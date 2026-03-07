@@ -8,11 +8,6 @@ A self-contained class for simulating N-body particle systems with:
   - Efficient binary save/load (NPZ + optional HDF5)
   - Static trajectory visualizer
   - Live visualizer (toggled via simulate(..., live=True))
-
-Dependencies (core):   numpy, matplotlib
-Dependencies (extras): numba (10-50x speedup), h5py (HDF5 save), tqdm (progress bar)
-
-Install: pip install numpy matplotlib numba h5py tqdm
 """
 
 from __future__ import annotations
@@ -29,6 +24,7 @@ from matplotlib.collections import LineCollection
 # ── Optional accelerators ────────────────────────────────────────────────────
 try:
     from numba import njit, prange
+
     _NUMBA = True
 except ImportError:
     _NUMBA = False
@@ -36,12 +32,14 @@ except ImportError:
 
 try:
     import h5py
+
     _H5PY = True
 except ImportError:
     _H5PY = False
 
 try:
     from tqdm import tqdm as _tqdm
+
     _TQDM = True
 except ImportError:
     _TQDM = False
@@ -57,7 +55,7 @@ def gravity(pos: np.ndarray, masses: np.ndarray,
     Returns acceleration array (F/m) of shape (N, D).
     """
     # dr[i,j] = pos[j] - pos[i],  shape (N, N, D)
-    dr = pos[np.newaxis, :, :] - pos[:, np.newaxis, :]          # (N, N, D)
+    dr = pos[np.newaxis, :, :] - pos[:, np.newaxis, :]  # (N, N, D)
     # squared distances + softening, shape (N, N)
     dist2 = (dr * dr).sum(axis=-1) + softening * softening
     # inv_dist3[i,j] = 1 / |r_j - r_i|^3, zero on diagonal
@@ -79,17 +77,17 @@ def spring_mesh(pos: np.ndarray, masses: np.ndarray,
     rest_lengths: (E,) float array
     """
     i_idx, j_idx = edges[:, 0], edges[:, 1]
-    dr   = pos[j_idx] - pos[i_idx]                    # (E, D)
+    dr = pos[j_idx] - pos[i_idx]  # (E, D)
     dist = np.linalg.norm(dr, axis=-1, keepdims=True)  # (E, 1)
     dist = np.maximum(dist, 1e-12)
-    unit = dr / dist                                    # (E, D)
-    f    = k * (dist - rest_lengths[:, np.newaxis]) * unit  # (E, D)
+    unit = dr / dist  # (E, D)
+    f = k * (dist - rest_lengths[:, np.newaxis]) * unit  # (E, D)
 
     if damping > 0.0 and vel is not None:
         f += damping * (vel[j_idx] - vel[i_idx])
 
     acc = np.zeros_like(pos)
-    np.add.at(acc, i_idx,  f / masses[i_idx, np.newaxis])
+    np.add.at(acc, i_idx, f / masses[i_idx, np.newaxis])
     np.add.at(acc, j_idx, -f / masses[j_idx, np.newaxis])
     return acc
 
@@ -98,12 +96,12 @@ def coulomb(pos: np.ndarray, masses: np.ndarray,
             charges: np.ndarray, k_e: float = 1.0,
             softening: float = 1e-3) -> np.ndarray:
     """Coulomb force — fully vectorised with broadcasting."""
-    dr     = pos[np.newaxis, :, :] - pos[:, np.newaxis, :]     # (N, N, D)
-    dist2  = (dr * dr).sum(axis=-1) + softening * softening    # (N, N)
+    dr = pos[np.newaxis, :, :] - pos[:, np.newaxis, :]  # (N, N, D)
+    dist2 = (dr * dr).sum(axis=-1) + softening * softening  # (N, N)
     inv_d3 = dist2 ** (-1.5)
     np.fill_diagonal(inv_d3, 0.0)
     # charge product matrix: q_i * q_j
-    qmat   = charges[:, np.newaxis] * charges[np.newaxis, :]   # (N, N)
+    qmat = charges[:, np.newaxis] * charges[np.newaxis, :]  # (N, N)
     # F on i from j is repulsive (same sign → positive qmat → away from j)
     # dr[i,j] = pos[j]-pos[i], so we negate to get force direction away
     acc = -k_e * np.einsum('ij,ijd->id', qmat * inv_d3, dr)
@@ -132,6 +130,7 @@ if _NUMBA:
                     acc[i, d] += fac * dr[d]
         return acc
 
+
     def gravity_fast(pos, masses, G=1.0, softening=1e-2):
         """JIT-compiled gravity (use in place of `gravity` for speed)."""
         return _gravity_numba(pos, masses, G, softening)
@@ -159,12 +158,12 @@ class NBodySimulator:
     # ── Construction ──────────────────────────────────────────────────────────
 
     def __init__(
-        self,
-        n: int = 3,
-        dim: int = 2,
-        masses: Optional[np.ndarray | list] = None,
-        force_fn: Optional[Callable] = None,
-        force_kwargs: Optional[dict] = None,
+            self,
+            n: int = 3,
+            dim: int = 2,
+            masses: Optional[np.ndarray | list] = None,
+            force_fn: Optional[Callable] = None,
+            force_kwargs: Optional[dict] = None,
     ):
         """
         Parameters
@@ -187,12 +186,12 @@ class NBodySimulator:
     # ── Initial conditions ────────────────────────────────────────────────────
 
     def random_initial_conditions(
-        self,
-        seed: Optional[int] = None,
-        pos_scale: float = 1.0,
-        vel_scale: float = 0.5,
-        zero_momentum: bool = True,
-        preset: Literal["random", "circular", "figure8", "solar"] = "random",
+            self,
+            seed: Optional[int] = None,
+            pos_scale: float = 1.0,
+            vel_scale: float = 0.5,
+            zero_momentum: bool = True,
+            preset: Literal["random", "circular", "figure8", "solar"] = "random",
     ) -> tuple[np.ndarray, np.ndarray]:
         """
         Generate initial positions and velocities.
@@ -220,9 +219,9 @@ class NBodySimulator:
                 raise ValueError("figure8 preset requires n=3, dim=2")
             # Chenciner & Montgomery (2000) — normalised
             pos0 = np.array([
-                [ 0.97000436, -0.24308753],
-                [-0.97000436,  0.24308753],
-                [ 0.0,         0.0       ]
+                [0.97000436, -0.24308753],
+                [-0.97000436, 0.24308753],
+                [0.0, 0.0]
             ])
             v0 = np.array([0.93240737, 0.86473146])
             vel0 = np.array([v0 / 2, v0 / 2, -v0])
@@ -256,12 +255,12 @@ class NBodySimulator:
         # min_sep scales as pos_scale / N^(1/D) so packing stays feasible for any N
         min_sep = pos_scale / (max(self.n, 1) ** (1.0 / self.dim)) * 0.4
         for _ in range(10_000):
-            pos0  = rng.uniform(-pos_scale, pos_scale, (self.n, self.dim))
+            pos0 = rng.uniform(-pos_scale, pos_scale, (self.n, self.dim))
             if self.n < 2:
                 break
             # Vectorised pairwise check
-            diff  = pos0[:, np.newaxis, :] - pos0[np.newaxis, :, :]  # (N,N,D)
-            dist2 = (diff * diff).sum(axis=-1)                        # (N,N)
+            diff = pos0[:, np.newaxis, :] - pos0[np.newaxis, :, :]  # (N,N,D)
+            dist2 = (diff * diff).sum(axis=-1)  # (N,N)
             np.fill_diagonal(dist2, np.inf)
             if np.sqrt(dist2.min()) >= min_sep:
                 break
@@ -277,10 +276,10 @@ class NBodySimulator:
         return pos0, vel0
 
     def batch_initial_conditions(
-        self,
-        n_trajectories: int,
-        seed: Optional[int] = None,
-        **kwargs
+            self,
+            n_trajectories: int,
+            seed: Optional[int] = None,
+            **kwargs
     ) -> tuple[np.ndarray, np.ndarray]:
         """
         Generate a batch of random initial conditions.
@@ -291,7 +290,7 @@ class NBodySimulator:
         vel_batch : (n_trajectories, n, dim)
         """
         rng = np.random.default_rng(seed)
-        seeds = rng.integers(0, 2**31, size=n_trajectories)
+        seeds = rng.integers(0, 2 ** 31, size=n_trajectories)
         pos_list, vel_list = [], []
         for s in seeds:
             p, v = self.random_initial_conditions(seed=int(s), **kwargs)
@@ -306,43 +305,46 @@ class NBodySimulator:
         return vel, self.force_fn(pos, self.masses, **self.force_kwargs)
 
     def _rk4_step(
-        self, pos: np.ndarray, vel: np.ndarray, dt: float
+            self, pos: np.ndarray, vel: np.ndarray, dt: float
     ) -> tuple[np.ndarray, np.ndarray]:
         """Single RK4 step — minimal allocations, no redundant copies."""
         h = dt
         h2 = 0.5 * h
         h6 = h / 6.0
 
-        a1 = self.force_fn(pos, self.masses, **self.force_kwargs)           # k1v
+        a1 = self.force_fn(pos, self.masses, **self.force_kwargs)  # k1v
         # k1p = vel  (no copy needed, used read-only below)
 
-        p2 = pos + h2 * vel;   v2 = vel + h2 * a1
+        p2 = pos + h2 * vel;
+        v2 = vel + h2 * a1
         a2 = self.force_fn(p2, self.masses, **self.force_kwargs)
 
-        p3 = pos + h2 * v2;   v3 = vel + h2 * a2
+        p3 = pos + h2 * v2;
+        v3 = vel + h2 * a2
         a3 = self.force_fn(p3, self.masses, **self.force_kwargs)
 
-        p4 = pos + h  * v3;   v4 = vel + h  * a3
+        p4 = pos + h * v3;
+        v4 = vel + h * a3
         a4 = self.force_fn(p4, self.masses, **self.force_kwargs)
 
-        new_pos = pos + h6 * (vel + 2.0*v2 + 2.0*v3 + v4)
-        new_vel = vel + h6 * (a1  + 2.0*a2 + 2.0*a3 + a4)
+        new_pos = pos + h6 * (vel + 2.0 * v2 + 2.0 * v3 + v4)
+        new_vel = vel + h6 * (a1 + 2.0 * a2 + 2.0 * a3 + a4)
         return new_pos, new_vel
 
     def simulate(
-        self,
-        pos0: np.ndarray,
-        vel0: np.ndarray,
-        t_end: float,
-        dt: float = 0.005,
-        save_every: int = 1,
-        visualize: bool = False,
-        trail: int = 80,
-        steps_per_frame: int = 5,
-        energy_check: bool = False,
-        verbose: bool = False,
-        adaptive_dt: bool = True,
-        close_encounter_radius: Optional[float] = None,
+            self,
+            pos0: np.ndarray,
+            vel0: np.ndarray,
+            t_end: float,
+            dt: float = 0.005,
+            save_every: int = 1,
+            visualize: bool = False,
+            trail: int = 80,
+            steps_per_frame: int = 5,
+            energy_check: bool = False,
+            verbose: bool = False,
+            adaptive_dt: bool = True,
+            close_encounter_radius: Optional[float] = None,
     ) -> dict:
         """
         Simulate the system using RK4.
@@ -423,13 +425,13 @@ class NBodySimulator:
 
             trail_lines = [ax.plot([], [], color=COLORS[i], alpha=0.4, lw=1.2)[0]
                            for i in range(self.n)]
-            glow_dots   = [ax.plot([], [], 'o', color=COLORS[i], ms=14, alpha=0.15)[0]
-                           for i in range(self.n)]
-            dots        = [ax.plot([], [], 'o', color=COLORS[i], ms=5,
-                                   markeredgecolor='white', markeredgewidth=0.4)[0]
-                           for i in range(self.n)]
-            time_label  = ax.text(0.02, 0.97, '', transform=ax.transAxes,
-                                  color='#8888aa', fontsize=9, va='top', family='monospace')
+            glow_dots = [ax.plot([], [], 'o', color=COLORS[i], ms=14, alpha=0.15)[0]
+                         for i in range(self.n)]
+            dots = [ax.plot([], [], 'o', color=COLORS[i], ms=5,
+                            markeredgecolor='white', markeredgewidth=0.4)[0]
+                    for i in range(self.n)]
+            time_label = ax.text(0.02, 0.97, '', transform=ax.transAxes,
+                                 color='#8888aa', fontsize=9, va='top', family='monospace')
             ax.set_title(f"{self.n}-Body Simulation", color="#aaaacc", fontsize=11)
             fig.tight_layout()
 
@@ -444,13 +446,13 @@ class NBodySimulator:
             # ── Adaptive dt: check proximity BEFORE stepping ──────────────────
             if adaptive_dt:
                 # Vectorised pairwise distances — no Python loop
-                diff  = pos[:, np.newaxis, :] - pos[np.newaxis, :, :]  # (N,N,D)
-                dist2 = (diff * diff).sum(axis=-1)                      # (N,N)
+                diff = pos[:, np.newaxis, :] - pos[np.newaxis, :, :]  # (N,N,D)
+                dist2 = (diff * diff).sum(axis=-1)  # (N,N)
                 np.fill_diagonal(dist2, np.inf)
                 min_dist = np.sqrt(dist2.min())
                 if min_dist < close_encounter_radius:
-                    ratio  = min_dist / close_encounter_radius
-                    n_sub  = int(np.clip(32.0 / (ratio + 0.05), 8, 512))
+                    ratio = min_dist / close_encounter_radius
+                    n_sub = int(np.clip(32.0 / (ratio + 0.05), 8, 512))
                     sub_dt = current_dt / n_sub
                     for _ in range(n_sub):
                         pos, vel = self._rk4_step(pos, vel, sub_dt)
@@ -490,12 +492,12 @@ class NBodySimulator:
 
         actual = save_idx
         result = {
-            "positions":  pos_track[:actual],
+            "positions": pos_track[:actual],
             "velocities": vel_track[:actual],
-            "times":      time_track[:actual],
-            "masses":     self.masses.copy(),
-            "dt":         dt,
-            "energies":   energies[:actual] if energy_check else None,
+            "times": time_track[:actual],
+            "masses": self.masses.copy(),
+            "dt": dt,
+            "energies": energies[:actual] if energy_check else None,
         }
         if energy_check:
             e = energies[:actual]
@@ -509,13 +511,13 @@ class NBodySimulator:
         return result
 
     def simulate_batch(
-        self,
-        pos_batch: np.ndarray,
-        vel_batch: np.ndarray,
-        t_end: float,
-        dt: float = 0.01,
-        save_every: int = 1,
-        verbose: bool = True,
+            self,
+            pos_batch: np.ndarray,
+            vel_batch: np.ndarray,
+            t_end: float,
+            dt: float = 0.01,
+            save_every: int = 1,
+            verbose: bool = True,
     ) -> list[dict]:
         """
         Simulate multiple initial conditions sequentially.
@@ -535,14 +537,14 @@ class NBodySimulator:
 
     def _compute_energy(self, pos: np.ndarray, vel: np.ndarray) -> np.ndarray:
         """Returns [KE, PE, total]."""
-        ke = 0.5 * np.sum(self.masses[:, None] * vel**2)
+        ke = 0.5 * np.sum(self.masses[:, None] * vel ** 2)
         pe = 0.0
         G = self.force_kwargs.get("G", 1.0)
         soft = self.force_kwargs.get("softening", 1e-3)
         for i in range(self.n):
             for j in range(i + 1, self.n):
                 dr = pos[j] - pos[i]
-                dist = np.sqrt(np.dot(dr, dr) + soft**2)
+                dist = np.sqrt(np.dot(dr, dr) + soft ** 2)
                 pe -= G * self.masses[i] * self.masses[j] / dist
         return np.array([ke, pe, ke + pe])
 
@@ -550,10 +552,10 @@ class NBodySimulator:
 
     @staticmethod
     def save(
-        track: dict,
-        path: str | Path,
-        fmt: Literal["npz", "npy", "h5"] = "npz",
-        compress: bool = True,
+            track: dict,
+            path: str | Path,
+            fmt: Literal["npz", "npy", "h5"] = "npz",
+            compress: bool = True,
     ) -> None:
         """
         Save a trajectory to disk.
@@ -605,12 +607,12 @@ class NBodySimulator:
             p = path if path.suffix == ".npz" else path.with_suffix(".npz")
             data = np.load(p)
             return {
-                "positions":  data["positions"],
+                "positions": data["positions"],
                 "velocities": data["velocities"],
-                "times":      data["times"],
-                "masses":     data["masses"],
-                "dt":         float(data["dt"][0]),
-                "energies":   data["energies"] if "energies" in data else None,
+                "times": data["times"],
+                "masses": data["masses"],
+                "dt": float(data["dt"][0]),
+                "energies": data["energies"] if "energies" in data else None,
             }
         elif path.suffix == ".h5" or path.with_suffix(".h5").exists():
             if not _H5PY:
@@ -620,21 +622,21 @@ class NBodySimulator:
                 return {k: f[k][()] for k in f.keys()}
         elif path.is_dir():
             return {
-                "positions":  np.load(path / "positions.npy"),
+                "positions": np.load(path / "positions.npy"),
                 "velocities": np.load(path / "velocities.npy"),
-                "times":      np.load(path / "times.npy"),
-                "masses":     np.load(path / "masses.npy"),
-                "dt":         None,
-                "energies":   None,
+                "times": np.load(path / "times.npy"),
+                "masses": np.load(path / "masses.npy"),
+                "dt": None,
+                "energies": None,
             }
         else:
             raise FileNotFoundError(f"Cannot find trajectory at {path}")
 
     @staticmethod
     def save_batch(
-        tracks: list[dict],
-        path: str | Path,
-        fmt: Literal["npz", "h5"] = "npz",
+            tracks: list[dict],
+            path: str | Path,
+            fmt: Literal["npz", "h5"] = "npz",
     ) -> None:
         """
         Save a batch of trajectories as a single stacked file.
@@ -665,17 +667,17 @@ class NBodySimulator:
 
     @staticmethod
     def plot_tracks(
-        track: dict,
-        ax: Optional[plt.Axes] = None,
-        color_by: Literal["body", "time", "speed"] = "body",
-        show_start: bool = True,
-        show_end: bool = True,
-        trail_alpha: float = 0.7,
-        figsize: tuple = (8, 8),
-        title: str = "N-Body Trajectories",
-        save_path: Optional[str | Path] = None,
-        show: bool = True,
-        cmap: str = "tab10",
+            track: dict,
+            ax: Optional[plt.Axes] = None,
+            color_by: Literal["body", "time", "speed"] = "body",
+            show_start: bool = True,
+            show_end: bool = True,
+            trail_alpha: float = 0.7,
+            figsize: tuple = (8, 8),
+            title: str = "N-Body Trajectories",
+            save_path: Optional[str | Path] = None,
+            show: bool = True,
+            cmap: str = "tab10",
     ) -> plt.Figure:
         """
         Plot static 2D/3D trajectory tracks.
@@ -690,7 +692,7 @@ class NBodySimulator:
         show_start : mark initial positions with a circle
         show_end   : mark final positions with a star
         """
-        pos = track["positions"]     # (T, N, D)
+        pos = track["positions"]  # (T, N, D)
         vel = track.get("velocities")
         T, N, D = pos.shape
 
@@ -771,10 +773,10 @@ class NBodySimulator:
 
     @staticmethod
     def plot_energy(
-        track: dict,
-        figsize: tuple = (10, 4),
-        save_path: Optional[str | Path] = None,
-        show: bool = True,
+            track: dict,
+            figsize: tuple = (10, 4),
+            save_path: Optional[str | Path] = None,
+            show: bool = True,
     ) -> plt.Figure:
         """Plot kinetic, potential, and total energy over time (energy conservation check)."""
         if track.get("energies") is None:
@@ -817,34 +819,34 @@ class NBodySimulator:
           'pairwise_dist' : (T, N, N) pairwise distances at each timestep
           'separation_min': minimum pairwise separation over time (collision proxy)
         """
-        pos = track["positions"]   # (T, N, D)
+        pos = track["positions"]  # (T, N, D)
         vel = track["velocities"]  # (T, N, D)
         T, N, D = pos.shape
         m = self.masses
 
-        com     = (m[None, :, None] * pos).sum(axis=1) / m.sum()
+        com = (m[None, :, None] * pos).sum(axis=1) / m.sum()
         lin_mom = (m[None, :, None] * vel).sum(axis=1)
 
         if D == 2:
             ang_mom = (m[None, :] * (pos[:, :, 0] * vel[:, :, 1]
-                                      - pos[:, :, 1] * vel[:, :, 0])).sum(axis=1)
+                                     - pos[:, :, 1] * vel[:, :, 0])).sum(axis=1)
         else:
             # cross product broadcast over time: (T, N, 3)
-            rxv     = np.cross(pos, vel)                        # (T, N, 3)
-            ang_mom = (m[None, :, None] * rxv).sum(axis=1)     # (T, 3)
+            rxv = np.cross(pos, vel)  # (T, N, 3)
+            ang_mom = (m[None, :, None] * rxv).sum(axis=1)  # (T, 3)
 
         # Vectorised pairwise distances: (T, N, 1, D) - (T, 1, N, D) → (T, N, N)
-        diff    = pos[:, :, np.newaxis, :] - pos[:, np.newaxis, :, :]
+        diff = pos[:, :, np.newaxis, :] - pos[:, np.newaxis, :, :]
         pw_dist = np.sqrt((diff * diff).sum(axis=-1))
 
-        ii, jj  = np.triu_indices(N, k=1)
+        ii, jj = np.triu_indices(N, k=1)
         sep_min = pw_dist[:, ii, jj].min()
 
         return {
-            "com_pos":        com,
-            "ang_momentum":   ang_mom,
-            "lin_momentum":   lin_mom,
-            "pairwise_dist":  pw_dist,
+            "com_pos": com,
+            "ang_momentum": ang_mom,
+            "lin_momentum": lin_mom,
+            "pairwise_dist": pw_dist,
             "separation_min": sep_min,
         }
 
@@ -865,7 +867,7 @@ if __name__ == "__main__":
     sim = NBodySimulator(n=3, dim=2, masses=[1.0, 1.0, 1.0])
     pos0, vel0 = sim.random_initial_conditions(preset="figure8")
     track = sim.simulate(pos0, vel0, t_end=6.3, dt=0.005,
-                          save_every=2, energy_check=True, verbose=True)
+                         save_every=2, energy_check=True, verbose=True)
     print(f"Track shape: {track['positions'].shape}")
     NBodySimulator.plot_tracks(track, title="Figure-8 Three-Body", color_by="time")
     NBodySimulator.plot_energy(track)
@@ -886,20 +888,23 @@ if __name__ == "__main__":
     print(f"Batch shapes: {pos_batch.shape}, {vel_batch.shape}")
 
     print("\n=== Example 5: Custom force (inverse-cube) ===")
+
+
     def inv_cube_force(pos, masses, G=1.0, softening=1e-3):
         N, D = pos.shape
         acc = np.zeros((N, D))
         for i in range(N):
             for j in range(i + 1, N):
                 dr = pos[j] - pos[i]
-                dist = np.sqrt(np.dot(dr, dr) + softening**2)
-                f = G * dr / dist**4          # 1/r^3 force
+                dist = np.sqrt(np.dot(dr, dr) + softening ** 2)
+                f = G * dr / dist ** 4  # 1/r^3 force
                 acc[i] += masses[j] * f
                 acc[j] -= masses[i] * f
         return acc
 
+
     sim_custom = NBodySimulator(n=3, dim=2, force_fn=inv_cube_force,
-                                 force_kwargs={"G": 0.5})
+                                force_kwargs={"G": 0.5})
     pos0, vel0 = sim_custom.random_initial_conditions(seed=7)
     track_custom = sim_custom.simulate(pos0, vel0, t_end=15, dt=0.01)
     NBodySimulator.plot_tracks(track_custom, title="Inverse-Cube Force")

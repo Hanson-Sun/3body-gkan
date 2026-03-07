@@ -1,0 +1,13 @@
+[project]
+name = "3body-gkan"
+version = "0.1.0"
+description = "440 horror"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "h5py>=3.16.0",
+    "matplotlib>=3.10.8",
+    "numba>=0.64.0",
+    "numpy>=2.4.2",
+    "tqdm>=4.67.3",
+]
