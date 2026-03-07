@@ -1,2 +1,0 @@
-# yeah idk just run it and install as you go
-# i use cuda 12.1 version fyi
