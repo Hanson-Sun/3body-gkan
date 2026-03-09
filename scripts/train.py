@@ -10,11 +10,12 @@ import argparse
 from pathlib import Path
 
 import torch
+from torch_geometric.loader import DataLoader
+
 from nbody_gkan.data.dataset import NBodyDataset
 from nbody_gkan.device import get_device
 from nbody_gkan.models import OrdinaryGraphKAN, OGN
 from nbody_gkan.training.trainer import Trainer, create_optimizer, create_scheduler
-from torch_geometric.loader import DataLoader
 
 
 def parse_args():
@@ -43,19 +44,13 @@ def parse_args():
         "--msg_dim", type=int, default=100, help="Message dimension"
     )
     parser.add_argument(
-        "--hidden_dim", type=int, default=300, help="Hidden dimension (for baseline)"
+        "--hidden", type=int, default=300, help="Hidden layer dimension"
     )
     parser.add_argument(
-        "--n_msg_layers", type=int, default=3, help="Number of message layers (KAN)"
+        "--grid_size", type=int, default=5, help="KAN grid size (Graph-KAN only)"
     )
     parser.add_argument(
-        "--n_node_layers", type=int, default=3, help="Number of node layers (KAN)"
-    )
-    parser.add_argument(
-        "--grid_size", type=int, default=5, help="KAN grid size"
-    )
-    parser.add_argument(
-        "--spline_order", type=int, default=3, help="KAN spline order"
+        "--spline_order", type=int, default=3, help="KAN spline order (Graph-KAN only)"
     )
 
     # Training
@@ -92,6 +87,10 @@ def parse_args():
     )
     parser.add_argument(
         "--gradient_clip", type=float, default=1.0, help="Gradient clipping"
+    )
+    parser.add_argument(
+        "--grid_update_freq", type=int, default=10,
+        help="Update KAN grids every N epochs (0=disabled, Graph-KAN only)"
     )
 
     # Checkpointing
@@ -149,27 +148,27 @@ def main():
     edge_index = train_dataset.edge_index
 
     # Create model
+    # Both models use configurable architecture: 4 layers, default 300 hidden (matches original OGN)
     if args.model == "graph_kan":
-        print("Creating Graph-KAN model")
+        print(f"Creating Graph-KAN model (4 layers, {args.hidden} hidden)")
         model = OrdinaryGraphKAN(
             n_f=n_features,
             msg_dim=args.msg_dim,
             ndim=dim,
             edge_index=edge_index,
-            n_msg_layers=args.n_msg_layers,
-            n_node_layers=args.n_node_layers,
+            hidden=args.hidden,
             grid_size=args.grid_size,
             spline_order=args.spline_order,
             aggr="add",
         )
     elif args.model == "baseline_gnn":
-        print("Creating baseline GNN model")
+        print(f"Creating baseline GNN model (4 layers, {args.hidden} hidden)")
         model = OGN(
             n_f=n_features,
             msg_dim=args.msg_dim,
             ndim=dim,
             edge_index=edge_index,
-            hidden=args.hidden_dim,
+            hidden=args.hidden,
             aggr="add",
         )
     else:
@@ -206,6 +205,13 @@ def main():
         checkpoint_dir=checkpoint_dir,
     )
 
+    # Grid update info (Graph-KAN only)
+    if args.model == "graph_kan":
+        if args.grid_update_freq > 0:
+            print(f"Grid updates enabled every {args.grid_update_freq} epochs")
+        else:
+            print("Grid updates disabled (use --grid_update_freq N to enable)")
+
     # Train
     trainer.train(
         n_epochs=args.epochs,
@@ -214,6 +220,7 @@ def main():
         gradient_clip=args.gradient_clip,
         save_every=args.save_every,
         log_every=args.log_every,
+        grid_update_freq=args.grid_update_freq,
     )
 
     # Save history

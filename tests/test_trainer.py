@@ -3,11 +3,11 @@
 import numpy as np
 import pytest
 import torch
+from torch.utils.data import DataLoader
+
 from nbody_gkan.data.dataset import NBodyDataset, get_edge_index
 from nbody_gkan.models.graph_kan import OrdinaryGraphKAN
 from nbody_gkan.training.trainer import Trainer
-from pathlib import Path
-from torch.utils.data import DataLoader
 
 
 @pytest.fixture

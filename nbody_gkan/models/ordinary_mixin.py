@@ -29,11 +29,14 @@ class OrdinaryMixin:
         """
         Compute derivative (acceleration) with optional position augmentation.
 
+        Position augmentation matches original OGN: applies the SAME random translation
+        to ALL nodes in the input (regardless of batching). This teaches translation
+        invariance while preserving relative positions.
+
         Parameters
         ----------
         g : torch_geometric.data.Data
             Graph data with node features g.x and edge_index.
-            If batched, must have g.batch attribute.
         augment : bool, optional (default=False)
             Whether to apply position augmentation
         augmentation : float, optional (default=3.0)
@@ -48,24 +51,11 @@ class OrdinaryMixin:
         ndim = self.ndim
 
         if augment:
-            # Add random noise to positions - different noise for each graph in batch
-            # This preserves relative positions within each graph and teaches translation invariance
+            # Match original OGN: single random translation for ALL nodes
+            # This teaches translation invariance (physics doesn't depend on absolute position)
             x = x.clone()
-
-            # Handle batched graphs (PyG Batch) vs single graphs (Data)
-            if hasattr(g, 'batch'):
-                # Batched case: apply different translation to each graph
-                n_graphs = g.batch.max().item() + 1
-                # Generate different random translation for each graph
-                aug_noise = torch.randn(n_graphs, ndim, device=x.device) * augmentation
-                # Index into aug_noise using batch tensor to get per-node translation
-                aug_noise_per_node = aug_noise[g.batch]  # (n_nodes, ndim)
-            else:
-                # Single graph case: same translation for all nodes
-                aug_noise_per_node = torch.randn(1, ndim, device=x.device) * augmentation
-                aug_noise_per_node = aug_noise_per_node.repeat(len(x), 1)
-
-            # Apply augmentation to positions (first ndim features)
+            aug_noise = torch.randn(1, ndim, device=x.device) * augmentation
+            aug_noise_per_node = aug_noise.expand(len(x), ndim)
             x[:, :ndim] = x[:, :ndim] + aug_noise_per_node
 
         edge_index = g.edge_index
@@ -78,6 +68,7 @@ class OrdinaryMixin:
             augment: bool = True,
             square: bool = False,
             augmentation: float = 3.0,
+            **kwargs,  # Absorb extra arguments for API compatibility
     ) -> torch.Tensor:
         """
         Compute loss between predicted and true accelerations.
@@ -101,6 +92,6 @@ class OrdinaryMixin:
         pred = self.just_derivative(g, augment=augment, augmentation=augmentation)
 
         if square:
-            return torch.mean((g.y - pred) ** 2)
+            return torch.sum((g.y - pred) ** 2)
         else:
-            return torch.mean(torch.abs(g.y - pred))
+            return torch.sum(torch.abs(g.y - pred))

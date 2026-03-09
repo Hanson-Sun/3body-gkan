@@ -1,6 +1,7 @@
 """Tests for device selection utilities."""
 
 import torch
+
 from nbody_gkan.device import get_device
 
 

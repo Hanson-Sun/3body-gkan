@@ -10,6 +10,7 @@ import argparse
 from pathlib import Path
 
 import numpy as np
+
 from nbody_gkan.data.dataset import create_dataset_from_simulator
 from nbody_gkan.nbody import NBodySimulator
 

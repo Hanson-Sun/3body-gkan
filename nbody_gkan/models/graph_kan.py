@@ -1,17 +1,17 @@
 """
 Graph-KAN: Graph Neural Network with KAN layers instead of MLPs.
 
-Mirrors the architecture of the baseline GNN but replaces Linear+ReLU
-layers with KAN layers for interpretable function learning.
+Uses pykan's KANLayer implementation with native support for activation
+storage and symbolic regression.
 """
 
 from typing import Optional
 
 import torch
 import torch.nn as nn
+from kan import KANLayer
 from torch_geometric.nn import MessagePassing
 
-from .kan_layer import KANLayer
 from .ordinary_mixin import OrdinaryMixin
 
 
@@ -19,8 +19,8 @@ class GraphKAN(MessagePassing):
     """
     Graph Neural Network using KAN layers for message and node update functions.
 
-    This is a direct analog of the baseline GN class, but with KAN layers
-    replacing the MLP message and node functions.
+    Architecture matches the baseline GNN: 4 layers, 300 hidden dimension.
+    Uses pykan's KANLayer with B-spline basis functions.
 
     Parameters
     ----------
@@ -30,19 +30,20 @@ class GraphKAN(MessagePassing):
         Dimension of message vectors
     ndim : int
         Dimension of output (e.g., acceleration dimension)
-    hidden : int or None, optional (default=None)
-        Hidden layer dimension. If None, uses input dimension (narrow KAN).
-        For fair comparison with baseline, set to 300.
-    n_msg_layers : int, optional (default=3)
-        Number of KAN layers in message function
-    n_node_layers : int, optional (default=3)
-        Number of KAN layers in node update function
+    hidden : int, optional (default=300)
+        Hidden layer dimension
     grid_size : int, optional (default=5)
-        KAN: Number of B-spline grid intervals
+        KAN: Number of B-spline grid intervals (must be >= 1)
     spline_order : int, optional (default=3)
-        KAN: B-spline order
+        KAN: B-spline order (must be >= 1)
     aggr : str, optional (default='add')
         Aggregation method for messages
+
+    Notes
+    -----
+    - Hidden dimension defaults to 300 to match baseline OGN
+    - Architecture is 4 layers to match baseline exactly
+    - KAN-specific parameters (grid_size, spline_order) are the only additions beyond baseline
     """
 
     def __init__(
@@ -50,9 +51,7 @@ class GraphKAN(MessagePassing):
             n_f: int,
             msg_dim: int,
             ndim: int,
-            hidden: Optional[int] = None,
-            n_msg_layers: int = 3,
-            n_node_layers: int = 3,
+            hidden: int = 300,
             grid_size: int = 5,
             spline_order: int = 3,
             aggr: str = "add",
@@ -62,30 +61,29 @@ class GraphKAN(MessagePassing):
         self.ndim = ndim
 
         # Message function: [x_i, x_j] (2*n_f) → msg_dim
-        # Matches baseline GNN - concatenate all features from both nodes
+        # 4 layers, configurable hidden (default 300) - matches baseline
         msg_input_dim = 2 * n_f
-        self.msg_fnc = self._build_kan_network(
-            msg_input_dim, msg_dim, n_msg_layers, grid_size, spline_order, hidden
+        self.msg_layers = self._build_kan_network(
+            msg_input_dim, msg_dim, hidden, grid_size, spline_order
         )
 
         # Node update function: [x, aggr_msgs] (n_f + msg_dim) → ndim
-        # Matches baseline GNN - concatenate node features with aggregated messages
+        # 4 layers, configurable hidden (default 300) - matches baseline
         node_input_dim = n_f + msg_dim
-        self.node_fnc = self._build_kan_network(
-            node_input_dim, ndim, n_node_layers, grid_size, spline_order, hidden
+        self.node_layers = self._build_kan_network(
+            node_input_dim, ndim, hidden, grid_size, spline_order
         )
 
     def _build_kan_network(
             self,
             in_dim: int,
             out_dim: int,
-            n_layers: int,
+            hidden: int,
             grid_size: int,
             spline_order: int,
-            hidden_dim: Optional[int] = None,
-    ) -> nn.Sequential:
+    ) -> nn.ModuleList:
         """
-        Build a sequential KAN network.
+        Build a 4-layer KAN network with configurable hidden dimension (matches baseline).
 
         Parameters
         ----------
@@ -93,38 +91,56 @@ class GraphKAN(MessagePassing):
             Input dimension
         out_dim : int
             Output dimension
-        n_layers : int
-            Number of layers
+        hidden : int
+            Hidden layer dimension
         grid_size : int
-            B-spline grid size
+            B-spline grid size (num parameter in pykan)
         spline_order : int
-            B-spline order
-        hidden_dim : int or None
-            Hidden layer dimension. If None, uses in_dim (narrow network).
+            B-spline order (k parameter in pykan)
 
         Returns
         -------
-        nn.Sequential
-            Sequential KAN network
+        nn.ModuleList
+            List of 4 KAN layers
         """
-        if n_layers == 1:
-            return nn.Sequential(KANLayer(in_dim, out_dim, grid_size, spline_order))
-
-        # Use hidden_dim if provided, otherwise use in_dim (narrow KAN)
-        h_dim = hidden_dim if hidden_dim is not None else in_dim
-
         layers = []
-        # First layer: in_dim → h_dim
-        layers.append(KANLayer(in_dim, h_dim, grid_size, spline_order))
+        # Layer 1: in_dim → hidden
+        layers.append(KANLayer(in_dim=in_dim, out_dim=hidden, num=grid_size, k=spline_order))
+        # Layer 2: hidden → hidden
+        layers.append(KANLayer(in_dim=hidden, out_dim=hidden, num=grid_size, k=spline_order))
+        # Layer 3: hidden → hidden
+        layers.append(KANLayer(in_dim=hidden, out_dim=hidden, num=grid_size, k=spline_order))
+        # Layer 4: hidden → out_dim
+        layers.append(KANLayer(in_dim=hidden, out_dim=out_dim, num=grid_size, k=spline_order))
 
-        # Hidden layers: h_dim → h_dim
-        for _ in range(n_layers - 2):
-            layers.append(KANLayer(h_dim, h_dim, grid_size, spline_order))
+        return nn.ModuleList(layers)
 
-        # Output layer: h_dim → out_dim
-        layers.append(KANLayer(h_dim, out_dim, grid_size, spline_order))
+    def _forward_kan_layers(
+            self,
+            x: torch.Tensor,
+            layers: nn.ModuleList,
+    ) -> torch.Tensor:
+        """
+        Forward through KAN layers.
 
-        return nn.Sequential(*layers)
+        Parameters
+        ----------
+        x : torch.Tensor
+            Input tensor
+        layers : nn.ModuleList
+            List of KAN layers
+
+        Returns
+        -------
+        torch.Tensor
+            Output tensor
+        """
+        for layer in layers:
+            # pykan's KANLayer returns (y, preacts, postacts, postspline)
+            # We only need the output y
+            y, _, _, _ = layer(x)
+            x = y
+        return x
 
     def forward(self, x: torch.Tensor, edge_index: torch.Tensor) -> torch.Tensor:
         """
@@ -148,8 +164,6 @@ class GraphKAN(MessagePassing):
         """
         Compute messages from node j to node i.
 
-        Matches baseline GNN: simply concatenate all features from both nodes.
-
         Parameters
         ----------
         x_i : torch.Tensor
@@ -164,15 +178,13 @@ class GraphKAN(MessagePassing):
         """
         # Concatenate all features: [x_i, x_j]
         tmp = torch.cat([x_i, x_j], dim=1)  # (n_edges, 2*n_f)
-        return self.msg_fnc(tmp)
+        return self._forward_kan_layers(tmp, self.msg_layers)
 
     def update(
             self, aggr_out: torch.Tensor, x: Optional[torch.Tensor] = None
     ) -> torch.Tensor:
         """
         Update node features using aggregated messages.
-
-        Matches baseline GNN: concatenate all node features with aggregated messages.
 
         Parameters
         ----------
@@ -188,7 +200,73 @@ class GraphKAN(MessagePassing):
         """
         # Concatenate [x, aggregated_messages]
         tmp = torch.cat([x, aggr_out], dim=1)  # (n_nodes, msg_dim+n_f)
-        return self.node_fnc(tmp)
+        return self._forward_kan_layers(tmp, self.node_layers)
+
+    def update_grids(self, data_loader, device='cpu', max_batches: int = 10):
+        """
+        Update KAN grids based on training data distribution.
+
+        This is an OPTIONAL KAN-specific optimization feature. Grid updates adapt
+        the B-spline grid boundaries to match the actual input distributions seen
+        during training, which can improve KAN performance.
+
+        Each layer's grid is updated based on the input distribution it actually sees
+        during forward pass, not just the network input.
+
+        Control via training script: --grid_update_freq N (0 to disable)
+
+        Parameters
+        ----------
+        data_loader : DataLoader
+            Training data loader
+        device : str or torch.device
+            Device to run on
+        max_batches : int, optional (default=10)
+            Maximum number of batches to use for grid adaptation
+        """
+        from torch_scatter import scatter_add
+
+        self.eval()
+        with torch.no_grad():
+            # Collect inputs for FIRST layer only (we'll propagate for subsequent layers)
+            msg_inputs_layer0 = []
+            node_inputs_layer0 = []
+
+            for i, batch in enumerate(data_loader):
+                if i >= max_batches:
+                    break
+                batch = batch.to(device)
+                x = batch.x
+                edge_index = batch.edge_index
+
+                # Message function inputs
+                row, col = edge_index
+                x_i = x[row]
+                x_j = x[col]
+                msg_input = torch.cat([x_i, x_j], dim=1)
+                msg_inputs_layer0.append(msg_input)
+
+                # Node function inputs (need to run through message layers)
+                msg_out = self._forward_kan_layers(msg_input, self.msg_layers)
+                aggr_msg = scatter_add(msg_out, row, dim=0, dim_size=x.size(0))
+                node_input = torch.cat([x, aggr_msg], dim=1)
+                node_inputs_layer0.append(node_input)
+
+            # Update message layers sequentially
+            if msg_inputs_layer0:
+                layer_input = torch.cat(msg_inputs_layer0, dim=0)
+                for layer in self.msg_layers:
+                    layer.update_grid_from_samples(layer_input)
+                    # Propagate to get input for next layer
+                    layer_input, _, _, _ = layer(layer_input)
+
+            # Update node layers sequentially
+            if node_inputs_layer0:
+                layer_input = torch.cat(node_inputs_layer0, dim=0)
+                for layer in self.node_layers:
+                    layer.update_grid_from_samples(layer_input)
+                    # Propagate to get input for next layer
+                    layer_input, _, _, _ = layer(layer_input)
 
 
 class OrdinaryGraphKAN(OrdinaryMixin, GraphKAN):
@@ -196,7 +274,7 @@ class OrdinaryGraphKAN(OrdinaryMixin, GraphKAN):
     Ordinary Graph-KAN with position augmentation and loss computation.
 
     This is analogous to the OGN (Ordinary Graph Network) in the baseline,
-    but using KAN layers.
+    but using KAN layers. Architecture matches baseline: 4 layers, 300 hidden.
 
     Parameters
     ----------
@@ -208,17 +286,12 @@ class OrdinaryGraphKAN(OrdinaryMixin, GraphKAN):
         Dimension of output (spatial dimension for accelerations)
     edge_index : torch.Tensor
         Fixed edge indices for the graph, shape (2, n_edges)
-    hidden : int or None, optional (default=None)
-        Hidden layer dimension. If None, uses input dimension (narrow KAN).
-        For fair comparison with baseline, set to 300.
-    n_msg_layers : int, optional (default=3)
-        Number of KAN layers in message function
-    n_node_layers : int, optional (default=3)
-        Number of KAN layers in node update function
+    hidden : int, optional (default=300)
+        Hidden layer dimension
     grid_size : int, optional (default=5)
-        KAN: Number of B-spline grid intervals
+        KAN: Number of B-spline grid intervals (must be >= 1)
     spline_order : int, optional (default=3)
-        KAN: B-spline order
+        KAN: B-spline order (must be >= 1)
     aggr : str, optional (default='add')
         Aggregation method
     """
@@ -229,17 +302,14 @@ class OrdinaryGraphKAN(OrdinaryMixin, GraphKAN):
             msg_dim: int,
             ndim: int,
             edge_index: torch.Tensor,
-            hidden: Optional[int] = None,
-            n_msg_layers: int = 3,
-            n_node_layers: int = 3,
+            hidden: int = 300,
             grid_size: int = 5,
             spline_order: int = 3,
             aggr: str = "add",
     ):
         super().__init__(
-            n_f, msg_dim, ndim, hidden, n_msg_layers, n_node_layers, grid_size, spline_order, aggr
+            n_f, msg_dim, ndim, hidden, grid_size, spline_order, aggr
         )
-        self.ndim = ndim
         self.register_buffer("edge_index", edge_index)
 
     # just_derivative() and loss() are inherited from OrdinaryMixin

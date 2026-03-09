@@ -21,7 +21,8 @@ class GN(MessagePassing):
     Graph Network with MLP message and node update functions.
 
     This is a baseline model using traditional MLPs (Linear + ReLU layers)
-    for message passing and node updates.
+    for message passing and node updates. Architecture matches the original
+    OGN from symbolic_deep_learning: 4 layers, 300 hidden dimension.
 
     Parameters
     ----------
@@ -45,7 +46,7 @@ class GN(MessagePassing):
         self.ndim = ndim
 
         # Message function: [x_i, x_j] (2*n_f) → msg_dim
-        # Matches original paper - concatenate all features from both nodes
+        # 4 layers, configurable hidden dimension (default 300) - matches original
         self.msg_fnc = Seq(
             Lin(2 * n_f, hidden),
             ReLU(),
@@ -57,7 +58,7 @@ class GN(MessagePassing):
         )
 
         # Node update function: [x, aggr_msgs] (n_f + msg_dim) → ndim
-        # Matches original paper - concatenate node features with aggregated messages
+        # 4 layers, configurable hidden dimension (default 300) - matches original
         self.node_fnc = Seq(
             Lin(msg_dim + n_f, hidden),
             ReLU(),
@@ -114,8 +115,6 @@ class GN(MessagePassing):
         """
         Update node features using aggregated messages.
 
-        Matches original paper: concatenate all node features with aggregated messages.
-
         Parameters
         ----------
         aggr_out : torch.Tensor
@@ -152,10 +151,10 @@ class OGN(OrdinaryMixin, GN):
         Dimension of output (spatial dimension for accelerations)
     edge_index : torch.Tensor
         Fixed edge indices for the graph, shape (2, n_edges)
-    aggr : str, optional (default='add')
-        Aggregation method
     hidden : int, optional (default=300)
         Hidden layer dimension
+    aggr : str, optional (default='add')
+        Aggregation method
     """
 
     def __init__(
@@ -164,10 +163,10 @@ class OGN(OrdinaryMixin, GN):
             msg_dim: int,
             ndim: int,
             edge_index: torch.Tensor,
-            aggr: str = "add",
             hidden: int = 300,
+            aggr: str = "add",
     ):
-        super().__init__(n_f, msg_dim, ndim, hidden=hidden, aggr=aggr)
+        super().__init__(n_f, msg_dim, ndim, hidden, aggr=aggr)
         self.ndim = ndim
         self.register_buffer("edge_index", edge_index)
 

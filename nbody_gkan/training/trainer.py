@@ -4,7 +4,6 @@ Training loop with checkpointing and logging.
 
 import json
 from pathlib import Path
-from typing import Optional
 
 import torch
 from torch.optim import Adam
@@ -46,11 +45,11 @@ class Trainer:
             self,
             model: torch.nn.Module,
             train_loader: DataLoader,
-            val_loader: Optional[DataLoader] = None,
+            val_loader: DataLoader | None = None,
             optimizer: torch.optim.Optimizer = None,
-            scheduler: Optional[torch.optim.lr_scheduler._LRScheduler] = None,
-            device: Optional[torch.device] = None,
-            checkpoint_dir: Optional[Path | str] = None,
+            scheduler: torch.optim.lr_scheduler._LRScheduler | None = None,
+            device: torch.device | None = None,
+            checkpoint_dir: Path | str | None = None,
     ):
         self.model = model
         self.train_loader = train_loader
@@ -79,7 +78,7 @@ class Trainer:
             self,
             augment: bool = True,
             augmentation_scale: float = 3.0,
-            gradient_clip: Optional[float] = None,
+            gradient_clip: float | None = None,
     ) -> float:
         """
         Train for one epoch.
@@ -173,9 +172,10 @@ class Trainer:
             n_epochs: int,
             augment: bool = True,
             augmentation_scale: float = 3.0,
-            gradient_clip: Optional[float] = None,
+            gradient_clip: float | None = None,
             save_every: int = 10,
             log_every: int = 1,
+            grid_update_freq: int = 0,
     ):
         """
         Full training loop.
@@ -188,12 +188,15 @@ class Trainer:
             Apply position augmentation
         augmentation_scale : float, optional (default=3.0)
             Scale of augmentation noise
-        gradient_clip : float, optional
+        gradient_clip : float | None, optional
             Gradient clipping value
         save_every : int, optional (default=10)
             Save checkpoint every k epochs
         log_every : int, optional (default=1)
             Log metrics every k epochs
+        grid_update_freq : int, optional (default=0)
+            Update KAN grids every N epochs (0 = disabled).
+            Only applies to models with update_grids() method.
         """
         print(f"Training for {n_epochs} epochs on {self.device}")
         print(f"Model: {self.model.__class__.__name__}")
@@ -211,6 +214,13 @@ class Trainer:
 
             # Validate
             val_loss = self.validate()
+
+            # Update KAN grids if applicable
+            if grid_update_freq > 0 and epoch > 0 and epoch % grid_update_freq == 0:
+                if hasattr(self.model, 'update_grids'):
+                    print(f"\nUpdating KAN grids at epoch {epoch}...")
+                    self.model.update_grids(self.train_loader, device=self.device)
+                    print("Grid update complete")
 
             # Update scheduler (only for epoch-based schedulers, not OneCycleLR)
             if self.scheduler is not None and not isinstance(
@@ -331,7 +341,7 @@ def create_scheduler(
         steps_per_epoch: int,
         max_lr: float = 5e-3,
         **kwargs,
-) -> Optional[torch.optim.lr_scheduler._LRScheduler]:
+) -> torch.optim.lr_scheduler._LRScheduler | None:
     """
     Create learning rate scheduler.
 

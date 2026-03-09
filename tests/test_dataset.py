@@ -3,6 +3,7 @@
 import numpy as np
 import pytest
 import torch
+
 from nbody_gkan.data.dataset import NBodyDataset, get_edge_index
 from nbody_gkan.nbody import gravity
 
