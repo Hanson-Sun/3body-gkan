@@ -12,13 +12,12 @@ A self-contained class for simulating N-body particle systems with:
 
 from __future__ import annotations
 
-import time
 import warnings
 from pathlib import Path
 from typing import Callable, Literal, Optional
 
-import numpy as np
 import matplotlib.pyplot as plt
+import numpy as np
 from matplotlib.collections import LineCollection
 
 # ── Optional accelerators ────────────────────────────────────────────────────
@@ -178,7 +177,8 @@ class NBodySimulator:
         self.n = n
         self.dim = dim
         self.masses = np.ones(n) if masses is None else np.asarray(masses, dtype=float)
-        assert self.masses.shape == (n,), f"masses must be length {n}"
+        if self.masses.shape != (n,):
+            raise ValueError(f"masses must have shape ({n},), got {self.masses.shape}")
 
         self.force_fn = gravity_fast if force_fn is None else force_fn
         self.force_kwargs = force_kwargs or {}
@@ -379,8 +379,11 @@ class NBodySimulator:
         """
         pos0 = np.asarray(pos0, dtype=np.float64)
         vel0 = np.asarray(vel0, dtype=np.float64)
-        assert pos0.shape == (self.n, self.dim)
-        assert vel0.shape == (self.n, self.dim)
+        expected_shape = (self.n, self.dim)
+        if pos0.shape != expected_shape:
+            raise ValueError(f"pos0 must have shape {expected_shape}, got {pos0.shape}")
+        if vel0.shape != expected_shape:
+            raise ValueError(f"vel0 must have shape {expected_shape}, got {vel0.shape}")
 
         softening = self.force_kwargs.get("softening", 1e-2)
         if close_encounter_radius is None:
@@ -407,7 +410,11 @@ class NBodySimulator:
 
         # ── Set up live plot ──────────────────────────────────────────────────
         if visualize:
-            assert self.dim == 2, "visualize only supports dim=2"
+            if self.dim != 2:
+                raise ValueError(
+                    f"Live visualization only supports dim=2, got dim={self.dim}. "
+                    f"Use visualize=False for {self.dim}D simulations."
+                )
             plt.ion()
             fig, ax = plt.subplots(figsize=(6, 6), facecolor="#080818")
             ax.set_facecolor("#080818")

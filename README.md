@@ -23,7 +23,7 @@ Ideally have GPU accelerated pytorch or else this will be slow af to train...
 - [x] n body simulation data generation (allow us to specify the force law between trajectories)
     - there might be some stability issues with close interactions, might be problematic
 - [x] n body simulation visualizer
-- [ ] convert trajectory data into graph format for GNN
-- [ ] GNN baseline implementation and training
-- [ ] Graph KAN implementation and training
+- [x] convert trajectory data into graph format for GNN
+- [x] GNN baseline implementation and training
+- [x] Graph KAN implementation and training
 - [ ] interpretability analysis of learned functions

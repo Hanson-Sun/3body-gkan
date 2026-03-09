@@ -1,0 +1,3 @@
+[submodule "symbolic_deep_learning"]
+	path = symbolic_deep_learning
+	url = git@github.com:MilesCranmer/symbolic_deep_learning.git
