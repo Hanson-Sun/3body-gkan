@@ -14,7 +14,7 @@ experiment_1:
       msg_dim: 8
       grid_size: 5 
     training_hp:
-      epoch: 5
+      epochs: 5
       batch_size: 16
       kan_batch_size: 16
       lr: 1e-3
@@ -38,56 +38,10 @@ experiment_2:
       msg_dim: 16
       grid_size: 5
     training_hp:
-      epoch: 5
+      epochs: 5
       batch_size: 16
       kan_batch_size: 16
       lr: 1e-3
   visualization_params:
     save_video: True
     plot_splines: True
-
-# experiment_3:
-#   name: "cubic_gravity"
-#   data_params:
-    # n_train: 100
-    # n_val: 20
-#     force_fn: 'cubic_gravity'
-#   train_params:
-#     gnn_hp:
-#       hidden: 200
-#     gkan_hp:
-#       hidden_layers: 1
-#       hidden: 8  
-#       msg_dim: 16
-#       grid_size: 5 
-#     training_hp:
-#       epoch: 50
-#       batch_size: 16
-#       kan_batch_size: 16
-#       lr: 1e-3
-#   visualization_params:
-#     save_video: True
-#     plot_splines: True
-
-# experiment_4:
-#   name: "linear_spring"
-#   data_params:
-    # n_train: 100
-    # n_val: 20
-#     force_fn: 'linear_spring'
-#   train_params:
-#     gnn_hp:
-#       hidden: 200
-#     gkan_hp:
-#       hidden_layers: 1
-#       hidden: 8  
-#       msg_dim: 16
-#       grid_size: 5 
-#     training_hp:
-#       epoch: 50
-#       batch_size: 16
-#       kan_batch_size: 16
-#       lr: 1e-3
-#   visualization_params:
-#     save_video: True
-#     plot_splines: True
