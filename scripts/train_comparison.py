@@ -1,5 +1,5 @@
 """Train small Graph-KAN and Baseline GNN models for comparison."""
-
+from tqdm import tqdm
 import torch
 from torch.optim import Adam
 from torch_geometric.loader import DataLoader
@@ -14,11 +14,19 @@ from nbody_gkan.device import get_device
 TRAIN_DATA = "data/train.npz"
 VAL_DATA = "data/val.npz"
 CHECKPOINT_DIR = "checkpoints/comparison"
-HIDDEN = 32
-MSG_DIM = 16
-GRID_SIZE = 5
-EPOCHS = 5
-BATCH_SIZE = 32
+# GNN hyperparameters
+HIDDEN = 200
+
+# GKAN hyperparameters
+KAN_HIDDEN_LAYERS = 1
+KAN_HIDDEN = 8  
+KAN_MSG_DIM = 16
+KAN_GRID_SIZE = 5 
+
+# Training hyperparameters
+EPOCHS = 50
+BATCH_SIZE = 16
+KAN_BATCH_SIZE = 16
 LR = 1e-3
 
 
@@ -26,40 +34,31 @@ def train_model(model, train_loader, val_loader, n_epochs, lr, device):
     """Train a model and return the trained model."""
     model.to(device)
     optimizer = Adam(model.parameters(), lr=lr)
-
     print(f"Training {model.__class__.__name__}...")
-    print(f"  Batches per epoch: {len(train_loader)}")
 
-    for epoch in range(n_epochs):
+    for epoch in tqdm(range(n_epochs), desc='Epochs'):
         model.train()
         train_loss = 0.0
-
-        for batch_idx, batch in enumerate(train_loader):
+        for batch in tqdm(train_loader, desc=f'  Epoch {epoch:2d} train', leave=False):
             batch = batch.to(device)
             optimizer.zero_grad()
             loss = model.loss(batch, augment=False)
             loss.backward()
             optimizer.step()
             train_loss += loss.item() * batch.num_graphs
-
-            # Progress within epoch
-            if (batch_idx + 1) % 50 == 0 or (batch_idx + 1) == len(train_loader):
-                avg_loss = train_loss / ((batch_idx + 1) * train_loader.batch_size)
-                print(f"  Epoch {epoch:2d} [{batch_idx+1:3d}/{len(train_loader)}] Loss={avg_loss:.6f}", end='\r')
-
         train_loss /= len(train_loader.dataset)
 
         # Validation
         model.eval()
         val_loss = 0.0
         with torch.no_grad():
-            for batch in val_loader:
+            for batch in tqdm(val_loader, desc=f'  Epoch {epoch:2d} val  ', leave=False):
                 batch = batch.to(device)
                 loss = model.loss(batch, augment=False)
                 val_loss += loss.item() * batch.num_graphs
         val_loss /= len(val_loader.dataset)
 
-        print(f"  Epoch {epoch:2d}: Train={train_loss:.6f}, Val={val_loss:.6f}          ")
+        tqdm.write(f"  Epoch {epoch:2d}: Train={train_loss:.6f}, Val={val_loss:.6f}")
 
     return model
 
@@ -91,9 +90,9 @@ def main():
     print("Graph-KAN")
     print("="*60)
     kan_model = OrdinaryGraphKAN(
-        n_f=n_features, msg_dim=MSG_DIM, ndim=train_dataset.dim,
-        edge_index=edge_index, hidden=HIDDEN, grid_size=GRID_SIZE,
-        spline_order=3, aggr="add"
+        n_f=n_features, msg_dim=KAN_MSG_DIM, ndim=train_dataset.dim,
+        edge_index=edge_index, hidden=KAN_HIDDEN, grid_size=KAN_GRID_SIZE,
+        spline_order=3, aggr="add", hidden_layers=KAN_HIDDEN_LAYERS
     )
     print(f"Parameters: {sum(p.numel() for p in kan_model.parameters()):,}\n")
 
@@ -106,9 +105,11 @@ def main():
         'dim': train_dataset.dim,
         'n_bodies': train_dataset.n,
         'edge_index': edge_index,
-        'hidden': HIDDEN,
-        'msg_dim': MSG_DIM,
-        'grid_size': GRID_SIZE,
+        'hidden': KAN_HIDDEN,
+        'msg_dim': KAN_MSG_DIM,
+        'grid_size': KAN_GRID_SIZE,
+        'spline_order': 3,
+        'hidden_layers': KAN_HIDDEN_LAYERS
     }, checkpoint_dir / 'graph_kan.pt')
     print(f"Saved checkpoint: {checkpoint_dir / 'graph_kan.pt'}\n")
 

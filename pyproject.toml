@@ -12,7 +12,7 @@ name = "nbody-gkan"
 version = "0.1.0"
 description = "440 horror"
 readme = "README.md"
-requires-python = ">=3.11"
+requires-python = ">=3.10"
 dependencies = [
     "h5py>=3.16.0",
     "matplotlib>=3.10.8",

@@ -218,7 +218,7 @@ class NBodySimulator:
         return pos, vel
 
     def batch_initial_conditions(self, n_trajectories: int, dim: int = 2,
-                                 pos_scale: float = 1.0, vel_scale: float = 0.5,
+                                 pos_scale: float = 2.0, vel_scale: float = 1,
                                  seed: int = 0) -> tuple:
         """
         Generate batch of random initial conditions.

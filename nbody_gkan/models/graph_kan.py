@@ -55,6 +55,7 @@ class GraphKAN(MessagePassing):
             grid_size: int = 5,
             spline_order: int = 3,
             aggr: str = "add",
+            hidden_layers: int = 0,
     ):
         super().__init__(aggr=aggr)
 
@@ -64,14 +65,14 @@ class GraphKAN(MessagePassing):
         # 4 layers, configurable hidden (default 300) - matches baseline
         msg_input_dim = 2 * n_f
         self.msg_layers = self._build_kan_network(
-            msg_input_dim, msg_dim, hidden, grid_size, spline_order
+            msg_input_dim, msg_dim, hidden, grid_size, spline_order, hidden_layers
         )
 
         # Node update function: [x, aggr_msgs] (n_f + msg_dim) → ndim
         # 4 layers, configurable hidden (default 300) - matches baseline
         node_input_dim = n_f + msg_dim
         self.node_layers = self._build_kan_network(
-            node_input_dim, ndim, hidden, grid_size, spline_order
+            node_input_dim, ndim, hidden, grid_size, spline_order, hidden_layers
         )
 
     def _build_kan_network(
@@ -81,6 +82,7 @@ class GraphKAN(MessagePassing):
             hidden: int,
             grid_size: int,
             spline_order: int,
+            hidden_layers: int = 0,
     ) -> nn.ModuleList:
         """
         Build a 4-layer KAN network with configurable hidden dimension (matches baseline).
@@ -106,11 +108,9 @@ class GraphKAN(MessagePassing):
         layers = []
         # Layer 1: in_dim → hidden
         layers.append(KANLayer(in_dim=in_dim, out_dim=hidden, num=grid_size, k=spline_order))
-        # Layer 2: hidden → hidden
-        layers.append(KANLayer(in_dim=hidden, out_dim=hidden, num=grid_size, k=spline_order))
-        # Layer 3: hidden → hidden
-        layers.append(KANLayer(in_dim=hidden, out_dim=hidden, num=grid_size, k=spline_order))
-        # Layer 4: hidden → out_dim
+        for _ in range(hidden_layers):
+            layers.append(KANLayer(in_dim=hidden, out_dim=hidden, num=grid_size, k=spline_order))
+        # Final layer: hidden → out_dim
         layers.append(KANLayer(in_dim=hidden, out_dim=out_dim, num=grid_size, k=spline_order))
 
         return nn.ModuleList(layers)
@@ -306,9 +306,10 @@ class OrdinaryGraphKAN(OrdinaryMixin, GraphKAN):
             grid_size: int = 5,
             spline_order: int = 3,
             aggr: str = "add",
+            hidden_layers: int = 0,
     ):
         super().__init__(
-            n_f, msg_dim, ndim, hidden, grid_size, spline_order, aggr
+            n_f, msg_dim, ndim, hidden, grid_size, spline_order, aggr, hidden_layers
         )
         self.register_buffer("edge_index", edge_index)
 
