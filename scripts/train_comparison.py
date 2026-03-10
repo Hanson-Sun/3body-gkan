@@ -1,4 +1,7 @@
 """Train small Graph-KAN and Baseline GNN models for comparison."""
+from typing import Optional
+import argparse
+
 from tqdm import tqdm
 import torch
 from torch.optim import Adam
@@ -10,24 +13,26 @@ from nbody_gkan.models import OrdinaryGraphKAN, OGN
 from nbody_gkan.device import get_device
 
 
-# Config
-TRAIN_DATA = "data/train.npz"
-VAL_DATA = "data/val.npz"
-CHECKPOINT_DIR = "checkpoints/comparison"
-# GNN hyperparameters
-HIDDEN = 200
-
-# GKAN hyperparameters
-KAN_HIDDEN_LAYERS = 1
-KAN_HIDDEN = 8  
-KAN_MSG_DIM = 16
-KAN_GRID_SIZE = 5 
-
-# Training hyperparameters
-EPOCHS = 50
-BATCH_SIZE = 16
-KAN_BATCH_SIZE = 16
-LR = 1e-3
+def parse_args(args=None):
+    parser = argparse.ArgumentParser(description="Train Graph-KAN and Baseline GNN models for comparison.")
+    # Data
+    parser.add_argument("--train_data", type=str, default="data/train.npz")
+    parser.add_argument("--val_data", type=str, default="data/val.npz")
+    parser.add_argument("--checkpoint_dir", type=str, default="checkpoints/comparison")
+    # GNN hyperparameters
+    parser.add_argument("--hidden", type=int, default=200)
+    parser.add_argument("--msg_dim", type=int, default=32)
+    # GKAN hyperparameters
+    parser.add_argument("--kan_hidden_layers", type=int, default=1)
+    parser.add_argument("--kan_hidden", type=int, default=8)
+    parser.add_argument("--kan_msg_dim", type=int, default=16)
+    parser.add_argument("--kan_grid_size", type=int, default=5)
+    # Training hyperparameters
+    parser.add_argument("--epochs", type=int, default=50)
+    parser.add_argument("--batch_size", type=int, default=16)
+    parser.add_argument("--kan_batch_size", type=int, default=16)
+    parser.add_argument("--lr", type=float, default=1e-3)
+    return parser.parse_args(args)
 
 
 def train_model(model, train_loader, val_loader, n_epochs, lr, device):
@@ -63,17 +68,34 @@ def train_model(model, train_loader, val_loader, n_epochs, lr, device):
     return model
 
 
-def main():
+def main(yaml_params: Optional[dict] = None, checkpoint_dir: Optional[str] = None, data_dir: Optional[str] = None):
+    args = parse_args([] if yaml_params is not None else None)
+
+    if yaml_params is not None:
+        args.train_data = data_dir + "/train.npz"
+        args.val_data = data_dir + "/val.npz"
+        args.checkpoint_dir = checkpoint_dir if checkpoint_dir is not None else args.checkpoint_dir
+        args.hidden = yaml_params.get("gnn_hp", {}).get("hidden", args.hidden)
+        args.msg_dim = yaml_params.get("gnn_hp", {}).get("msg_dim", args.msg_dim)
+        args.kan_hidden_layers = yaml_params.get("gkan_hp", {}).get("kan_hidden_layers", args.kan_hidden_layers)
+        args.kan_hidden = yaml_params.get("gkan_hp", {}).get("hidden", args.kan_hidden)
+        args.kan_msg_dim = yaml_params.get("gkan_hp", {}).get("msg_dim", args.kan_msg_dim)
+        args.kan_grid_size = yaml_params.get("gkan_hp", {}).get("grid_size", args.kan_grid_size)
+        args.epochs = yaml_params.get("training_hp", {}).get("epochs", args.epochs)
+        args.batch_size = yaml_params.get("training_hp", {}).get("batch_size", args.batch_size)
+        args.kan_batch_size = yaml_params.get("training_hp", {}).get("kan_batch_size", args.kan_batch_size)
+        args.lr = float(yaml_params.get("training_hp", {}).get("lr", args.lr))
+
     device = get_device()
     print(f"Using device: {device}\n")
 
     # Load data
     print("Loading datasets...")
-    train_dataset = NBodyDataset(TRAIN_DATA)
-    val_dataset = NBodyDataset(VAL_DATA)
+    train_dataset = NBodyDataset(args.train_data)
+    val_dataset = NBodyDataset(args.val_data)
 
-    train_loader = DataLoader(train_dataset, batch_size=BATCH_SIZE, shuffle=True)
-    val_loader = DataLoader(val_dataset, batch_size=BATCH_SIZE, shuffle=False)
+    train_loader = DataLoader(train_dataset, batch_size=args.batch_size, shuffle=True)
+    val_loader = DataLoader(val_dataset, batch_size=args.batch_size, shuffle=False)
 
     n_features = 2 * train_dataset.dim + 1
     edge_index = train_dataset.edge_index
@@ -82,7 +104,7 @@ def main():
     print(f"Train: {len(train_dataset)} samples, Val: {len(val_dataset)} samples\n")
 
     # Create checkpoint directory
-    checkpoint_dir = Path(CHECKPOINT_DIR)
+    checkpoint_dir = Path(args.checkpoint_dir)
     checkpoint_dir.mkdir(parents=True, exist_ok=True)
 
     # Create and train Graph-KAN
@@ -90,13 +112,13 @@ def main():
     print("Graph-KAN")
     print("="*60)
     kan_model = OrdinaryGraphKAN(
-        n_f=n_features, msg_dim=KAN_MSG_DIM, ndim=train_dataset.dim,
-        edge_index=edge_index, hidden=KAN_HIDDEN, grid_size=KAN_GRID_SIZE,
-        spline_order=3, aggr="add", hidden_layers=KAN_HIDDEN_LAYERS
+        n_f=n_features, msg_dim=args.kan_msg_dim, ndim=train_dataset.dim,
+        edge_index=edge_index, hidden=args.kan_hidden, grid_size=args.kan_grid_size,
+        spline_order=3, aggr="add", hidden_layers=args.kan_hidden_layers
     )
     print(f"Parameters: {sum(p.numel() for p in kan_model.parameters()):,}\n")
 
-    kan_model = train_model(kan_model, train_loader, val_loader, EPOCHS, LR, device)
+    kan_model = train_model(kan_model, train_loader, val_loader, args.epochs, args.lr, device)
 
     # Save checkpoint
     torch.save({
@@ -105,11 +127,11 @@ def main():
         'dim': train_dataset.dim,
         'n_bodies': train_dataset.n,
         'edge_index': edge_index,
-        'hidden': KAN_HIDDEN,
-        'msg_dim': KAN_MSG_DIM,
-        'grid_size': KAN_GRID_SIZE,
+        'hidden': args.kan_hidden,
+        'msg_dim': args.kan_msg_dim,
+        'grid_size': args.kan_grid_size,
         'spline_order': 3,
-        'hidden_layers': KAN_HIDDEN_LAYERS
+        'hidden_layers': args.kan_hidden_layers
     }, checkpoint_dir / 'graph_kan.pt')
     print(f"Saved checkpoint: {checkpoint_dir / 'graph_kan.pt'}\n")
 
@@ -118,12 +140,12 @@ def main():
     print("Baseline GNN")
     print("="*60)
     gnn_model = OGN(
-        n_f=n_features, msg_dim=MSG_DIM, ndim=train_dataset.dim,
-        edge_index=edge_index, hidden=HIDDEN, aggr="add"
+        n_f=n_features, msg_dim=args.msg_dim, ndim=train_dataset.dim,
+        edge_index=edge_index, hidden=args.hidden, aggr="add"
     )
     print(f"Parameters: {sum(p.numel() for p in gnn_model.parameters()):,}\n")
 
-    gnn_model = train_model(gnn_model, train_loader, val_loader, EPOCHS, LR, device)
+    gnn_model = train_model(gnn_model, train_loader, val_loader, args.epochs, args.lr, device)
 
     # Save checkpoint
     torch.save({
@@ -132,8 +154,8 @@ def main():
         'dim': train_dataset.dim,
         'n_bodies': train_dataset.n,
         'edge_index': edge_index,
-        'hidden': HIDDEN,
-        'msg_dim': MSG_DIM,
+        'hidden': args.hidden,
+        'msg_dim': args.msg_dim,
     }, checkpoint_dir / 'baseline_gnn.pt')
     print(f"Saved checkpoint: {checkpoint_dir / 'baseline_gnn.pt'}\n")
 

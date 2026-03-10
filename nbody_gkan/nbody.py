@@ -4,41 +4,11 @@ import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.animation import FuncAnimation
 from typing import Optional, Callable
+from nbody_gkan.nbody_force_fns import gravity
 
 
-def gravity(positions: np.ndarray, masses: np.ndarray, G: float = 1.0,
-            softening: float = 1e-2) -> np.ndarray:
-    """
-    Compute gravitational accelerations for all bodies.
 
-    Parameters
-    ----------
-    positions : np.ndarray
-        Positions of shape (n, dim)
-    masses : np.ndarray
-        Masses of shape (n,)
-    G : float
-        Gravitational constant
-    softening : float
-        Softening parameter to avoid singularities
 
-    Returns
-    -------
-    np.ndarray
-        Accelerations of shape (n, dim)
-    """
-    n = len(masses)
-    dim = positions.shape[1]
-    acc = np.zeros((n, dim))
-
-    for i in range(n):
-        for j in range(n):
-            if i != j:
-                r = positions[j] - positions[i]
-                r_norm = np.sqrt(np.sum(r**2) + softening**2)
-                acc[i] += G * masses[j] * r / r_norm**3
-
-    return acc
 
 
 class NBodySimulator:
