@@ -137,7 +137,7 @@ def create_dataset_from_simulator(
         dt: float,
         save_every: int = 1,
         output_path: Optional[str | Path] = None,
-        seed: Optional[int] = None,
+        seed: int = 0,
         **ic_kwargs,
 ) -> Path:
     """
@@ -157,8 +157,8 @@ def create_dataset_from_simulator(
         Save every k-th step
     output_path : str or Path, optional
         Output file path (.npz). If None, uses "data/nbody_data.npz"
-    seed : int, optional
-        Random seed
+    seed : int
+        Random seed for reproducibility
     **ic_kwargs
         Additional keyword arguments for initial conditions
 
