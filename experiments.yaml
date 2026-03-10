@@ -6,15 +6,15 @@ experiment_1:
     force_fn: 'gravity'
   train_params:
     gnn_hp:
-      hidden: 200
+      hidden: 256
       msg_dim: 32
     gkan_hp:
       hidden_layers: 1
       hidden: 8  
-      msg_dim: 8
+      msg_dim: 4
       grid_size: 5 
     training_hp:
-      epochs: 5
+      epochs: 10
       batch_size: 16
       kan_batch_size: 16
       lr: 1e-3
@@ -30,15 +30,15 @@ experiment_2:
     force_fn: 'linear_gravity'
   train_params:
     gnn_hp:
-      hidden: 200
+      hidden: 256
       msg_dim: 32
     gkan_hp:
       hidden_layers: 1
       hidden: 8  
-      msg_dim: 16
-      grid_size: 5
+      msg_dim: 4
+      grid_size: 5 
     training_hp:
-      epochs: 5
+      epochs: 10
       batch_size: 16
       kan_batch_size: 16
       lr: 1e-3
