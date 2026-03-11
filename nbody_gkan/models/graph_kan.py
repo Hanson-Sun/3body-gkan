@@ -13,9 +13,10 @@ from kan import KANLayer
 from torch_geometric.nn import MessagePassing
 
 from .ordinary_mixin import OrdinaryMixin
+from .graph_mixin import GraphMixin
 
 
-class GraphKAN(MessagePassing):
+class GraphKAN(MessagePassing, GraphMixin):
     """
     Graph Neural Network using KAN layers for message and node update functions.
 
@@ -58,8 +59,13 @@ class GraphKAN(MessagePassing):
             hidden_layers: int = 0,
     ):
         super().__init__(aggr=aggr)
-
+        self.n_f = n_f
+        self.msg_dim = msg_dim
         self.ndim = ndim
+        self.hidden = hidden
+        self.grid_size = grid_size
+        self.spline_order = spline_order
+        self.hidden_layers = hidden_layers
 
         # Message function: [x_i, x_j] (2*n_f) → msg_dim
         # 4 layers, configurable hidden (default 300) - matches baseline
@@ -268,6 +274,26 @@ class GraphKAN(MessagePassing):
                     # Propagate to get input for next layer
                     layer_input, _, _, _ = layer(layer_input)
 
+    def summary(self):
+        super().summary()   
+        
+        print(f"  Grid size:     {self.grid_size}")
+        print(f"  Spline order:  {self.spline_order}")
+        print(f"  KAN layers:    {len(self.msg_layers)} msg, "
+                f"{len(self.node_layers)} node")
+        print()
+        print("  msg_layers:")
+        for i, layer in enumerate(self.msg_layers):
+            n = sum(p.numel() for p in layer.parameters())
+            print(f"    [{i}]  {layer.in_dim:>4} → {layer.out_dim:<4}  "
+                    f"params: {n:,}")
+        print("  node_layers:")
+        for i, layer in enumerate(self.node_layers):
+            n = sum(p.numel() for p in layer.parameters())
+            print(f"    [{i}]  {layer.in_dim:>4} → {layer.out_dim:<4}  "
+                    f"params: {n:,}")
+        print("=" * 60)
+
 
 class OrdinaryGraphKAN(OrdinaryMixin, GraphKAN):
     """
@@ -312,5 +338,5 @@ class OrdinaryGraphKAN(OrdinaryMixin, GraphKAN):
             n_f, msg_dim, ndim, hidden, grid_size, spline_order, aggr, hidden_layers
         )
         self.register_buffer("edge_index", edge_index)
-
+            
     # just_derivative() and loss() are inherited from OrdinaryMixin

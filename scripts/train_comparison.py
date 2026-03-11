@@ -72,8 +72,8 @@ def main(yaml_params: Optional[dict] = None, checkpoint_dir: Optional[str] = Non
     args = parse_args([] if yaml_params is not None else None)
 
     if yaml_params is not None:
-        args.train_data = data_dir + "/train.npz"
-        args.val_data = data_dir + "/val.npz"
+        args.train_data = str(Path(data_dir) / "train.npz")
+        args.val_data = str(Path(data_dir) / "val.npz")
         args.checkpoint_dir = checkpoint_dir if checkpoint_dir is not None else args.checkpoint_dir
         args.hidden = yaml_params.get("gnn_hp", {}).get("hidden", args.hidden)
         args.msg_dim = yaml_params.get("gnn_hp", {}).get("msg_dim", args.msg_dim)
@@ -116,11 +116,11 @@ def main(yaml_params: Optional[dict] = None, checkpoint_dir: Optional[str] = Non
         edge_index=edge_index, hidden=args.kan_hidden, grid_size=args.kan_grid_size,
         spline_order=3, aggr="add", hidden_layers=args.kan_hidden_layers
     )
-    print(f"Parameters: {sum(p.numel() for p in kan_model.parameters()):,}\n")
+    kan_model.summary()
+    print(" ")
 
     kan_model = train_model(kan_model, train_loader, val_loader, args.epochs, args.lr, device)
 
-    # Save checkpoint
     torch.save({
         'model_state': kan_model.state_dict(),
         'n_features': n_features,
@@ -131,7 +131,7 @@ def main(yaml_params: Optional[dict] = None, checkpoint_dir: Optional[str] = Non
         'msg_dim': args.kan_msg_dim,
         'grid_size': args.kan_grid_size,
         'spline_order': 3,
-        'hidden_layers': args.kan_hidden_layers
+        'hidden_layers': args.kan_hidden_layers,
     }, checkpoint_dir / 'graph_kan.pt')
     print(f"Saved checkpoint: {checkpoint_dir / 'graph_kan.pt'}\n")
 
@@ -143,11 +143,11 @@ def main(yaml_params: Optional[dict] = None, checkpoint_dir: Optional[str] = Non
         n_f=n_features, msg_dim=args.msg_dim, ndim=train_dataset.dim,
         edge_index=edge_index, hidden=args.hidden, aggr="add"
     )
-    print(f"Parameters: {sum(p.numel() for p in gnn_model.parameters()):,}\n")
+    gnn_model.summary()
+    print(" ")
 
     gnn_model = train_model(gnn_model, train_loader, val_loader, args.epochs, args.lr, device)
 
-    # Save checkpoint
     torch.save({
         'model_state': gnn_model.state_dict(),
         'n_features': n_features,

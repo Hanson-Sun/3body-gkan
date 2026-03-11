@@ -1,8 +1,10 @@
 """Visualize trained models: rollout comparison and spline analysis."""
 
-import os
 import argparse
+import tempfile
+from pathlib import Path
 from typing import Optional
+
 import numpy as np
 import torch
 from torch_geometric.data import Data
@@ -14,16 +16,16 @@ from nbody_gkan.models import OrdinaryGraphKAN, OGN
 from nbody_gkan.nbody import NBodySimulator
 
 
-def parse_args(args = None):
+def parse_args(args=None):
     parser = argparse.ArgumentParser(description="Visualize trained models: rollout comparison and spline analysis.")
-    parser.add_argument("--output_dir", type=str, default="visualizations")
-    parser.add_argument("--checkpoint_dir", type=str, default="checkpoints/comparison")
-    parser.add_argument("--data_file", type=str, default="data/train.npz")
-    parser.add_argument("--rollout_time", type=float, default=5.0)
-    parser.add_argument("--dt", type=float, default=0.01)
-    parser.add_argument("--save_video", action="store_true", default=True)
-    parser.add_argument("--plot_trajectories", action="store_true", default=True)
-    parser.add_argument("--plot_splines", action="store_true", default=True)
+    parser.add_argument("--output_dir",        type=str,   default="visualizations")
+    parser.add_argument("--checkpoint_dir",    type=str,   default="checkpoints/comparison")
+    parser.add_argument("--data_file",         type=str,   default="data/train.npz")
+    parser.add_argument("--rollout_time",      type=float, default=5.0)
+    parser.add_argument("--dt",                type=float, default=0.01)
+    parser.add_argument("--save_video",        action=argparse.BooleanOptionalAction, default=True)
+    parser.add_argument("--plot_trajectories", action=argparse.BooleanOptionalAction, default=True)
+    parser.add_argument("--plot_splines",      action=argparse.BooleanOptionalAction, default=True)
     return parser.parse_args(args)
 
 
@@ -39,8 +41,9 @@ def load_model(checkpoint_path, model_class):
             edge_index=ckpt['edge_index'],
             hidden=ckpt['hidden'],
             grid_size=ckpt['grid_size'],
-            spline_order=3,
-            aggr="add"
+            spline_order=ckpt.get('spline_order', 3),
+            aggr="add",
+            hidden_layers=ckpt.get('hidden_layers', 0),
         )
     else:  # OGN
         model = model_class(
@@ -49,18 +52,16 @@ def load_model(checkpoint_path, model_class):
             ndim=ckpt['dim'],
             edge_index=ckpt['edge_index'],
             hidden=ckpt['hidden'],
-            aggr="add"
+            aggr="add",
         )
 
     model.load_state_dict(ckpt['model_state'])
     model.eval()
-
     return model, ckpt
 
 
 def rollout(model, pos0, vel0, masses, dt, n_steps, edge_index):
     """Rollout dynamics using leapfrog integration."""
-    n_bodies, dim = pos0.shape
     positions = [pos0.cpu().numpy()]
     velocities = [vel0.cpu().numpy()]
 
@@ -69,7 +70,6 @@ def rollout(model, pos0, vel0, masses, dt, n_steps, edge_index):
 
     with torch.no_grad():
         for _ in range(n_steps):
-            # Build features
             mass_expanded = masses.unsqueeze(1)
             x = torch.cat([pos, vel, mass_expanded], dim=1)
             graph = Data(x=x, edge_index=edge_index)
@@ -79,7 +79,7 @@ def rollout(model, pos0, vel0, masses, dt, n_steps, edge_index):
             vel_half = vel + 0.5 * dt * acc
             pos = pos + dt * vel_half
 
-            # Recompute with new position
+            # Recompute acceleration at new position
             x = torch.cat([pos, vel_half, mass_expanded], dim=1)
             graph = Data(x=x, edge_index=edge_index)
             acc_new = model.just_derivative(graph, augment=False)
@@ -96,7 +96,7 @@ def animate_rollout(positions_dict, dt, video_name='rollout_comparison.mp4'):
     print(f"\nCreating animation...")
 
     n_models = len(positions_dict)
-    fig, axes = plt.subplots(1, n_models, figsize=(6*n_models, 6))
+    fig, axes = plt.subplots(1, n_models, figsize=(6 * n_models, 6))
     if n_models == 1:
         axes = [axes]
 
@@ -116,10 +116,10 @@ def animate_rollout(positions_dict, dt, video_name='rollout_comparison.mp4'):
     y_min, y_max = y_mid - max_range / 2, y_mid + max_range / 2
 
     scatters, trails, time_texts = [], [], []
-    trail_data = {name: [[] for _ in range(n_bodies)] for name in positions_dict.keys()}
+    trail_data = {name: [[] for _ in range(n_bodies)] for name in positions_dict}
     trail_length = 50
 
-    for ax, name in zip(axes, positions_dict.keys()):
+    for ax, name in zip(axes, positions_dict):
         ax.set_xlim(x_min, x_max)
         ax.set_ylim(y_min, y_max)
         ax.set_xlabel('x')
@@ -128,15 +128,10 @@ def animate_rollout(positions_dict, dt, video_name='rollout_comparison.mp4'):
         ax.set_aspect('equal')
         ax.grid(True, alpha=0.3)
 
-        scatter = ax.scatter([], [], s=100, alpha=0.8)
-        scatters.append(scatter)
-
-        model_trails = [ax.plot([], [], '-', alpha=0.4, linewidth=1.5)[0] for _ in range(n_bodies)]
-        trails.append(model_trails)
-
-        time_text = ax.text(0.02, 0.98, '', transform=ax.transAxes,
-                           verticalalignment='top', fontsize=10)
-        time_texts.append(time_text)
+        scatters.append(ax.scatter([], [], s=100, alpha=0.8))
+        trails.append([ax.plot([], [], '-', alpha=0.4, linewidth=1.5)[0] for _ in range(n_bodies)])
+        time_texts.append(ax.text(0.02, 0.98, '', transform=ax.transAxes,
+                                  verticalalignment='top', fontsize=10))
 
     plt.tight_layout()
 
@@ -163,8 +158,7 @@ def animate_rollout(positions_dict, dt, video_name='rollout_comparison.mp4'):
             time_texts[i].set_text(f'Time: {frame * dt:.2f}s')
         return scatters + [t for mt in trails for t in mt] + time_texts
 
-    anim = FuncAnimation(fig, update, init_func=init, frames=n_steps,
-                        interval=20, blit=True)
+    anim = FuncAnimation(fig, update, init_func=init, frames=n_steps, interval=20, blit=True)
 
     try:
         writer = FFMpegWriter(fps=30, bitrate=2000)
@@ -173,83 +167,56 @@ def animate_rollout(positions_dict, dt, video_name='rollout_comparison.mp4'):
     except Exception as e:
         print(f"Could not save MP4 (ffmpeg not available): {e}")
         print("Saving as GIF instead...")
-        anim.save(video_name.replace('.mp4', '.gif'), writer='pillow', fps=30)
-        print(f"Saved {video_name.replace('.mp4', '.gif')}")
+        gif_name = str(Path(video_name).with_suffix('.gif'))
+        anim.save(gif_name, writer='pillow', fps=30)
+        print(f"Saved {gif_name}")
 
     plt.close()
 
-def visualize_kan_splines(model, var_names=['x', 'y', 'vx', 'vy', 'm'], save_dir=None):
+
+def visualize_kan_splines(model, var_names=('x', 'y', 'vx', 'vy', 'm'), save_dir=None):
     """Visualize learned spline activations in KAN layers."""
     print("\nVisualizing Graph-KAN splines...")
 
-    # Message layers
-    fig, axes = plt.subplots(2, 2, figsize=(12, 10))
-    axes = axes.flatten()
+    save_dir = Path(save_dir)
+    layer_groups = [("msg", model.msg_layers), ("node", model.node_layers)]
 
-    for layer_idx, layer in enumerate(model.msg_layers):
-        ax = axes[layer_idx]
-        x_eval = torch.linspace(-3, 3, 200)
+    for tag, layers in layer_groups:
+        fig, axes = plt.subplots(2, 2, figsize=(12, 10))
+        axes = axes.flatten()
 
-        in_dim = min(layer.in_dim, 5)
-        out_dim = min(layer.out_dim, 3)
+        for layer_idx, layer in enumerate(layers):
+            ax = axes[layer_idx]
+            x_eval = torch.linspace(-3, 3, 200)
 
-        for i in range(in_dim):
-            for j in range(out_dim):
-                x_full = torch.zeros(200, layer.in_dim)
-                x_full[:, i] = x_eval
+            in_dim  = min(layer.in_dim,  5)
+            out_dim = min(layer.out_dim, 3)
 
-                with torch.no_grad():
-                    spline_out = coef2curve(x_full, layer.grid, layer.coef, layer.k)
-                    y = spline_out[:, i, j] * layer.scale_sp[i, j].item()
+            for i in range(in_dim):
+                for j in range(out_dim):
+                    x_full = torch.zeros(200, layer.in_dim)
+                    x_full[:, i] = x_eval
 
-                label = f'in{i}→out{j}'
-                if i < len(var_names):
-                    label = f'{var_names[i]}→out{j}'
-                ax.plot(x_eval.numpy(), y.numpy(), alpha=0.6, label=label)
+                    with torch.no_grad():
+                        spline_out = coef2curve(x_full, layer.grid, layer.coef, layer.k)
+                        y = spline_out[:, i, j] * layer.scale_sp[i, j].item()
 
-        ax.set_xlabel('Input value')
-        ax.set_ylabel('Spline output')
-        ax.set_title(f'Message Layer {layer_idx}')
-        ax.grid(True, alpha=0.3)
-        if layer_idx == 0:
-            ax.legend(fontsize=8)
+                    label = f'{var_names[i]}→out{j}' if i < len(var_names) else f'in{i}→out{j}'
+                    ax.plot(x_eval.numpy(), y.numpy(), alpha=0.6, label=label)
 
-    plt.tight_layout()
-    plt.savefig(f"{save_dir}/kan_splines_msg.png", dpi=150)
-    print("Saved kan_splines_msg.png")
-    plt.close()
+            layer_label = "Message" if tag == "msg" else "Node"
+            ax.set_xlabel('Input value')
+            ax.set_ylabel('Spline output')
+            ax.set_title(f'{layer_label} Layer {layer_idx}')
+            ax.grid(True, alpha=0.3)
+            if layer_idx == 0:
+                ax.legend(fontsize=8)
 
-    # Node layers
-    fig, axes = plt.subplots(2, 2, figsize=(12, 10))
-    axes = axes.flatten()
-
-    for layer_idx, layer in enumerate(model.node_layers):
-        ax = axes[layer_idx]
-        x_eval = torch.linspace(-3, 3, 200)
-
-        in_dim = min(layer.in_dim, 5)
-        out_dim = min(layer.out_dim, 3)
-
-        for i in range(in_dim):
-            for j in range(out_dim):
-                x_full = torch.zeros(200, layer.in_dim)
-                x_full[:, i] = x_eval
-
-                with torch.no_grad():
-                    spline_out = coef2curve(x_full, layer.grid, layer.coef, layer.k)
-                    y = spline_out[:, i, j] * layer.scale_sp[i, j].item()
-
-                ax.plot(x_eval.numpy(), y.numpy(), alpha=0.6, label=f'in{i}→out{j}')
-
-        ax.set_xlabel('Input value')
-        ax.set_ylabel('Spline output')
-        ax.set_title(f'Node Layer {layer_idx}')
-        ax.grid(True, alpha=0.3)
-
-    plt.tight_layout()
-    plt.savefig(f"{save_dir}/kan_splines_node.png", dpi=150)
-    print("Saved kan_splines_node.png")
-    plt.close()
+        plt.tight_layout()
+        fname = f"kan_splines_{tag}.png"
+        plt.savefig(save_dir / fname, dpi=150)
+        print(f"Saved {fname}")
+        plt.close()
 
 
 def visualize_kan_network(model, ckpt, data_sample, network='msg', save_path=None):
@@ -273,30 +240,21 @@ def visualize_kan_network(model, ckpt, data_sample, network='msg', save_path=Non
     """
     from kan import KAN
 
-    layers     = model.msg_layers  if network == 'msg' else model.node_layers
-    grid_size  = ckpt['grid_size']
-    k          = ckpt.get('spline_order', 3)
+    layers    = model.msg_layers if network == 'msg' else model.node_layers
+    grid_size = ckpt['grid_size']
+    k         = ckpt.get('spline_order', 3)
 
     # Infer width from the stacked KANLayers
-    # Each KANLayer has .in_dim and .out_dim
     width = [int(layers[0].in_dim)] + [int(l.out_dim) for l in layers]
 
     print(f"\nBuilding standalone KAN for '{network}' network:")
     print(f"  width={width}, grid={grid_size}, k={k}")
 
-    # Build a fresh KAN with matching architecture (no auto_save clutter)
-    import tempfile, os
     with tempfile.TemporaryDirectory() as tmpdir:
-        kan = KAN(width=width, grid=grid_size, k=k, seed=0,
-                  auto_save=False, ckpt_path=tmpdir)
+        kan = KAN(width=width, grid=grid_size, k=k, seed=0, auto_save=False, ckpt_path=tmpdir)
 
-        # --- Transplant weights from GKAN KANLayers → pykan KANLayers ---
-        # pykan stores layers in kan.act_fun (list of KANLayer)
-        for layer_idx, (src_layer, dst_layer) in enumerate(zip(layers, kan.act_fun)):
-            # coef: spline coefficients  [in_dim, out_dim, grid+k]
-            # grid: knot positions       [in_dim, grid+2k+1]
-            # scale_sp: spline scales    [in_dim, out_dim]
-            # scale_base: base scales    [in_dim, out_dim]  (residual connection)
+        # Transplant weights from GKAN KANLayers → pykan KANLayers
+        for src_layer, dst_layer in zip(layers, kan.act_fun):
             dst_layer.coef.data.copy_(src_layer.coef.data)
             dst_layer.grid.data.copy_(src_layer.grid.data)
             dst_layer.scale_sp.data.copy_(src_layer.scale_sp.data)
@@ -305,16 +263,16 @@ def visualize_kan_network(model, ckpt, data_sample, network='msg', save_path=Non
 
         kan.eval()
 
-        # --- Forward pass to populate activations (required by model.plot) ---
+        # Forward pass to populate activations (required by model.plot)
         with torch.no_grad():
             kan(data_sample)
 
-        # --- Variable names for msg / node networks ---
-        n_f = ckpt['n_features']
+        # Variable names for msg / node networks
+        n_f       = ckpt['n_features']
         base_vars = ['x', 'y', 'vx', 'vy', 'm'][:n_f]
         if network == 'msg':
             in_vars  = [f'{v}_i' for v in base_vars] + [f'{v}_j' for v in base_vars]
-            out_vars = [f'msg{str(i)}' for i in range(width[-1][0])]
+            out_vars = [f'msg{i}' for i in range(width[-1][0])]
         else:
             in_vars  = base_vars + [f'msg{i}' for i in range(ckpt['msg_dim'])]
             out_vars = ['ax', 'ay'] if ckpt['dim'] == 2 else [f'a{i}' for i in range(ckpt['dim'])]
@@ -322,36 +280,23 @@ def visualize_kan_network(model, ckpt, data_sample, network='msg', save_path=Non
         title = f"Graph-KAN — {'Message' if network == 'msg' else 'Node Update'} Network"
         print(f"  Plotting '{title}'...")
 
-        kan.plot(
-            in_vars=in_vars,
-            out_vars=out_vars,
-            title=title,
-            beta=3,
-            scale=2,     
-            varscale=0.2,
-        )
+        kan.plot(in_vars=in_vars, out_vars=out_vars, title=title, beta=3, scale=2, varscale=0.2)
+
         fig = plt.gcf()
         w, h = fig.get_size_inches()
         fig.set_size_inches(w * 8, h * 3)
 
-        # pykan creates one large background axes + many tiny inset axes for splines
-        # Scale up every inset axes (the small ones) by a multiplier
-        INSET_SCALE = 4  # make spline subplots 3x bigger
-
-        all_axes = fig.get_axes()
-
-        # for i, ax in enumerate(all_axes):
-        #     pos = ax.get_position()
-        #     print(f"ax[{i}]: x0={pos.x0:.3f}, y0={pos.y0:.3f}, w={pos.width:.4f}, h={pos.height:.4f}")
-
-        for ax in all_axes:
+        # Scale up inset spline subplots for readability
+        INSET_SCALE = 4
+        for ax in fig.get_axes():
             pos = ax.get_position()
-            if pos.width < 0.005:  # spline subplots are w=0.0042
+            if pos.width < 0.005:  # spline subplots have a characteristically small fixed width
                 cx = pos.x0 + pos.width / 2
                 cy = pos.y0 + pos.height / 2
-                new_w = pos.width * INSET_SCALE
-                new_h = pos.height * INSET_SCALE
-                ax.set_position([cx - new_w/2, cy - new_h/2, new_w, new_h])
+                ax.set_position([cx - pos.width  * INSET_SCALE / 2,
+                                  cy - pos.height * INSET_SCALE / 2,
+                                  pos.width  * INSET_SCALE,
+                                  pos.height * INSET_SCALE])
 
         if save_path:
             plt.savefig(save_path, dpi=300, bbox_inches='tight')
@@ -361,44 +306,48 @@ def visualize_kan_network(model, ckpt, data_sample, network='msg', save_path=Non
         plt.close()
 
 
-def main(yaml_params: Optional[dict] = None, output_dir: Optional[str] = None, checkpoint_dir: Optional[str] = None, data_file: Optional[str] = None):
+def main(
+    yaml_params: Optional[dict] = None,
+    output_dir: Optional[str] = None,
+    checkpoint_dir: Optional[str] = None,
+    data_file: Optional[str] = None,
+):
     args = parse_args([] if yaml_params is not None else None)
 
     if yaml_params is not None:
-        args.output_dir = output_dir if output_dir is not None else args.output_dir
-        args.checkpoint_dir = checkpoint_dir if checkpoint_dir is not None else args.checkpoint_dir
-        args.data_file = data_file if data_file is not None else args.data_file
-        args.save_video = yaml_params.get("render_video", args.save_video)
+        args.output_dir        = output_dir     or args.output_dir
+        args.checkpoint_dir    = checkpoint_dir or args.checkpoint_dir
+        args.data_file         = data_file      or args.data_file
+        args.save_video        = yaml_params.get("save_video",        args.save_video)
         args.plot_trajectories = yaml_params.get("plot_trajectories", args.plot_trajectories)
-        args.plot_splines = yaml_params.get("plot_splines", args.plot_splines)
+        args.plot_splines      = yaml_params.get("plot_splines",      args.plot_splines)
 
-    if not os.path.exists(args.output_dir):
-        os.makedirs(args.output_dir)
+    Path(args.output_dir).mkdir(parents=True, exist_ok=True)
 
-    print("="*60)
+    print("=" * 60)
     print("Model Comparison Visualization")
-    print("="*60)
+    print("=" * 60)
 
     # Load models
     print("\nLoading trained models...")
-    kan_model, kan_ckpt = load_model(f'{args.checkpoint_dir}/graph_kan.pt', OrdinaryGraphKAN)
-    gnn_model, gnn_ckpt = load_model(f'{args.checkpoint_dir}/baseline_gnn.pt', OGN)
+    kan_model, kan_ckpt = load_model(f'{args.checkpoint_dir}/graph_kan.pt',    OrdinaryGraphKAN)
+    gnn_model, _        = load_model(f'{args.checkpoint_dir}/baseline_gnn.pt', OGN)
     print("Models loaded successfully")
 
     # Load initial conditions
     print("\nLoading initial conditions...")
-    data = np.load(args.data_file)
-    idx = 10
-    pos0 = torch.from_numpy(data['positions'][idx, 0]).float()
-    vel0 = torch.from_numpy(data['velocities'][idx, 0]).float()
-    masses = torch.from_numpy(data['masses']).float()
+    data       = np.load(args.data_file)
+    idx        = 10
+    pos0       = torch.from_numpy(data['positions'][idx, 0]).float()
+    vel0       = torch.from_numpy(data['velocities'][idx, 0]).float()
+    masses     = torch.from_numpy(data['masses']).float()
     edge_index = kan_ckpt['edge_index']
 
-    # Ground truth
+    # Ground truth rollout
     print("Generating ground truth...")
-    sim = NBodySimulator(masses.numpy())
+    sim       = NBodySimulator(masses.numpy())
     gt_result = sim.simulate(pos0.numpy(), vel0.numpy(), t_end=args.rollout_time, dt=args.dt, save_every=5)
-    gt_pos = gt_result['positions']
+    gt_pos    = gt_result['positions']
 
     # Model rollouts
     n_steps = int(args.rollout_time / args.dt)
@@ -408,57 +357,52 @@ def main(yaml_params: Optional[dict] = None, output_dir: Optional[str] = None, c
     print(f"Rolling out Baseline GNN ({n_steps} steps)...")
     gnn_pos, _ = rollout(gnn_model, pos0, vel0, masses, args.dt, n_steps, edge_index)
 
-    # Sample for animation
-    kan_pos_sampled = kan_pos[::5]
-    gnn_pos_sampled = gnn_pos[::5]
-
-    # Animate
-    print("\n" + "="*60)
+    # Animate (sampled to match ground truth cadence)
+    print("\n" + "=" * 60)
     print("Creating Animated Comparison")
-    print("="*60)
-    animate_rollout({
-        'Ground Truth': gt_pos,
-        'Graph-KAN': kan_pos_sampled,
-        'Baseline GNN': gnn_pos_sampled
-    }, dt=args.dt*5, video_name=f'{args.output_dir}/rollout_comparison.mp4')
+    print("=" * 60)
+    animate_rollout(
+        {
+            'Ground Truth': gt_pos,
+            'Graph-KAN':    kan_pos[::5],
+            'Baseline GNN': gnn_pos[::5],
+        },
+        dt=args.dt * 5,
+        video_name=f'{args.output_dir}/rollout_comparison.mp4',
+    )
 
-    # Spline visualization
+    # Spline visualizations
     if args.plot_splines:
-        print("\n" + "="*60)
+        print("\n" + "=" * 60)
         print("Graph-KAN Spline Analysis")
-        print("="*60)
-        visualize_kan_splines(kan_model, var_names=['x', 'y', 'vx', 'vy', 'm'], save_dir=args.output_dir)
+        print("=" * 60)
+        visualize_kan_splines(kan_model, save_dir=args.output_dir)
 
-        # Build representative input samples for activation population
-        # Message network input: [x_i, x_j] concatenated pairs — use actual edge pairs
+        # Build representative inputs for activation population
         with torch.no_grad():
             mass_expanded = masses.unsqueeze(1)
-            x_nodes = torch.cat([pos0, vel0, mass_expanded], dim=1)  # (n_bodies, n_f)
-            src, dst = edge_index[0], edge_index[1]
-            msg_sample = torch.cat([x_nodes[src], x_nodes[dst]], dim=1)  # (n_edges, 2*n_f)
+            x_nodes   = torch.cat([pos0, vel0, mass_expanded], dim=1)       # (n_bodies, n_f)
+            src, dst  = edge_index[0], edge_index[1]
+            msg_sample = torch.cat([x_nodes[src], x_nodes[dst]], dim=1)     # (n_edges, 2*n_f)
 
-            # For node network, we need aggregated messages — run one message pass
-            graph = Data(x=x_nodes, edge_index=edge_index)
-            # Use a small batch of random-ish inputs to get good activation coverage
-            msg_sample_batch = msg_sample.repeat(50, 1) + torch.randn(msg_sample.shape[0]*50, msg_sample.shape[1]) * 0.5
-            node_sample_dim = kan_ckpt['n_features'] + kan_ckpt['msg_dim']
-            node_sample_batch = torch.randn(200, node_sample_dim) * 0.5
+            msg_sample_batch  = (msg_sample.repeat(50, 1)
+                                 + torch.randn(msg_sample.shape[0] * 50, msg_sample.shape[1]) * 0.5)
+            node_sample_batch = torch.randn(200, kan_ckpt['n_features'] + kan_ckpt['msg_dim']) * 0.5
 
-        # Spline visualization — pykan native
-        print("\n" + "="*60)
+        print("\n" + "=" * 60)
         print("Graph-KAN Native Network Visualization")
-        print("="*60)
+        print("=" * 60)
         visualize_kan_network(kan_model, kan_ckpt, msg_sample_batch,
-                            network='msg',  save_path=f'{args.output_dir}/kan_msg_network.png')
+                              network='msg',  save_path=f'{args.output_dir}/kan_msg_network.png')
         visualize_kan_network(kan_model, kan_ckpt, node_sample_batch,
-                            network='node', save_path=f'{args.output_dir}/kan_node_network.png')
+                              network='node', save_path=f'{args.output_dir}/kan_node_network.png')
 
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)
     print("Done! Generated files:")
     print("  - rollout_comparison.mp4 (or .gif)")
     print("  - kan_splines_msg.png")
     print("  - kan_splines_node.png")
-    print("="*60)
+    print("=" * 60)
 
 
 if __name__ == "__main__":
