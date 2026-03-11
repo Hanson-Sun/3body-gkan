@@ -57,6 +57,8 @@ class GraphKAN(MessagePassing, GraphMixin):
             spline_order: int = 3,
             aggr: str = "add",
             hidden_layers: int = 0,
+            lamb_l1: float = 1.0,
+            lamb_entropy: float = 2.0,
     ):
         super().__init__(aggr=aggr)
         self.n_f = n_f
@@ -66,6 +68,8 @@ class GraphKAN(MessagePassing, GraphMixin):
         self.grid_size = grid_size
         self.spline_order = spline_order
         self.hidden_layers = hidden_layers
+        self.lamb_l1 = lamb_l1
+        self.lamb_entropy = lamb_entropy
 
         # Message function: [x_i, x_j] (2*n_f) → msg_dim
         # 4 layers, configurable hidden (default 300) - matches baseline
@@ -273,6 +277,39 @@ class GraphKAN(MessagePassing, GraphMixin):
                     layer.update_grid_from_samples(layer_input)
                     # Propagate to get input for next layer
                     layer_input, _, _, _ = layer(layer_input)
+                    
+    def regularization(
+        self,
+    ) -> torch.Tensor:
+        """
+        Compute KAN sparsity regularization over all msg and node layers.
+        Mirrors pykan's MultKAN.get_reg() but operates on raw KANLayer instances.
+        """
+        reg = torch.tensor(0.0)
+        
+        all_layers = list(self.msg_layers) + list(self.node_layers)
+        
+        for layer in all_layers:
+            # acts_scale shape: (out_dim, in_dim)
+            # only available after a forward pass has been run
+            if not hasattr(layer, 'acts_scale'):
+                continue
+            
+            acts = layer.acts_scale  # mean |activation| per spline edge
+            
+            # L1 — total activation magnitude, pushes edges toward zero
+            l1 = torch.sum(torch.mean(acts, dim=0))
+            
+            # Entropy — encourages each output to depend on ONE input strongly
+            # low entropy = one dominant spline = interpretable
+            acts_normalized = acts / (torch.sum(acts, dim=0, keepdim=True) + 1e-8)
+            entropy = -torch.sum(
+                acts_normalized * torch.log(acts_normalized + 1e-8), dim=0
+            ).mean()
+            
+            reg += self.lamb_l1 * l1 + self.lamb_entropy * entropy
+        
+        return reg
 
     def summary(self):
         super().summary()   
@@ -281,6 +318,8 @@ class GraphKAN(MessagePassing, GraphMixin):
         print(f"  Spline order:  {self.spline_order}")
         print(f"  KAN layers:    {len(self.msg_layers)} msg, "
                 f"{len(self.node_layers)} node")
+        print(f"  L1 regularization: {self.lamb_l1}")
+        print(f"  Entropy regularization: {self.lamb_entropy}")
         print()
         print("  msg_layers:")
         for i, layer in enumerate(self.msg_layers):
@@ -333,9 +372,11 @@ class OrdinaryGraphKAN(OrdinaryMixin, GraphKAN):
             spline_order: int = 3,
             aggr: str = "add",
             hidden_layers: int = 0,
+            lamb_l1: float = 1.0,
+            lamb_entropy: float = 2.0
     ):
         super().__init__(
-            n_f, msg_dim, ndim, hidden, grid_size, spline_order, aggr, hidden_layers
+            n_f, msg_dim, ndim, hidden, grid_size, spline_order, aggr, hidden_layers, lamb_l1, lamb_entropy
         )
         self.register_buffer("edge_index", edge_index)
             

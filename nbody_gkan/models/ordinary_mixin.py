@@ -68,6 +68,7 @@ class OrdinaryMixin:
             augment: bool = True,
             square: bool = False,
             augmentation: float = 3.0,
+            lamb: float = 0,  # 0 is off
             **kwargs,  # Absorb extra arguments for API compatibility
     ) -> torch.Tensor:
         """
@@ -92,6 +93,12 @@ class OrdinaryMixin:
         pred = self.just_derivative(g, augment=augment, augmentation=augmentation)
 
         if square:
-            return torch.sum((g.y - pred) ** 2)
+            task_loss = torch.sum((g.y - pred) ** 2)
         else:
-            return torch.sum(torch.abs(g.y - pred))
+            task_loss = torch.sum(torch.abs(g.y - pred))
+    
+        if lamb > 0.0 and hasattr(self, 'regularization'):
+            reg = self.regularization()
+            return task_loss + lamb * reg
+        
+        return task_loss

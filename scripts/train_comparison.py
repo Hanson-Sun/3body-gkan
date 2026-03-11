@@ -27,45 +27,70 @@ def parse_args(args=None):
     parser.add_argument("--kan_hidden", type=int, default=8)
     parser.add_argument("--kan_msg_dim", type=int, default=16)
     parser.add_argument("--kan_grid_size", type=int, default=5)
+    parser.add_argument("--kan_lamb_l1", type=float, default=1.0)
+    parser.add_argument("--kan_lamb_entropy", type=float, default=2.0)
     # Training hyperparameters
     parser.add_argument("--epochs", type=int, default=50)
     parser.add_argument("--batch_size", type=int, default=16)
     parser.add_argument("--kan_batch_size", type=int, default=16)
     parser.add_argument("--lr", type=float, default=1e-3)
+    parser.add_argument("--lamb", type=float, default=0)
     return parser.parse_args(args)
 
 
-def train_model(model, train_loader, val_loader, n_epochs, lr, device):
-    """Train a model and return the trained model."""
+def train_model(model, train_loader, val_loader, n_epochs, lr, device, lamb):
+    """Train a model and return the trained model and loss history."""
     model.to(device)
     optimizer = Adam(model.parameters(), lr=lr)
+    
+    history = {'train': [], 'val': []}
+    
     print(f"Training {model.__class__.__name__}...")
-
-    for epoch in tqdm(range(n_epochs), desc='Epochs'):
+    
+    epoch_bar = tqdm(range(n_epochs), desc='Epochs')
+    for _, epoch in enumerate(epoch_bar):
         model.train()
         train_loss = 0.0
-        for batch in tqdm(train_loader, desc=f'  Epoch {epoch:2d} train', leave=False):
+        train_bar = tqdm(train_loader, desc=f'  Epoch {epoch:2d} train', leave=False)
+        for i, batch in enumerate(train_bar):
             batch = batch.to(device)
             optimizer.zero_grad()
-            loss = model.loss(batch, augment=False)
+            loss = model.loss(
+                batch,
+                augment=False,
+                lamb=lamb
+            )
             loss.backward()
             optimizer.step()
             train_loss += loss.item() * batch.num_graphs
+            
+            if i % 10 == 0:
+                train_bar.set_postfix(loss=f'{loss.item():.4e}')
+        
         train_loss /= len(train_loader.dataset)
 
-        # Validation
         model.eval()
         val_loss = 0.0
         with torch.no_grad():
-            for batch in tqdm(val_loader, desc=f'  Epoch {epoch:2d} val  ', leave=False):
+            val_bar = tqdm(val_loader, desc=f'  Epoch {epoch:2d} val  ', leave=False)
+            for batch in val_bar:
                 batch = batch.to(device)
                 loss = model.loss(batch, augment=False)
                 val_loss += loss.item() * batch.num_graphs
+                val_bar.set_postfix(loss=f'{loss.item():.4e}')
+        
         val_loss /= len(val_loader.dataset)
-
-        tqdm.write(f"  Epoch {epoch:2d}: Train={train_loss:.6f}, Val={val_loss:.6f}")
-
-    return model
+        history['train'].append(train_loss)
+        history['val'].append(val_loss)
+        
+        # update outer epoch bar with both losses
+        epoch_bar.set_postfix(
+            train=f'{train_loss:.6f}',
+            val=f'{val_loss:.6f}',
+        )
+        tqdm.write(f"Epoch {epoch}: Train Loss = {train_loss:.6f}, Val Loss = {val_loss:.6f}")
+    
+    return model, history
 
 
 def main(yaml_params: Optional[dict] = None, checkpoint_dir: Optional[str] = None, data_dir: Optional[str] = None):
@@ -81,10 +106,13 @@ def main(yaml_params: Optional[dict] = None, checkpoint_dir: Optional[str] = Non
         args.kan_hidden = yaml_params.get("gkan_hp", {}).get("hidden", args.kan_hidden)
         args.kan_msg_dim = yaml_params.get("gkan_hp", {}).get("msg_dim", args.kan_msg_dim)
         args.kan_grid_size = yaml_params.get("gkan_hp", {}).get("grid_size", args.kan_grid_size)
+        args.kan_lamb_l1 = yaml_params.get("gkan_hp", {}).get("lamb_l1", args.kan_lamb_l1)
+        args.kan_lamb_entropy = yaml_params.get("gkan_hp", {}).get("lamb_entropy", args.kan_lamb_entropy)
         args.epochs = yaml_params.get("training_hp", {}).get("epochs", args.epochs)
         args.batch_size = yaml_params.get("training_hp", {}).get("batch_size", args.batch_size)
         args.kan_batch_size = yaml_params.get("training_hp", {}).get("kan_batch_size", args.kan_batch_size)
         args.lr = float(yaml_params.get("training_hp", {}).get("lr", args.lr))
+        args.lamb = yaml_params.get("training_hp", {}).get("lamb", args.lamb)
 
     device = get_device()
     print(f"Using device: {device}\n")
@@ -114,12 +142,13 @@ def main(yaml_params: Optional[dict] = None, checkpoint_dir: Optional[str] = Non
     kan_model = OrdinaryGraphKAN(
         n_f=n_features, msg_dim=args.kan_msg_dim, ndim=train_dataset.dim,
         edge_index=edge_index, hidden=args.kan_hidden, grid_size=args.kan_grid_size,
-        spline_order=3, aggr="add", hidden_layers=args.kan_hidden_layers
+        spline_order=3, aggr="add", hidden_layers=args.kan_hidden_layers, 
+        lamb_l1=args.kan_lamb_l1, lamb_entropy=args.kan_lamb_entropy
     )
     kan_model.summary()
     print(" ")
 
-    kan_model = train_model(kan_model, train_loader, val_loader, args.epochs, args.lr, device)
+    kan_model, _history = train_model(kan_model, train_loader, val_loader, args.epochs, args.lr, device, args.lamb)
 
     torch.save({
         'model_state': kan_model.state_dict(),
@@ -146,7 +175,7 @@ def main(yaml_params: Optional[dict] = None, checkpoint_dir: Optional[str] = Non
     gnn_model.summary()
     print(" ")
 
-    gnn_model = train_model(gnn_model, train_loader, val_loader, args.epochs, args.lr, device)
+    gnn_model, _history = train_model(gnn_model, train_loader, val_loader, args.epochs, args.lr, device, args.lamb)
 
     torch.save({
         'model_state': gnn_model.state_dict(),
