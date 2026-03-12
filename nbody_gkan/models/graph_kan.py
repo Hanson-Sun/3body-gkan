@@ -53,10 +53,12 @@ class GraphKAN(MessagePassing, GraphMixin):
             msg_dim: int,
             ndim: int,
             hidden: int = 300,
+            node_hidden: int = 300,
             grid_size: int = 5,
             spline_order: int = 3,
             aggr: str = "add",
             hidden_layers: int = 0,
+            node_hidden_layers: int = 0,
             lamb_l1: float = 1.0,
             lamb_entropy: float = 2.0,
     ):
@@ -65,9 +67,11 @@ class GraphKAN(MessagePassing, GraphMixin):
         self.msg_dim = msg_dim
         self.ndim = ndim
         self.hidden = hidden
+        self.node_hidden = node_hidden
         self.grid_size = grid_size
         self.spline_order = spline_order
         self.hidden_layers = hidden_layers
+        self.node_hidden_layers = node_hidden_layers
         self.lamb_l1 = lamb_l1
         self.lamb_entropy = lamb_entropy
 
@@ -82,7 +86,7 @@ class GraphKAN(MessagePassing, GraphMixin):
         # 4 layers, configurable hidden (default 300) - matches baseline
         node_input_dim = n_f + msg_dim
         self.node_layers = self._build_kan_network(
-            node_input_dim, ndim, hidden, grid_size, spline_order, hidden_layers
+            node_input_dim, ndim, node_hidden, grid_size, spline_order, node_hidden_layers
         )
 
     def _build_kan_network(
@@ -368,15 +372,17 @@ class OrdinaryGraphKAN(OrdinaryMixin, GraphKAN):
             ndim: int,
             edge_index: torch.Tensor,
             hidden: int = 300,
+            node_hidden: int = 300,
             grid_size: int = 5,
             spline_order: int = 3,
             aggr: str = "add",
             hidden_layers: int = 0,
+            node_hidden_layers: int = 0,
             lamb_l1: float = 1.0,
             lamb_entropy: float = 2.0
     ):
         super().__init__(
-            n_f, msg_dim, ndim, hidden, grid_size, spline_order, aggr, hidden_layers, lamb_l1, lamb_entropy
+            n_f, msg_dim, ndim, hidden, node_hidden, grid_size, spline_order, aggr, hidden_layers, node_hidden_layers, lamb_l1, lamb_entropy
         )
         self.register_buffer("edge_index", edge_index)
             

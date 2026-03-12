@@ -14,6 +14,7 @@ from kan.spline import coef2curve
 
 from nbody_gkan.models import OrdinaryGraphKAN, OGN
 from nbody_gkan.nbody import NBodySimulator
+from nbody_gkan.models.model_loader import ModelLoader
 
 
 def parse_args(args=None):
@@ -29,36 +30,35 @@ def parse_args(args=None):
     return parser.parse_args(args)
 
 
-def load_model(checkpoint_path, model_class):
-    """Load model from checkpoint."""
-    ckpt = torch.load(checkpoint_path, map_location='cpu')
+# def load_model(checkpoint_path, model_class):
+#     """Load model from checkpoint."""
+#     ckpt = torch.load(checkpoint_path, map_location='cpu')
 
-    if model_class == OrdinaryGraphKAN:
-        model = model_class(
-            n_f=ckpt['n_features'],
-            msg_dim=ckpt['msg_dim'],
-            ndim=ckpt['dim'],
-            edge_index=ckpt['edge_index'],
-            hidden=ckpt['hidden'],
-            grid_size=ckpt['grid_size'],
-            spline_order=ckpt.get('spline_order', 3),
-            aggr="add",
-            hidden_layers=ckpt.get('hidden_layers', 0),
-        )
-    else:  # OGN
-        model = model_class(
-            n_f=ckpt['n_features'],
-            msg_dim=ckpt['msg_dim'],
-            ndim=ckpt['dim'],
-            edge_index=ckpt['edge_index'],
-            hidden=ckpt['hidden'],
-            aggr="add",
-        )
+#     if model_class == OrdinaryGraphKAN:
+#         model = model_class(
+#             n_f=ckpt['n_features'],
+#             msg_dim=ckpt['msg_dim'],
+#             ndim=ckpt['dim'],
+#             edge_index=ckpt['edge_index'],
+#             hidden=ckpt['hidden'],
+#             grid_size=ckpt['grid_size'],
+#             spline_order=ckpt.get('spline_order', 3),
+#             aggr="add",
+#             hidden_layers=ckpt.get('hidden_layers', 0),
+#         )
+#     else:  # OGN
+#         model = model_class(
+#             n_f=ckpt['n_features'],
+#             msg_dim=ckpt['msg_dim'],
+#             ndim=ckpt['dim'],
+#             edge_index=ckpt['edge_index'],
+#             hidden=ckpt['hidden'],
+#             aggr="add",
+#         )
 
-    model.load_state_dict(ckpt['model_state'])
-    model.eval()
-    return model, ckpt
-
+#     model.load_state_dict(ckpt['model_state'])
+#     model.eval()
+#     return model, ckpt
 
 def rollout(model, pos0, vel0, masses, dt, n_steps, edge_index):
     """Rollout dynamics using leapfrog integration."""
@@ -219,41 +219,47 @@ def visualize_kan_splines(model, var_names=('x', 'y', 'vx', 'vy', 'm'), save_dir
         plt.close()
 
 
-def visualize_kan_network(model, ckpt, data_sample, network='msg', save_path=None):
+def visualize_kan_network(model: 'OrdinaryGraphKAN',
+                          data_sample: torch.Tensor,
+                          network: str = 'msg',
+                          save_path: str | Path | None = None) -> None:
     """
     Visualize msg or node KAN sub-network using pykan's native model.plot().
 
-    The GKAN stores its message and node update functions as ModuleLists of
-    KANLayer objects. To use pykan's native visualization, we reconstruct a
-    standalone KAN (MultKAN) from the checkpoint dims, transplant the trained
-    weights, run a forward pass to populate activations, then call model.plot().
-
     Args:
         model:       Loaded OrdinaryGraphKAN instance
-        ckpt:        Checkpoint dict (provides grid_size, spline_order, dims)
-        data_sample: A representative input tensor, shape (N, input_dim),
-                     used to populate activations for visualization.
-                     For msg network: shape (N, 2*n_features)
-                     For node network: shape (N, n_features + msg_dim)
+        data_sample: A representative input tensor — keep small (~50 samples).
+                     For msg network:  shape (N, 2*n_f)
+                     For node network: shape (N, n_f + msg_dim)
         network:     'msg' or 'node'
         save_path:   If given, save the figure here (e.g. 'kan_msg.png')
     """
+    import gc
+    import tempfile
     from kan import KAN
 
+    # ── Select sub-network ────────────────────────────────────────
     layers    = model.msg_layers if network == 'msg' else model.node_layers
-    grid_size = ckpt['grid_size']
-    k         = ckpt.get('spline_order', 3)
+    grid_size = model.grid_size
+    k         = model.spline_order
+    n_f       = model.n_f
+    ndim      = model.ndim
+    msg_dim   = model.msg_dim
 
-    # Infer width from the stacked KANLayers
+    # Clamp sample size — pykan stores all activations, keep it small
+    data_sample = data_sample[:50]
+
+    # Infer width from stacked KANLayers — works for any depth
     width = [int(layers[0].in_dim)] + [int(l.out_dim) for l in layers]
 
     print(f"\nBuilding standalone KAN for '{network}' network:")
-    print(f"  width={width}, grid={grid_size}, k={k}")
+    print(f"  width={width}, grid={grid_size}, k={k}, n_samples={len(data_sample)}")
 
     with tempfile.TemporaryDirectory() as tmpdir:
-        kan = KAN(width=width, grid=grid_size, k=k, seed=0, auto_save=False, ckpt_path=tmpdir)
+        kan = KAN(width=width, grid=grid_size, k=k,
+                  seed=0, auto_save=False, ckpt_path=tmpdir)
 
-        # Transplant weights from GKAN KANLayers → pykan KANLayers
+        # ── Transplant weights ─────────────────────────────────────
         for src_layer, dst_layer in zip(layers, kan.act_fun):
             dst_layer.coef.data.copy_(src_layer.coef.data)
             dst_layer.grid.data.copy_(src_layer.grid.data)
@@ -261,50 +267,63 @@ def visualize_kan_network(model, ckpt, data_sample, network='msg', save_path=Non
             if hasattr(src_layer, 'scale_base') and hasattr(dst_layer, 'scale_base'):
                 dst_layer.scale_base.data.copy_(src_layer.scale_base.data)
 
+        # ── Forward pass to populate activations ──────────────────
         kan.eval()
-
-        # Forward pass to populate activations (required by model.plot)
         with torch.no_grad():
             kan(data_sample)
 
-        # Variable names for msg / node networks
-        n_f       = ckpt['n_features']
+        # ── Variable names ─────────────────────────────────────────
         base_vars = ['x', 'y', 'vx', 'vy', 'm'][:n_f]
         if network == 'msg':
             in_vars  = [f'{v}_i' for v in base_vars] + [f'{v}_j' for v in base_vars]
-            out_vars = [f'msg{i}' for i in range(width[-1][0])]
+            out_vars = [f'msg{i}' for i in range(msg_dim)]
         else:
-            in_vars  = base_vars + [f'msg{i}' for i in range(ckpt['msg_dim'])]
-            out_vars = ['ax', 'ay'] if ckpt['dim'] == 2 else [f'a{i}' for i in range(ckpt['dim'])]
+            in_vars  = base_vars + [f'msg{i}' for i in range(msg_dim)]
+            out_vars = ['ax', 'ay'] if ndim == 2 else [f'a{i}' for i in range(ndim)]
 
-        title = f"Graph-KAN — {'Message' if network == 'msg' else 'Node Update'} Network"
+        arch_str = '×'.join(str(w) for w in width)
+        title    = (f"Graph-KAN — {'Message' if network == 'msg' else 'Node Update'} "
+                    f"Network  [{arch_str}]")
+
         print(f"  Plotting '{title}'...")
-
-        kan.plot(in_vars=in_vars, out_vars=out_vars, title=title, beta=3, scale=2, varscale=0.2)
+        kan.plot(in_vars=in_vars, out_vars=out_vars,
+                 title=title, beta=3, scale=2, varscale=0.2)
 
         fig = plt.gcf()
         w, h = fig.get_size_inches()
-        fig.set_size_inches(w * 8, h * 3)
+        fig.set_size_inches(w * 8, h * 4)
 
-        # Scale up inset spline subplots for readability
-        INSET_SCALE = 4
+        INSET_SCALE = 10
         for ax in fig.get_axes():
             pos = ax.get_position()
-            if pos.width < 0.005:  # spline subplots have a characteristically small fixed width
-                cx = pos.x0 + pos.width / 2
+            if pos.width < 0.005:
+                cx = pos.x0 + pos.width  / 2
                 cy = pos.y0 + pos.height / 2
-                ax.set_position([cx - pos.width  * INSET_SCALE / 2,
-                                  cy - pos.height * INSET_SCALE / 2,
-                                  pos.width  * INSET_SCALE,
-                                  pos.height * INSET_SCALE])
+                ax.set_position([
+                    cx - pos.width  * INSET_SCALE / 2,
+                    cy - pos.height * INSET_SCALE / 2,
+                    pos.width  * INSET_SCALE,
+                    pos.height * INSET_SCALE,
+                ])
 
         if save_path:
             plt.savefig(save_path, dpi=300, bbox_inches='tight')
             print(f"  Saved: {save_path}")
         else:
             plt.show()
+
         plt.close()
 
+        # ── Explicit cleanup — pykan holds large activation buffers ─
+        for attr in ('acts', 'acts_scale', 'spline_preacts',
+                     'spline_postacts', 'spline_postacts_symb'):
+            try:
+                delattr(kan, attr)
+            except AttributeError:
+                pass
+
+    gc.collect()
+    torch.cuda.empty_cache()
 
 def main(
     yaml_params: Optional[dict] = None,
@@ -330,14 +349,14 @@ def main(
 
     # Load models
     print("\nLoading trained models...")
-    kan_model, kan_ckpt = load_model(f'{args.checkpoint_dir}/graph_kan.pt',    OrdinaryGraphKAN)
-    gnn_model, _        = load_model(f'{args.checkpoint_dir}/baseline_gnn.pt', OGN)
+    kan_model, kan_ckpt = ModelLoader(OrdinaryGraphKAN, f'{args.checkpoint_dir}/graph_kan.pt').load()
+    gnn_model, _        = ModelLoader(OGN             , f'{args.checkpoint_dir}/baseline_gnn.pt').load()
     print("Models loaded successfully")
 
     # Load initial conditions
     print("\nLoading initial conditions...")
     data       = np.load(args.data_file)
-    idx        = 10
+    idx        = 2
     pos0       = torch.from_numpy(data['positions'][idx, 0]).float()
     vel0       = torch.from_numpy(data['velocities'][idx, 0]).float()
     masses     = torch.from_numpy(data['masses']).float()
@@ -382,20 +401,24 @@ def main(
         with torch.no_grad():
             mass_expanded = masses.unsqueeze(1)
             x_nodes   = torch.cat([pos0, vel0, mass_expanded], dim=1)       # (n_bodies, n_f)
-            src, dst  = edge_index[0], edge_index[1]
+            src, dst  = kan_model.edge_index[0], kan_model.edge_index[1]    # ← from model, not external
             msg_sample = torch.cat([x_nodes[src], x_nodes[dst]], dim=1)     # (n_edges, 2*n_f)
 
-            msg_sample_batch  = (msg_sample.repeat(50, 1)
-                                 + torch.randn(msg_sample.shape[0] * 50, msg_sample.shape[1]) * 0.5)
-            node_sample_batch = torch.randn(200, kan_ckpt['n_features'] + kan_ckpt['msg_dim']) * 0.5
+            msg_sample_batch = (msg_sample.repeat(50, 1)
+                                + torch.randn(msg_sample.shape[0] * 50,
+                                              msg_sample.shape[1]) * 0.5)
+
+            node_sample_batch = torch.randn(200, kan_model.n_f + kan_model.msg_dim) * 0.5  # ← from model
 
         print("\n" + "=" * 60)
         print("Graph-KAN Native Network Visualization")
         print("=" * 60)
-        visualize_kan_network(kan_model, kan_ckpt, msg_sample_batch,
-                              network='msg',  save_path=f'{args.output_dir}/kan_msg_network.png')
-        visualize_kan_network(kan_model, kan_ckpt, node_sample_batch,
-                              network='node', save_path=f'{args.output_dir}/kan_node_network.png')
+        visualize_kan_network(kan_model, msg_sample_batch,
+                              network='msg',
+                              save_path=f'{args.output_dir}/kan_msg_network.png')
+        visualize_kan_network(kan_model, node_sample_batch,
+                              network='node',
+                              save_path=f'{args.output_dir}/kan_node_network.png')
 
     print("\n" + "=" * 60)
     print("Done! Generated files:")

@@ -11,6 +11,7 @@ from pathlib import Path
 from nbody_gkan.data.dataset import NBodyDataset
 from nbody_gkan.models import OrdinaryGraphKAN, OGN
 from nbody_gkan.device import get_device
+from nbody_gkan.models.model_loader import ModelLoader
 
 
 def parse_args(args=None):
@@ -25,6 +26,8 @@ def parse_args(args=None):
     # GKAN hyperparameters
     parser.add_argument("--kan_hidden_layers", type=int, default=1)
     parser.add_argument("--kan_hidden", type=int, default=8)
+    parser.add_argument("--kan_node_hidden_layers", type=int, default=1)
+    parser.add_argument("--kan_node_hidden", type=int, default=8)
     parser.add_argument("--kan_msg_dim", type=int, default=16)
     parser.add_argument("--kan_grid_size", type=int, default=5)
     parser.add_argument("--kan_lamb_l1", type=float, default=1.0)
@@ -42,11 +45,11 @@ def train_model(model, train_loader, val_loader, n_epochs, lr, device, lamb):
     """Train a model and return the trained model and loss history."""
     model.to(device)
     optimizer = Adam(model.parameters(), lr=lr)
-    
+
     history = {'train': [], 'val': []}
-    
+
     print(f"Training {model.__class__.__name__}...")
-    
+
     epoch_bar = tqdm(range(n_epochs), desc='Epochs')
     for _, epoch in enumerate(epoch_bar):
         model.train()
@@ -63,10 +66,10 @@ def train_model(model, train_loader, val_loader, n_epochs, lr, device, lamb):
             loss.backward()
             optimizer.step()
             train_loss += loss.item() * batch.num_graphs
-            
+
             if i % 10 == 0:
                 train_bar.set_postfix(loss=f'{loss.item():.4e}')
-        
+
         train_loss /= len(train_loader.dataset)
 
         model.eval()
@@ -78,20 +81,19 @@ def train_model(model, train_loader, val_loader, n_epochs, lr, device, lamb):
                 loss = model.loss(batch, augment=False)
                 val_loss += loss.item() * batch.num_graphs
                 val_bar.set_postfix(loss=f'{loss.item():.4e}')
-        
+
         val_loss /= len(val_loader.dataset)
         history['train'].append(train_loss)
         history['val'].append(val_loss)
-        
+
         # update outer epoch bar with both losses
         epoch_bar.set_postfix(
             train=f'{train_loss:.6f}',
             val=f'{val_loss:.6f}',
         )
         tqdm.write(f"Epoch {epoch}: Train Loss = {train_loss:.6f}, Val Loss = {val_loss:.6f}")
-    
-    return model, history
 
+    return model, history
 
 def main(yaml_params: Optional[dict] = None, checkpoint_dir: Optional[str] = None, data_dir: Optional[str] = None):
     args = parse_args([] if yaml_params is not None else None)
@@ -102,8 +104,10 @@ def main(yaml_params: Optional[dict] = None, checkpoint_dir: Optional[str] = Non
         args.checkpoint_dir = checkpoint_dir if checkpoint_dir is not None else args.checkpoint_dir
         args.hidden = yaml_params.get("gnn_hp", {}).get("hidden", args.hidden)
         args.msg_dim = yaml_params.get("gnn_hp", {}).get("msg_dim", args.msg_dim)
-        args.kan_hidden_layers = yaml_params.get("gkan_hp", {}).get("kan_hidden_layers", args.kan_hidden_layers)
+        args.kan_hidden_layers = yaml_params.get("gkan_hp", {}).get("hidden_layers", args.kan_hidden_layers)
         args.kan_hidden = yaml_params.get("gkan_hp", {}).get("hidden", args.kan_hidden)
+        args.kan_node_hidden_layers = yaml_params.get("gkan_hp", {}).get("node_hidden_layers", args.kan_node_hidden_layers)
+        args.kan_node_hidden = yaml_params.get("gkan_hp", {}).get("node_hidden", args.kan_node_hidden)
         args.kan_msg_dim = yaml_params.get("gkan_hp", {}).get("msg_dim", args.kan_msg_dim)
         args.kan_grid_size = yaml_params.get("gkan_hp", {}).get("grid_size", args.kan_grid_size)
         args.kan_lamb_l1 = yaml_params.get("gkan_hp", {}).get("lamb_l1", args.kan_lamb_l1)
@@ -142,27 +146,33 @@ def main(yaml_params: Optional[dict] = None, checkpoint_dir: Optional[str] = Non
     kan_model = OrdinaryGraphKAN(
         n_f=n_features, msg_dim=args.kan_msg_dim, ndim=train_dataset.dim,
         edge_index=edge_index, hidden=args.kan_hidden, grid_size=args.kan_grid_size,
-        spline_order=3, aggr="add", hidden_layers=args.kan_hidden_layers, 
-        lamb_l1=args.kan_lamb_l1, lamb_entropy=args.kan_lamb_entropy
+        spline_order=3, aggr="add", hidden_layers=args.kan_hidden_layers,
+        lamb_l1=args.kan_lamb_l1, lamb_entropy=args.kan_lamb_entropy, 
+        node_hidden=args.kan_node_hidden, node_hidden_layers=args.kan_node_hidden_layers
     )
     kan_model.summary()
     print(" ")
 
     kan_model, _history = train_model(kan_model, train_loader, val_loader, args.epochs, args.lr, device, args.lamb)
 
-    torch.save({
-        'model_state': kan_model.state_dict(),
-        'n_features': n_features,
-        'dim': train_dataset.dim,
-        'n_bodies': train_dataset.n,
-        'edge_index': edge_index,
-        'hidden': args.kan_hidden,
-        'msg_dim': args.kan_msg_dim,
-        'grid_size': args.kan_grid_size,
-        'spline_order': 3,
-        'hidden_layers': args.kan_hidden_layers,
-    }, checkpoint_dir / 'graph_kan.pt')
-    print(f"Saved checkpoint: {checkpoint_dir / 'graph_kan.pt'}\n")
+
+    # torch.save({
+    #     'model_state': kan_model.state_dict(),
+    #     'n_features': n_features,
+    #     'dim': train_dataset.dim,
+    #     'n_bodies': train_dataset.n,
+    #     'edge_index': edge_index,
+    #     'hidden': args.kan_hidden,
+    #     'msg_dim': args.kan_msg_dim,
+    #     'grid_size': args.kan_grid_size,
+    #     'spline_order': 3,
+    #     'hidden_layers': args.kan_hidden_layers,
+    #     ''
+    # }, checkpoint_dir / 'graph_kan.pt')
+    gkan_checkpoint_path = f"{checkpoint_dir}/graph_kan.pt" 
+    loader = ModelLoader(OrdinaryGraphKAN, gkan_checkpoint_path)
+    loader.save(kan_model, gkan_checkpoint_path)
+    print(f"Saved checkpoint: {gkan_checkpoint_path}\n")
 
     # Create and train Baseline GNN
     print("="*60)
@@ -177,16 +187,19 @@ def main(yaml_params: Optional[dict] = None, checkpoint_dir: Optional[str] = Non
 
     gnn_model, _history = train_model(gnn_model, train_loader, val_loader, args.epochs, args.lr, device, args.lamb)
 
-    torch.save({
-        'model_state': gnn_model.state_dict(),
-        'n_features': n_features,
-        'dim': train_dataset.dim,
-        'n_bodies': train_dataset.n,
-        'edge_index': edge_index,
-        'hidden': args.hidden,
-        'msg_dim': args.msg_dim,
-    }, checkpoint_dir / 'baseline_gnn.pt')
-    print(f"Saved checkpoint: {checkpoint_dir / 'baseline_gnn.pt'}\n")
+    # torch.save({
+    #     'model_state': gnn_model.state_dict(),
+    #     'n_features': n_features,
+    #     'dim': train_dataset.dim,
+    #     'n_bodies': train_dataset.n,
+    #     'edge_index': edge_index,
+    #     'hidden': args.hidden,
+    #     'msg_dim': args.msg_dim,
+    # }, checkpoint_dir / 'baseline_gnn.pt')
+    gkan_checkpoint_path = f"{checkpoint_dir}/baseline_gnn.pt"
+    loader = ModelLoader(OGN, gkan_checkpoint_path)
+    loader.save(gnn_model, gkan_checkpoint_path)
+    print(f"Saved checkpoint: {gkan_checkpoint_path}\n")
 
     print("="*60)
     print("Training complete!")
