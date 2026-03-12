@@ -7,6 +7,7 @@ import torch
 from torch.optim import Adam
 from torch_geometric.loader import DataLoader
 from pathlib import Path
+import matplotlib.pyplot as plt
 
 from nbody_gkan.data.dataset import NBodyDataset
 from nbody_gkan.models import OrdinaryGraphKAN, OGN
@@ -94,6 +95,41 @@ def train_model(model, train_loader, val_loader, n_epochs, lr, device, lamb):
         tqdm.write(f"Epoch {epoch}: Train Loss = {train_loss:.6f}, Val Loss = {val_loss:.6f}")
 
     return model, history
+    
+def visualize_training_loss(
+        history: dict[str, list[float]],
+        save_path: str | Path | None = None,
+        title: str = 'Training Loss'
+) -> None:
+    """
+    Plot train and validation loss curves over epochs.
+
+    Args:
+        history:   dict with 'train' and 'val' loss lists
+        save_path: if given, save figure here
+        title:     plot title
+    """
+    epochs = range(len(history['train']))
+
+    fig, ax = plt.subplots(figsize=(8, 5))
+    ax.plot(epochs, history['train'], label='Train',      linewidth=2)
+    ax.plot(epochs, history['val'],   label='Validation', linewidth=2, linestyle='--')
+
+    ax.set_xlabel('Epoch')
+    ax.set_ylabel('Loss')
+    ax.set_title(title)
+    ax.legend()
+    ax.grid(True, alpha=0.3)
+
+    plt.tight_layout()
+
+    if save_path:
+        plt.savefig(save_path, dpi=150, bbox_inches='tight')
+        print(f"Saved: {save_path}")
+    else:
+        plt.show()
+
+    plt.close()
 
 def main(yaml_params: Optional[dict] = None, checkpoint_dir: Optional[str] = None, data_dir: Optional[str] = None):
     args = parse_args([] if yaml_params is not None else None)
@@ -153,7 +189,11 @@ def main(yaml_params: Optional[dict] = None, checkpoint_dir: Optional[str] = Non
     kan_model.summary()
     print(" ")
 
-    kan_model, _history = train_model(kan_model, train_loader, val_loader, args.epochs, args.lr, device, args.lamb)
+    kan_model, kan_history = train_model(kan_model, train_loader, val_loader, args.epochs, args.lr, device, args.lamb)
+    visualize_training_loss(kan_history,
+                            title='Graph-KAN Training Loss',
+                            save_path=f'{checkpoint_dir}/kan_loss.png')
+
 
 
     # torch.save({
@@ -185,8 +225,15 @@ def main(yaml_params: Optional[dict] = None, checkpoint_dir: Optional[str] = Non
     gnn_model.summary()
     print(" ")
 
-    gnn_model, _history = train_model(gnn_model, train_loader, val_loader, args.epochs, args.lr, device, args.lamb)
-
+    gnn_model, gnn_history = train_model(gnn_model, train_loader, val_loader, args.epochs, args.lr, device, args.lamb)
+    visualize_training_loss(gnn_history,
+                            title='GNN Training Loss',
+                            save_path=f'{checkpoint_dir}/gnn_loss.png')
+    
+    gnn_checkpoint_path = f"{checkpoint_dir}/baseline_gnn.pt"
+    loader = ModelLoader(OGN, gnn_checkpoint_path)
+    loader.save(gnn_model, gnn_checkpoint_path)
+    print(f"Saved checkpoint: {gnn_checkpoint_path}\n")
     # torch.save({
     #     'model_state': gnn_model.state_dict(),
     #     'n_features': n_features,
@@ -196,11 +243,7 @@ def main(yaml_params: Optional[dict] = None, checkpoint_dir: Optional[str] = Non
     #     'hidden': args.hidden,
     #     'msg_dim': args.msg_dim,
     # }, checkpoint_dir / 'baseline_gnn.pt')
-    gkan_checkpoint_path = f"{checkpoint_dir}/baseline_gnn.pt"
-    loader = ModelLoader(OGN, gkan_checkpoint_path)
-    loader.save(gnn_model, gkan_checkpoint_path)
-    print(f"Saved checkpoint: {gkan_checkpoint_path}\n")
-
+    # 
     print("="*60)
     print("Training complete!")
     print("="*60)

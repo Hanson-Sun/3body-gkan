@@ -174,49 +174,128 @@ def animate_rollout(positions_dict, dt, video_name='rollout_comparison.mp4'):
     plt.close()
 
 
-def visualize_kan_splines(model, var_names=('x', 'y', 'vx', 'vy', 'm'), save_dir=None):
-    """Visualize learned spline activations in KAN layers."""
-    print("\nVisualizing Graph-KAN splines...")
+def visualize_kan_splines(model, save_dir=None):
+    """
+    Visualize learned spline activations in KAN layers.
 
-    save_dir = Path(save_dir)
-    layer_groups = [("msg", model.msg_layers), ("node", model.node_layers)]
+    Each spline (one per input→output connection) gets its own subplot.
+    Subplots are grouped by layer, with one figure per network (msg/node).
+    The activation plotted is the full ϕ(x) = w_b·SiLU(x) + w_s·spline(x)
+    matching what the network actually computes.
+    """
+    from kan.spline import coef2curve
+    import torch.nn.functional as F
+
+    save_dir = Path(save_dir) if save_dir else None
+    if save_dir is not None:
+        save_dir.mkdir(parents=True, exist_ok=True)
+
+    # Variable name labels for msg and node inputs
+    n_f      = model.n_f
+    msg_dim  = model.msg_dim
+    ndim     = model.ndim
+    base_vars = ['x', 'y', 'vx', 'vy', 'm'][:n_f]
+
+    input_labels = {
+        'msg':  [f'{v}_i' for v in base_vars] + [f'{v}_j' for v in base_vars],
+        'node': base_vars + [f'msg{i}' for i in range(msg_dim)],
+    }
+    output_labels = {
+        'msg':  [f'msg{i}' for i in range(msg_dim)],
+        'node': ['ax', 'ay'] if ndim == 2 else [f'a{i}' for i in range(ndim)],
+    }
+
+    layer_groups = [('msg', model.msg_layers), ('node', model.node_layers)]
 
     for tag, layers in layer_groups:
-        fig, axes = plt.subplots(2, 2, figsize=(12, 10))
-        axes = axes.flatten()
+        in_labels  = input_labels[tag]
+        out_labels = output_labels[tag]
 
         for layer_idx, layer in enumerate(layers):
-            ax = axes[layer_idx]
-            x_eval = torch.linspace(-3, 3, 200)
+            in_dim  = layer.in_dim
+            out_dim = layer.out_dim
 
-            in_dim  = min(layer.in_dim,  5)
-            out_dim = min(layer.out_dim, 3)
+            # Each spline is one subplot — in_dim × out_dim total
+            n_plots = in_dim * out_dim
+            ncols   = min(out_dim, 4)
+            nrows   = in_dim
+
+            fig, axes = plt.subplots(
+                nrows, ncols,
+                figsize=(ncols * 3, nrows * 2.5),
+                squeeze=False,
+            )
+
+            layer_label = 'Message' if tag == 'msg' else 'Node Update'
+            fig.suptitle(f'Graph-KAN — {layer_label} Network  |  Layer {layer_idx}  '
+                         f'[{in_dim}→{out_dim}]', fontsize=13, fontweight='bold')
+
+            x_eval = torch.linspace(-3, 3, 300)
 
             for i in range(in_dim):
                 for j in range(out_dim):
-                    x_full = torch.zeros(200, layer.in_dim)
+                    ax = axes[i][j % ncols]
+
+                    # ── Full activation: w_b·SiLU(x) + w_s·spline(x) ──
+                    x_full = torch.zeros(300, in_dim)
                     x_full[:, i] = x_eval
 
                     with torch.no_grad():
-                        spline_out = coef2curve(x_full, layer.grid, layer.coef, layer.k)
-                        y = spline_out[:, i, j] * layer.scale_sp[i, j].item()
+                        # Spline component
+                        spline_vals = coef2curve(
+                            x_full, layer.grid, layer.coef, layer.k
+                        )[:, i, j]                              # shape (300,)
+                        w_s = layer.scale_sp[i, j].item()
 
-                    label = f'{var_names[i]}→out{j}' if i < len(var_names) else f'in{i}→out{j}'
-                    ax.plot(x_eval.numpy(), y.numpy(), alpha=0.6, label=label)
+                        # SiLU residual component
+                        silu_vals = F.silu(x_eval)
+                        w_b = layer.scale_base[i, j].item()
 
-            layer_label = "Message" if tag == "msg" else "Node"
-            ax.set_xlabel('Input value')
-            ax.set_ylabel('Spline output')
-            ax.set_title(f'{layer_label} Layer {layer_idx}')
-            ax.grid(True, alpha=0.3)
-            if layer_idx == 0:
-                ax.legend(fontsize=8)
+                        # Full activation
+                        full   = w_b * silu_vals + w_s * spline_vals
+                        spline_only = w_s * spline_vals
+                        silu_only   = w_b * silu_vals
 
-        plt.tight_layout()
-        fname = f"kan_splines_{tag}.png"
-        plt.savefig(save_dir / fname, dpi=150)
-        print(f"Saved {fname}")
-        plt.close()
+                    x_np = x_eval.numpy()
+                    ax.plot(x_np, full.numpy(),
+                            color='steelblue', linewidth=2,
+                            label='ϕ(x) full')
+                    ax.plot(x_np, spline_only.numpy(),
+                            color='orange',    linewidth=1.5,
+                            linestyle='--',    label='spline')
+                    ax.plot(x_np, silu_only.numpy(),
+                            color='green',     linewidth=1.5,
+                            linestyle=':',     label='SiLU')
+                    ax.axhline(0, color='gray', linewidth=0.5, alpha=0.5)
+                    ax.axvline(0, color='gray', linewidth=0.5, alpha=0.5)
+
+                    # Labels
+                    in_label  = in_labels[i]  if i < len(in_labels)  else f'in{i}'
+                    out_label = out_labels[j] if j < len(out_labels) else f'out{j}'
+                    ax.set_title(f'{in_label} → {out_label}', fontsize=9)
+                    ax.set_xlabel('x', fontsize=8)
+                    ax.set_ylabel('ϕ(x)', fontsize=8)
+                    ax.tick_params(labelsize=7)
+                    ax.grid(True, alpha=0.25)
+
+                    if i == 0 and j == 0:
+                        ax.legend(fontsize=7, loc='upper left')
+
+            # Hide any unused axes (if out_dim < ncols)
+            for i in range(in_dim):
+                for j in range(out_dim, ncols):
+                    axes[i][j].set_visible(False)
+
+            plt.tight_layout()
+
+            if save_dir:
+                fname = f'kan_splines_{tag}_layer{layer_idx}.png'
+                plt.savefig(save_dir / fname, dpi=150, bbox_inches='tight')
+                print(f"  Saved: {fname}")
+            else:
+                plt.show()
+
+            plt.close()
 
 
 def visualize_kan_network(model: 'OrdinaryGraphKAN',
@@ -293,10 +372,13 @@ def visualize_kan_network(model: 'OrdinaryGraphKAN',
         w, h = fig.get_size_inches()
         fig.set_size_inches(w * 8, h * 4)
 
-        INSET_SCALE = 10
+        widths = sorted(set(ax.get_position().width for ax in fig.get_axes()))
+
+        INSET_SCALE = 3
         for ax in fig.get_axes():
             pos = ax.get_position()
-            if pos.width < 0.005:
+            # print(pos.width)
+            if abs(pos.width - widths[0]) < 1e-6:
                 cx = pos.x0 + pos.width  / 2
                 cy = pos.y0 + pos.height / 2
                 ax.set_position([
@@ -324,6 +406,7 @@ def visualize_kan_network(model: 'OrdinaryGraphKAN',
 
     gc.collect()
     torch.cuda.empty_cache()
+
 
 def main(
     yaml_params: Optional[dict] = None,
@@ -356,7 +439,7 @@ def main(
     # Load initial conditions
     print("\nLoading initial conditions...")
     data       = np.load(args.data_file)
-    idx        = 2
+    idx        = 1
     pos0       = torch.from_numpy(data['positions'][idx, 0]).float()
     vel0       = torch.from_numpy(data['velocities'][idx, 0]).float()
     masses     = torch.from_numpy(data['masses']).float()
@@ -377,25 +460,26 @@ def main(
     gnn_pos, _ = rollout(gnn_model, pos0, vel0, masses, args.dt, n_steps, edge_index)
 
     # Animate (sampled to match ground truth cadence)
-    print("\n" + "=" * 60)
-    print("Creating Animated Comparison")
-    print("=" * 60)
-    animate_rollout(
-        {
-            'Ground Truth': gt_pos,
-            'Graph-KAN':    kan_pos[::5],
-            'Baseline GNN': gnn_pos[::5],
-        },
-        dt=args.dt * 5,
-        video_name=f'{args.output_dir}/rollout_comparison.mp4',
-    )
+    if (args.save_video):
+        print("\n" + "=" * 60)
+        print("Creating Animated Comparison")
+        print("=" * 60)
+        animate_rollout(
+            {
+                'Ground Truth': gt_pos,
+                'Graph-KAN':    kan_pos[::5],
+                'Baseline GNN': gnn_pos[::5],
+            },
+            dt=args.dt * 5,
+            video_name=f'{args.output_dir}/rollout_comparison.mp4',
+        )
 
     # Spline visualizations
     if args.plot_splines:
         print("\n" + "=" * 60)
         print("Graph-KAN Spline Analysis")
         print("=" * 60)
-        visualize_kan_splines(kan_model, save_dir=args.output_dir)
+        visualize_kan_splines(kan_model, save_dir=f"{args.output_dir}/splines")
 
         # Build representative inputs for activation population
         with torch.no_grad():
