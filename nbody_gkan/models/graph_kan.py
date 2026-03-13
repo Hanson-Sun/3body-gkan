@@ -13,9 +13,10 @@ from kan import KANLayer
 from torch_geometric.nn import MessagePassing
 
 from .ordinary_mixin import OrdinaryMixin
+from .graph_mixin import GraphMixin
 
 
-class GraphKAN(MessagePassing):
+class GraphKAN(MessagePassing, GraphMixin):
     """
     Graph Neural Network using KAN layers for message and node update functions.
 
@@ -52,26 +53,40 @@ class GraphKAN(MessagePassing):
             msg_dim: int,
             ndim: int,
             hidden: int = 300,
+            node_hidden: int = 300,
             grid_size: int = 5,
             spline_order: int = 3,
             aggr: str = "add",
+            hidden_layers: int = 0,
+            node_hidden_layers: int = 0,
+            lamb_l1: float = 1.0,
+            lamb_entropy: float = 2.0,
     ):
         super().__init__(aggr=aggr)
-
+        self.n_f = n_f
+        self.msg_dim = msg_dim
         self.ndim = ndim
+        self.hidden = hidden
+        self.node_hidden = node_hidden
+        self.grid_size = grid_size
+        self.spline_order = spline_order
+        self.hidden_layers = hidden_layers
+        self.node_hidden_layers = node_hidden_layers
+        self.lamb_l1 = lamb_l1
+        self.lamb_entropy = lamb_entropy
 
         # Message function: [x_i, x_j] (2*n_f) → msg_dim
         # 4 layers, configurable hidden (default 300) - matches baseline
         msg_input_dim = 2 * n_f
         self.msg_layers = self._build_kan_network(
-            msg_input_dim, msg_dim, hidden, grid_size, spline_order
+            msg_input_dim, msg_dim, hidden, grid_size, spline_order, hidden_layers
         )
 
         # Node update function: [x, aggr_msgs] (n_f + msg_dim) → ndim
         # 4 layers, configurable hidden (default 300) - matches baseline
         node_input_dim = n_f + msg_dim
         self.node_layers = self._build_kan_network(
-            node_input_dim, ndim, hidden, grid_size, spline_order
+            node_input_dim, ndim, node_hidden, grid_size, spline_order, node_hidden_layers
         )
 
     def _build_kan_network(
@@ -81,6 +96,7 @@ class GraphKAN(MessagePassing):
             hidden: int,
             grid_size: int,
             spline_order: int,
+            hidden_layers: int = 0,
     ) -> nn.ModuleList:
         """
         Build a 4-layer KAN network with configurable hidden dimension (matches baseline).
@@ -106,11 +122,9 @@ class GraphKAN(MessagePassing):
         layers = []
         # Layer 1: in_dim → hidden
         layers.append(KANLayer(in_dim=in_dim, out_dim=hidden, num=grid_size, k=spline_order))
-        # Layer 2: hidden → hidden
-        layers.append(KANLayer(in_dim=hidden, out_dim=hidden, num=grid_size, k=spline_order))
-        # Layer 3: hidden → hidden
-        layers.append(KANLayer(in_dim=hidden, out_dim=hidden, num=grid_size, k=spline_order))
-        # Layer 4: hidden → out_dim
+        for _ in range(hidden_layers):
+            layers.append(KANLayer(in_dim=hidden, out_dim=hidden, num=grid_size, k=spline_order))
+        # Final layer: hidden → out_dim
         layers.append(KANLayer(in_dim=hidden, out_dim=out_dim, num=grid_size, k=spline_order))
 
         return nn.ModuleList(layers)
@@ -267,6 +281,61 @@ class GraphKAN(MessagePassing):
                     layer.update_grid_from_samples(layer_input)
                     # Propagate to get input for next layer
                     layer_input, _, _, _ = layer(layer_input)
+                    
+    def regularization(
+        self,
+    ) -> torch.Tensor:
+        """
+        Compute KAN sparsity regularization over all msg and node layers.
+        Mirrors pykan's MultKAN.get_reg() but operates on raw KANLayer instances.
+        """
+        reg = torch.tensor(0.0)
+        
+        all_layers = list(self.msg_layers) + list(self.node_layers)
+        
+        for layer in all_layers:
+            # acts_scale shape: (out_dim, in_dim)
+            # only available after a forward pass has been run
+            if not hasattr(layer, 'acts_scale'):
+                continue
+            
+            acts = layer.acts_scale  # mean |activation| per spline edge
+            
+            # L1 — total activation magnitude, pushes edges toward zero
+            l1 = torch.sum(torch.mean(acts, dim=0))
+            
+            # Entropy — encourages each output to depend on ONE input strongly
+            # low entropy = one dominant spline = interpretable
+            acts_normalized = acts / (torch.sum(acts, dim=0, keepdim=True) + 1e-8)
+            entropy = -torch.sum(
+                acts_normalized * torch.log(acts_normalized + 1e-8), dim=0
+            ).mean()
+            
+            reg += self.lamb_l1 * l1 + self.lamb_entropy * entropy
+        
+        return reg
+
+    def summary(self):
+        super().summary()   
+        
+        print(f"  Grid size:     {self.grid_size}")
+        print(f"  Spline order:  {self.spline_order}")
+        print(f"  KAN layers:    {len(self.msg_layers)} msg, "
+                f"{len(self.node_layers)} node")
+        print(f"  L1 regularization: {self.lamb_l1}")
+        print(f"  Entropy regularization: {self.lamb_entropy}")
+        print()
+        print("  msg_layers:")
+        for i, layer in enumerate(self.msg_layers):
+            n = sum(p.numel() for p in layer.parameters())
+            print(f"    [{i}]  {layer.in_dim:>4} → {layer.out_dim:<4}  "
+                    f"params: {n:,}")
+        print("  node_layers:")
+        for i, layer in enumerate(self.node_layers):
+            n = sum(p.numel() for p in layer.parameters())
+            print(f"    [{i}]  {layer.in_dim:>4} → {layer.out_dim:<4}  "
+                    f"params: {n:,}")
+        print("=" * 60)
 
 
 class OrdinaryGraphKAN(OrdinaryMixin, GraphKAN):
@@ -303,13 +372,18 @@ class OrdinaryGraphKAN(OrdinaryMixin, GraphKAN):
             ndim: int,
             edge_index: torch.Tensor,
             hidden: int = 300,
+            node_hidden: int = 300,
             grid_size: int = 5,
             spline_order: int = 3,
             aggr: str = "add",
+            hidden_layers: int = 0,
+            node_hidden_layers: int = 0,
+            lamb_l1: float = 1.0,
+            lamb_entropy: float = 2.0
     ):
         super().__init__(
-            n_f, msg_dim, ndim, hidden, grid_size, spline_order, aggr
+            n_f, msg_dim, ndim, hidden, node_hidden, grid_size, spline_order, aggr, hidden_layers, node_hidden_layers, lamb_l1, lamb_entropy
         )
         self.register_buffer("edge_index", edge_index)
-
+            
     # just_derivative() and loss() are inherited from OrdinaryMixin

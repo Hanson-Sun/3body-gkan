@@ -14,9 +14,10 @@ from torch.nn import Sequential as Seq, Linear as Lin, ReLU
 from torch_geometric.nn import MessagePassing
 
 from .ordinary_mixin import OrdinaryMixin
+from .graph_mixin import GraphMixin
 
 
-class GN(MessagePassing):
+class GN(MessagePassing, GraphMixin):
     """
     Graph Network with MLP message and node update functions.
 
@@ -42,8 +43,11 @@ class GN(MessagePassing):
             self, n_f: int, msg_dim: int, ndim: int, hidden: int = 300, aggr: str = "add"
     ):
         super().__init__(aggr=aggr)
-
+        
+        self.n_f = n_f
+        self.msg_dim = msg_dim
         self.ndim = ndim
+        self.hidden = hidden
 
         # Message function: [x_i, x_j] (2*n_f) → msg_dim
         # 4 layers, configurable hidden dimension (default 300) - matches original
@@ -130,6 +134,9 @@ class GN(MessagePassing):
         # Concatenate [x, aggregated_messages]
         tmp = torch.cat([x, aggr_out], dim=1)  # (n_nodes, msg_dim+n_f)
         return self.node_fnc(tmp)
+        
+    def summary(self):
+        super().summary()
 
 
 class OGN(OrdinaryMixin, GN):
