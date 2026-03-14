@@ -216,7 +216,7 @@ class GraphKAN(MessagePassing, GraphMixin):
         tmp = torch.cat([x, aggr_out], dim=1)  # (n_nodes, msg_dim+n_f)
         return self._forward_kan_layers(tmp, self.node_layers)
 
-    def update_grids(self, data_loader, device='cpu', max_batches: int = 10):
+    def update_grids(self, data_loader, device:torch.device | str = 'cpu', max_batches: int = 10):
         """
         Update KAN grids based on training data distribution.
 
@@ -246,40 +246,42 @@ class GraphKAN(MessagePassing, GraphMixin):
             msg_inputs_layer0 = []
             node_inputs_layer0 = []
 
+            # Pass 1: collect msg inputs and compute node inputs with current weights
             for i, batch in enumerate(data_loader):
                 if i >= max_batches:
                     break
                 batch = batch.to(device)
                 x = batch.x
                 edge_index = batch.edge_index
-
-                # Message function inputs
                 row, col = edge_index
-                x_i = x[row]
-                x_j = x[col]
-                msg_input = torch.cat([x_i, x_j], dim=1)
+                msg_input = torch.cat([x[row], x[col]], dim=1)
                 msg_inputs_layer0.append(msg_input)
-
-                # Node function inputs (need to run through message layers)
-                msg_out = self._forward_kan_layers(msg_input, self.msg_layers)
-                aggr_msg = scatter_add(msg_out, row, dim=0, dim_size=x.size(0))
-                node_input = torch.cat([x, aggr_msg], dim=1)
-                node_inputs_layer0.append(node_input)
-
-            # Update message layers sequentially
+            
+            # Update message grids first
             if msg_inputs_layer0:
                 layer_input = torch.cat(msg_inputs_layer0, dim=0)
                 for layer in self.msg_layers:
                     layer.update_grid_from_samples(layer_input)
-                    # Propagate to get input for next layer
                     layer_input, _, _, _ = layer(layer_input)
-
-            # Update node layers sequentially
+            
+            # Pass 2: collect node inputs AFTER message grids are updated
+            for i, batch in enumerate(data_loader):
+                if i >= max_batches:
+                    break
+                batch = batch.to(device)
+                x = batch.x
+                edge_index = batch.edge_index
+                row, col = edge_index
+                msg_input = torch.cat([x[row], x[col]], dim=1)
+                msg_out = self._forward_kan_layers(msg_input, self.msg_layers)
+                aggr_msg = scatter_add(msg_out, row, dim=0, dim_size=x.size(0))
+                node_inputs_layer0.append(torch.cat([x, aggr_msg], dim=1))
+            
+            # Now update node grids with fresh inputs
             if node_inputs_layer0:
                 layer_input = torch.cat(node_inputs_layer0, dim=0)
                 for layer in self.node_layers:
                     layer.update_grid_from_samples(layer_input)
-                    # Propagate to get input for next layer
                     layer_input, _, _, _ = layer(layer_input)
                     
     def regularization(
@@ -289,7 +291,7 @@ class GraphKAN(MessagePassing, GraphMixin):
         Compute KAN sparsity regularization over all msg and node layers.
         Mirrors pykan's MultKAN.get_reg() but operates on raw KANLayer instances.
         """
-        reg = torch.tensor(0.0)
+        reg = torch.tensor(0.0, device=next(self.parameters()).device)
         
         all_layers = list(self.msg_layers) + list(self.node_layers)
         
