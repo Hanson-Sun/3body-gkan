@@ -8,9 +8,13 @@ from typing import Optional
 import numpy as np
 import torch
 from torch_geometric.data import Data
+import matplotlib
+matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 from matplotlib.animation import FuncAnimation, FFMpegWriter
 from kan.spline import coef2curve
+from torch_geometric.data import Data
+from torch_geometric.loader import DataLoader as PyGLoader
 
 from nbody_gkan.models import OrdinaryGraphKAN, OGN
 from nbody_gkan.nbody import NBodySimulator
@@ -406,6 +410,85 @@ def visualize_kan_network(model: 'OrdinaryGraphKAN',
 
     gc.collect()
     torch.cuda.empty_cache()
+    
+def visualize_symbolic_expressions(
+        kan_model,
+        x_nodes: torch.Tensor,
+        output_dir: str | Path,
+        lib: list[str] | None = None,
+        threshold: float = 0.85,
+        max_batches: int = 10,
+) -> dict:
+    """
+    Run symbolic regression on a trained GraphKAN model, print results,
+    and save to JSON.
+
+    Parameters
+    ----------
+    kan_model : OrdinaryGraphKAN
+        Trained model
+    x_nodes : torch.Tensor
+        Representative node features, shape (n_nodes, n_f)
+    output_dir : str or Path
+        Directory to save symbolic_regression.json
+    lib : list of str, optional
+        Candidate symbolic functions. Defaults to physics-relevant library.
+    threshold : float
+        Minimum R² to report a match
+    max_batches : int
+        Number of batches to run forward pass over
+
+    Returns
+    -------
+    dict
+        Raw suggestions from suggest_symbolic()
+    """
+    import json
+
+    output_dir = Path(output_dir)
+    output_dir.mkdir(parents=True, exist_ok=True)
+
+    if lib is None:
+        lib = ['x', 'x^2', 'x^3', '1/x', '1/x^2',
+               'sqrt(x)', 'log(x)', 'abs(x)', 'sin(x)']
+
+    print("\n" + "=" * 60)
+    print("Symbolic Regression Analysis")
+    print("=" * 60)
+
+    sym_graph  = Data(x=x_nodes, edge_index=kan_model.edge_index)
+    sym_loader = PyGLoader([sym_graph] * max_batches, batch_size=1)
+
+    suggestions = kan_model.suggest_symbolic(
+        sym_loader,
+        device=next(kan_model.parameters()).device,
+        lib=lib,
+        threshold=threshold,
+    )
+
+    kan_model.print_symbolic_suggestions(suggestions)
+
+    # Serialize — tuple keys need converting for JSON
+    serializable = {}
+    for layer_key in ['msg_layers', 'node_layers']:
+        serializable[layer_key] = {}
+        for layer_idx, edges in suggestions[layer_key].items():
+            serializable[layer_key][str(layer_idx)] = {}
+            for (in_i, out_i), info in edges.items():
+                serializable[layer_key][str(layer_idx)][f'{in_i}->{out_i}'] = {
+                    'fn':         info['fn'],
+                    'r2':         round(float(info['r2']), 6),
+                    'a':          round(float(info['a']),  6),
+                    'b':          round(float(info['b']),  6),
+                    'expression': f"{info['a']:.4f} * {info['fn']} + {info['b']:.4f}",
+                }
+
+    save_path = output_dir / 'symbolic_regression.json'
+    with open(save_path, 'w') as f:
+        json.dump(serializable, f, indent=2)
+    print(f"  Saved: {save_path}")
+
+    return suggestions
 
 
 def main(
@@ -475,6 +558,7 @@ def main(
         )
 
     # Spline visualizations
+    # Spline visualizations
     if args.plot_splines:
         print("\n" + "=" * 60)
         print("Graph-KAN Spline Analysis")
@@ -484,25 +568,35 @@ def main(
         # Build representative inputs for activation population
         with torch.no_grad():
             mass_expanded = masses.unsqueeze(1)
-            x_nodes   = torch.cat([pos0, vel0, mass_expanded], dim=1)       # (n_bodies, n_f)
-            src, dst  = kan_model.edge_index[0], kan_model.edge_index[1]    # ← from model, not external
-            msg_sample = torch.cat([x_nodes[src], x_nodes[dst]], dim=1)     # (n_edges, 2*n_f)
+            x_nodes  = torch.cat([pos0, vel0, mass_expanded], dim=1)
+            src, dst = kan_model.edge_index[0], kan_model.edge_index[1]
+            msg_sample = torch.cat([x_nodes[src], x_nodes[dst]], dim=1)
 
             msg_sample_batch = (msg_sample.repeat(50, 1)
                                 + torch.randn(msg_sample.shape[0] * 50,
-                                              msg_sample.shape[1]) * 0.5)
-
-            node_sample_batch = torch.randn(200, kan_model.n_f + kan_model.msg_dim) * 0.5  # ← from model
+                                                msg_sample.shape[1]) * 0.5)
+            node_sample_batch = torch.randn(200, kan_model.n_f + kan_model.msg_dim) * 0.5
 
         print("\n" + "=" * 60)
         print("Graph-KAN Native Network Visualization")
         print("=" * 60)
         visualize_kan_network(kan_model, msg_sample_batch,
-                              network='msg',
-                              save_path=f'{args.output_dir}/kan_msg_network.png')
+                                network='msg',
+                                save_path=f'{args.output_dir}/kan_msg_network.png')
         visualize_kan_network(kan_model, node_sample_batch,
-                              network='node',
-                              save_path=f'{args.output_dir}/kan_node_network.png')
+                                network='node',
+                                save_path=f'{args.output_dir}/kan_node_network.png')
+
+        # ── Symbolic regression — only once, after network viz ────
+        print("\n" + "=" * 60)
+        print("Symbolic Regression Analysis")
+        print("=" * 60)
+        suggestions = visualize_symbolic_expressions(
+                    kan_model,
+                    x_nodes=x_nodes,
+                    output_dir=args.output_dir,
+                    threshold=0.85,
+                )
 
     print("\n" + "=" * 60)
     print("Done! Generated files:")

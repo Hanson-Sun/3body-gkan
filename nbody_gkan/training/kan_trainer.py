@@ -1,6 +1,7 @@
 import torch
 import warnings
 from tqdm import tqdm
+from kan.LBFGS import LBFGS
 from .trainer import Trainer
 
 
@@ -44,9 +45,14 @@ class KANTrainer(Trainer):
         self._adam_optimizer = torch.optim.Adam(
             model.parameters(), lr=adam_lr
         )
+        # self._lbfgs_optimizer = LBFGS(          # pykan's LBFGS — handles minibatch
+        #     model.parameters(), lr=lbfgs_lr,    # noise and nonsmooth splines better
+        #     max_iter=10, history_size=20,
+        #     line_search_fn='strong_wolfe',
+        # )
         self._lbfgs_optimizer = torch.optim.LBFGS(
             model.parameters(), lr=lbfgs_lr,
-            max_iter=5, history_size=10,
+            max_iter=10, history_size=20,
             line_search_fn='strong_wolfe',
         )
 
@@ -54,12 +60,13 @@ class KANTrainer(Trainer):
         self.optimizer = self._adam_optimizer if adam_warmup_epochs > 0 else self._lbfgs_optimizer
         self._using_lbfgs = adam_warmup_epochs == 0
 
-        self.scheduler          = scheduler
-        self.lamb               = 0.0
-        self.grid_update_freq   = grid_update_freq
+        self.scheduler         = scheduler
+        self.lamb              = 0.0
+        self.grid_update_freq  = grid_update_freq
         self.grid_update_warmup = grid_update_warmup
-        self.max_grid_updates   = max_grid_updates
-        self._n_grid_updates    = 0
+        self.max_grid_updates  = max_grid_updates
+        self._n_grid_updates   = 0
+
 
     def _maybe_switch_to_lbfgs(self, epoch: int):
         """Switch from Adam to LBFGS once warmup is complete."""
@@ -68,13 +75,12 @@ class KANTrainer(Trainer):
                 f"  Epoch {epoch}: switching from Adam to LBFGS "
                 f"(warmup complete after {self.adam_warmup_epochs} epochs)"
             )
-            self.optimizer   = self._lbfgs_optimizer
+            self.optimizer    = self._lbfgs_optimizer
             self._using_lbfgs = True
 
     @property
     def current_phase(self) -> str:
         return "LBFGS" if self._using_lbfgs else "Adam"
-
 
     def _on_epoch_start(self, epoch: int):
         # Phase switch check comes first
@@ -92,20 +98,23 @@ class KANTrainer(Trainer):
             self.model.update_grids(self.train_loader, device=self.device)
             self._n_grid_updates += 1
 
-
     def _train_step(self, batch, augment: bool = False,
                     augmentation_scale: float = 3.0) -> float:
         if self._using_lbfgs:
             def closure():
                 self.optimizer.zero_grad()
-                loss = self.model.loss(batch, augment=augment, augmentation=augmentation_scale, lamb=self.lamb)
+                loss = self.model.loss(batch, augment=augment,
+                                       augmentation=augmentation_scale,
+                                       lamb=self.lamb)
                 loss.backward()
                 return loss
             return self.optimizer.step(closure).item()
         else:
             # Standard Adam step
             self.optimizer.zero_grad()
-            loss = self.model.loss(batch, augment=augment, augmentation=augmentation_scale, lamb=self.lamb)
+            loss = self.model.loss(batch, augment=augment,
+                                   augmentation=augmentation_scale,
+                                   lamb=self.lamb)
             loss.backward()
             self.optimizer.step()
             return loss.item()

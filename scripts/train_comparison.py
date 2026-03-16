@@ -5,6 +5,8 @@ import argparse
 import torch
 from torch_geometric.loader import DataLoader
 from pathlib import Path
+import matplotlib
+matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 from tqdm import tqdm
 
@@ -158,10 +160,10 @@ def main(yaml_params: Optional[dict] = None, checkpoint_dir: Optional[str] = Non
     val_dataset = NBodyDataset(args.val_data)
 
     train_loader = DataLoader(train_dataset, batch_size=args.batch_size, shuffle=True, num_workers=8, pin_memory=True, persistent_workers=True)
-    val_loader = DataLoader(val_dataset, batch_size=args.batch_size, shuffle=False, num_workers=8, pin_memory=True, persistent_workers=True)
+    val_loader = DataLoader(val_dataset, batch_size=args.batch_size, shuffle=True, num_workers=8, pin_memory=True, persistent_workers=True)
 
     kan_train_loader = DataLoader(train_dataset, batch_size=args.kan_batch_size, shuffle=True, num_workers=8, pin_memory=True, persistent_workers=True)
-    kan_val_loader = DataLoader(val_dataset, batch_size=args.kan_batch_size, shuffle=False, num_workers=8, pin_memory=True, persistent_workers=True)
+    kan_val_loader = DataLoader(val_dataset, batch_size=args.kan_batch_size, shuffle=True, num_workers=8, pin_memory=True, persistent_workers=True)
 
     n_features = 2 * train_dataset.dim + 1
     edge_index = train_dataset.edge_index

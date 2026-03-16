@@ -3,6 +3,8 @@ from typing import Optional
 import torch
 from torch_geometric.loader import DataLoader
 from pathlib import Path
+import matplotlib
+matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 from tqdm import tqdm
 
