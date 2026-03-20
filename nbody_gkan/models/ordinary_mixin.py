@@ -93,9 +93,9 @@ class OrdinaryMixin:
         pred = self.just_derivative(g, augment=augment, augmentation=augmentation)
 
         if square:
-            task_loss = torch.sum((g.y - pred) ** 2)
+            task_loss = torch.mean((g.y - pred) ** 2)
         else:
-            task_loss = torch.sum(torch.abs(g.y - pred))
+            task_loss = torch.mean(torch.abs(g.y - pred))
     
         if lamb > 0.0 and hasattr(self, 'regularization'):
             reg = self.regularization()

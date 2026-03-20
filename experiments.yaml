@@ -84,7 +84,7 @@
 #   visualization_params:
 #     save_video: True
 #     plot_splines: True
-    
+
 # experiment_0b:
 #   name: "gravity_extra_long_epoch_regularized_minimal"
 #   data_params:
@@ -142,7 +142,7 @@
 #   visualization_params:
 #     save_video: True
 #     plot_splines: True
-    
+
 # test:
 #   name: "test"
 #   data_params:
@@ -173,7 +173,7 @@
 #     plot_splines: True
 
 experiment_1a:
-  name: "gravity_small_short"
+  name: "gravity_small_medium"
   data_params:
     n_train: 200
     n_val: 20
@@ -183,26 +183,30 @@ experiment_1a:
       hidden: 256
       msg_dim: 32
     gkan_hp:
-      hidden_layers: 2
+      hidden_layers: 4
       hidden: 4
       node_hidden_layers: 0
       node_hidden: 4
       msg_dim: 2
       grid_size: 5
-      lamb_l1: 1.0
-      lamb_entropy: 2.0
+      lamb_l1: 0.5
+      lamb_entropy: 1.0
+      adam_warmup_epochs: 0
+      grid_update_freq: 15 # might be important for interpretability but might cause instability, turn off for now.
+      grid_update_warmup: 5
+      max_grid_updates: 2
     training_hp:
       epochs: 67
       batch_size: 32
-      kan_batch_size: 32
+      kan_batch_size: 32768
       lr: 1e-3
-      lamb: 0.3
+      lamb: 0.0
   visualization_params:
     save_video: True
     plot_splines: True
 
 experiment_1b:
-  name: "linear_gravity_small_short"
+  name: "linear_gravity_small_medium"
   data_params:
     n_train: 200
     n_val: 20
@@ -212,26 +216,30 @@ experiment_1b:
       hidden: 256
       msg_dim: 32
     gkan_hp:
-      hidden_layers: 2
+      hidden_layers: 4
       hidden: 4
       node_hidden_layers: 0
       node_hidden: 4
       msg_dim: 2
       grid_size: 5
-      lamb_l1: 1.0
-      lamb_entropy: 2.0
+      lamb_l1: 0.5
+      lamb_entropy: 1.0
+      adam_warmup_epochs: 21
+      grid_update_freq: 15
+      grid_update_warmup: 25
+      max_grid_updates: 2
     training_hp:
       epochs: 67
       batch_size: 32
-      kan_batch_size: 32
+      kan_batch_size: 32768
       lr: 1e-3
-      lamb: 0.3
+      lamb: 0.0
   visualization_params:
     save_video: True
     plot_splines: True
 
 experiment_1c:
-  name: "cubic_gravity_small_short"
+  name: "cubic_gravity_small_medium"
   data_params:
     n_train: 200
     n_val: 20
@@ -241,20 +249,24 @@ experiment_1c:
       hidden: 256
       msg_dim: 32
     gkan_hp:
-      hidden_layers: 2
+      hidden_layers: 4
       hidden: 4
       node_hidden_layers: 0
       node_hidden: 4
       msg_dim: 2
       grid_size: 5
-      lamb_l1: 1.0
-      lamb_entropy: 2.0
+      lamb_l1: 0.5
+      lamb_entropy: 1.0
+      adam_warmup_epochs: 21
+      grid_update_freq: 15
+      grid_update_warmup: 25
+      max_grid_updates: 2
     training_hp:
       epochs: 67
       batch_size: 32
-      kan_batch_size: 32
+      kan_batch_size: 32768
       lr: 1e-3
-      lamb: 0.3
+      lamb: 0.0
   visualization_params:
     save_video: True
     plot_splines: True

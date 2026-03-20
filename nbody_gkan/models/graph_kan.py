@@ -7,8 +7,11 @@ storage and symbolic regression.
 
 from typing import Optional
 
+import numpy as np
 import torch
 import torch.nn as nn
+import sympy as sp
+from tqdm import tqdm
 from kan import KANLayer
 from torch_geometric.nn import MessagePassing
 
@@ -216,7 +219,7 @@ class GraphKAN(MessagePassing, GraphMixin):
         tmp = torch.cat([x, aggr_out], dim=1)  # (n_nodes, msg_dim+n_f)
         return self._forward_kan_layers(tmp, self.node_layers)
 
-    def update_grids(self, data_loader, device='cpu', max_batches: int = 10):
+    def update_grids(self, data_loader, device:torch.device | str = 'cpu', max_batches: int = 10):
         """
         Update KAN grids based on training data distribution.
 
@@ -246,42 +249,171 @@ class GraphKAN(MessagePassing, GraphMixin):
             msg_inputs_layer0 = []
             node_inputs_layer0 = []
 
+            # Pass 1: collect msg inputs
             for i, batch in enumerate(data_loader):
                 if i >= max_batches:
                     break
                 batch = batch.to(device)
                 x = batch.x
                 edge_index = batch.edge_index
-
-                # Message function inputs
                 row, col = edge_index
-                x_i = x[row]
-                x_j = x[col]
-                msg_input = torch.cat([x_i, x_j], dim=1)
+                msg_input = torch.cat([x[row], x[col]], dim=1)
                 msg_inputs_layer0.append(msg_input)
 
-                # Node function inputs (need to run through message layers)
-                msg_out = self._forward_kan_layers(msg_input, self.msg_layers)
-                aggr_msg = scatter_add(msg_out, row, dim=0, dim_size=x.size(0))
-                node_input = torch.cat([x, aggr_msg], dim=1)
-                node_inputs_layer0.append(node_input)
-
-            # Update message layers sequentially
+            # Update message grids first
             if msg_inputs_layer0:
                 layer_input = torch.cat(msg_inputs_layer0, dim=0)
+
+                # Guard against zero-variance dimensions (e.g. constant mass)
+                std = layer_input.std(dim=0, keepdim=True)
+                zero_var_dims = std < 1e-6
+                if zero_var_dims.any():
+                    zero_dims = zero_var_dims.squeeze().nonzero().flatten().tolist()
+                    tqdm.write(f"  [Grid Update] Jittering zero-variance msg dims: {zero_dims}")
+                    jitter = torch.randn_like(layer_input) * 1e-4
+                    layer_input = layer_input + jitter * zero_var_dims
+
                 for layer in self.msg_layers:
                     layer.update_grid_from_samples(layer_input)
-                    # Propagate to get input for next layer
                     layer_input, _, _, _ = layer(layer_input)
 
-            # Update node layers sequentially
+            # Pass 2: collect node inputs AFTER message grids are updated
+            for i, batch in enumerate(data_loader):
+                if i >= max_batches:
+                    break
+                batch = batch.to(device)
+                x = batch.x
+                edge_index = batch.edge_index
+                row, col = edge_index
+                msg_input = torch.cat([x[row], x[col]], dim=1)
+                msg_out = self._forward_kan_layers(msg_input, self.msg_layers)
+                aggr_msg = scatter_add(msg_out, row, dim=0, dim_size=x.size(0))
+                node_inputs_layer0.append(torch.cat([x, aggr_msg], dim=1))
+
+            # Now update node grids with fresh inputs
             if node_inputs_layer0:
                 layer_input = torch.cat(node_inputs_layer0, dim=0)
+
+                # Guard against zero-variance dimensions in node inputs
+                std = layer_input.std(dim=0, keepdim=True)
+                zero_var_dims = std < 1e-6
+                if zero_var_dims.any():
+                    zero_dims = zero_var_dims.squeeze().nonzero().flatten().tolist()
+                    tqdm.write(f"  [Grid Update] Jittering zero-variance node dims: {zero_dims}")
+                    jitter = torch.randn_like(layer_input) * 1e-4
+                    layer_input = layer_input + jitter * zero_var_dims
+
                 for layer in self.node_layers:
                     layer.update_grid_from_samples(layer_input)
-                    # Propagate to get input for next layer
                     layer_input, _, _, _ = layer(layer_input)
-                    
+
+        self.train()
+
+    def suggest_symbolic(self, data_loader, device='cpu', lib=None,
+                        max_batches=10, threshold=0.8) -> dict:
+        if lib is None:
+            lib = ['x', 'x^2', 'x^3', '1/x', '1/x^2',
+                'sqrt(x)', 'log(x)', 'exp(x)', 'abs(x)', 'sin(x)']
+    
+        self.eval()
+        with torch.no_grad():
+            for i, batch in enumerate(data_loader):
+                if i >= max_batches:
+                    break
+                batch = batch.to(device)
+                # Call GraphKAN.forward directly — bypasses OrdinaryMixin
+                # which may not trigger message/update and populate acts_scale
+                self.propagate(
+                    batch.edge_index,
+                    size=(batch.x.size(0), batch.x.size(0)),
+                    x=batch.x
+                )
+    
+        # Diagnostic — log whether acts_scale got populated
+        for i, layer in enumerate(self.msg_layers):
+            if not hasattr(layer, 'acts_scale'):
+                tqdm.write(f"  Warning: msg layer {i} has no acts_scale — "
+                        f"forward pass may not have reached it")
+        for i, layer in enumerate(self.node_layers):
+            if not hasattr(layer, 'acts_scale'):
+                tqdm.write(f"  Warning: node layer {i} has no acts_scale — "
+                        f"forward pass may not have reached it")
+    
+        suggestions = {'msg_layers': {}, 'node_layers': {}}
+    
+        def _suggest_for_layers(layers, layer_key):
+            for layer_idx, layer in enumerate(layers):
+                suggestions[layer_key][layer_idx] = {}
+                for in_i in range(layer.in_dim):
+                    for out_i in range(layer.out_dim):
+                        best_fn     = None
+                        best_r2     = -float('inf')
+                        best_coeffs = None
+    
+                        x_sample = torch.linspace(
+                            layer.grid[in_i, layer.k].item(),
+                            layer.grid[in_i, -layer.k - 1].item(),
+                            steps=100,
+                        ).unsqueeze(1).to(device)
+    
+                        with torch.no_grad():
+                            y_spline, _, _, _ = layer(
+                                x_sample.expand(-1, layer.in_dim)
+                            )
+                        y_edge = y_spline[:, out_i].cpu().numpy()
+                        x_np   = x_sample.squeeze().cpu().numpy()
+    
+                        for fn_str in lib:
+                            try:
+                                x_sym  = sp.Symbol('x')
+                                fn_sym = sp.sympify(fn_str)
+                                fn_lam = sp.lambdify(x_sym, fn_sym, 'numpy')
+    
+                                with np.errstate(invalid='ignore', divide='ignore'):
+                                    y_cand = fn_lam(x_np).astype(float)
+    
+                                if not np.isfinite(y_cand).all():
+                                    continue
+                                A      = np.stack([y_cand, np.ones_like(y_cand)], axis=1)
+                                coeffs, _, _, _ = np.linalg.lstsq(A, y_edge, rcond=None)
+                                y_fit  = A @ coeffs
+                                ss_res = np.sum((y_edge - y_fit) ** 2)
+                                ss_tot = np.sum((y_edge - y_edge.mean()) ** 2)
+                                r2     = 1 - ss_res / (ss_tot + 1e-10)
+                                if r2 > best_r2:
+                                    best_r2     = r2
+                                    best_fn     = fn_str
+                                    best_coeffs = coeffs
+                            except Exception:
+                                continue
+    
+                        if best_fn is not None and best_r2 >= threshold:
+                            suggestions[layer_key][layer_idx][(in_i, out_i)] = {
+                                'fn': best_fn,
+                                'r2': best_r2,
+                                'a':  best_coeffs[0],
+                                'b':  best_coeffs[1],
+                            }
+    
+        _suggest_for_layers(self.msg_layers,  'msg_layers')
+        _suggest_for_layers(self.node_layers, 'node_layers')
+        self.train()
+        return suggestions
+        
+    def print_symbolic_suggestions(self, suggestions: dict):
+        """Pretty print suggestions from suggest_symbolic()"""
+        for layer_key in ['msg_layers', 'node_layers']:
+            print(f"\n{layer_key}:")
+            for layer_idx, edges in suggestions[layer_key].items():
+                print(f"  Layer {layer_idx}:")
+                if not edges:
+                    print("    No strong symbolic matches found")
+                for (in_i, out_i), info in edges.items():
+                    print(f"    edge ({in_i}→{out_i}): "
+                        f"{info['a']:.3f} * {info['fn']} + {info['b']:.3f}  "
+                        f"(R²={info['r2']:.4f})")
+
+
     def regularization(
         self,
     ) -> torch.Tensor:
@@ -289,35 +421,35 @@ class GraphKAN(MessagePassing, GraphMixin):
         Compute KAN sparsity regularization over all msg and node layers.
         Mirrors pykan's MultKAN.get_reg() but operates on raw KANLayer instances.
         """
-        reg = torch.tensor(0.0)
-        
+        reg = torch.tensor(0.0, device=next(self.parameters()).device)
+
         all_layers = list(self.msg_layers) + list(self.node_layers)
-        
+
         for layer in all_layers:
             # acts_scale shape: (out_dim, in_dim)
             # only available after a forward pass has been run
             if not hasattr(layer, 'acts_scale'):
                 continue
-            
+
             acts = layer.acts_scale  # mean |activation| per spline edge
-            
+
             # L1 — total activation magnitude, pushes edges toward zero
             l1 = torch.sum(torch.mean(acts, dim=0))
-            
+
             # Entropy — encourages each output to depend on ONE input strongly
             # low entropy = one dominant spline = interpretable
             acts_normalized = acts / (torch.sum(acts, dim=0, keepdim=True) + 1e-8)
             entropy = -torch.sum(
                 acts_normalized * torch.log(acts_normalized + 1e-8), dim=0
             ).mean()
-            
+
             reg += self.lamb_l1 * l1 + self.lamb_entropy * entropy
-        
+
         return reg
 
     def summary(self):
-        super().summary()   
-        
+        super().summary()
+
         print(f"  Grid size:     {self.grid_size}")
         print(f"  Spline order:  {self.spline_order}")
         print(f"  KAN layers:    {len(self.msg_layers)} msg, "
@@ -336,6 +468,8 @@ class GraphKAN(MessagePassing, GraphMixin):
             print(f"    [{i}]  {layer.in_dim:>4} → {layer.out_dim:<4}  "
                     f"params: {n:,}")
         print("=" * 60)
+
+
 
 
 class OrdinaryGraphKAN(OrdinaryMixin, GraphKAN):
@@ -385,5 +519,5 @@ class OrdinaryGraphKAN(OrdinaryMixin, GraphKAN):
             n_f, msg_dim, ndim, hidden, node_hidden, grid_size, spline_order, aggr, hidden_layers, node_hidden_layers, lamb_l1, lamb_entropy
         )
         self.register_buffer("edge_index", edge_index)
-            
+
     # just_derivative() and loss() are inherited from OrdinaryMixin
