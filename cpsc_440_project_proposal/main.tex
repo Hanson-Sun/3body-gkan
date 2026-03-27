@@ -26,31 +26,27 @@
 % Introduce any non-ML background that a CS/stat/ECE grad student might not know.
 % You do NOT need to introduce ML background covered in the course.
 
-[Describe the problem you are focusing on. Be precise: What is the input? What
-is the output or goal? Why is this problem interesting or important?
-Introduce any domain-specific background required to understand the setting.]
+% [Describe the problem you are focusing on. Be precise: What is the input? What is the output or goal? Why is this problem interesting or important? Introduce any domain-specific background required to understand the setting.]
 
 In their 2020 paper, ``\textit{Discovering Symbolic Models from Deep Learning with Inductive Biases}'',
-Cranmer et al. introduced a deep learning method for extracting relationships from simulated physics
+Cranmer et al.\cite{cranmer2020discoveringsymbolicmodelsdeep} introduced a deep learning method for extracting relationships from simulated physics
 interactions. Their work involved training a graph neural network (GNN) on the $n$-body problem then
 performing symbolic regression to recover a generalizable analytical form for Newton's law of universal gravity.
 
-One limitation of Cranmer et al.'s approach is that the GNN is not directly interpretable. The additional
-symbolic regression step is computationally expensive, and the quality of the obtained analytical form
-depends on whether the deep latent representation is semantically meaningful (as the learned parameters
-may not correspond to real physical quantities like mass and velocity).
+One limitation of Cranmer et al.'s\cite{cranmer2020discoveringsymbolicmodelsdeep} approach is that the GNN is not directly interpretable. The additional symbolic regression step is computationally expensive, and the quality of the obtained analytical form
+depends on whether the deep latent representation is semantically meaningful, as the learned parameters
+may not correspond to real physical quantities like mass and velocity.
 
 In 2024, Liu et al. demonstrated the potential of the Kolmogorov-Arnold network (KAN) to model physical
-relationships in ``\textit{KAN}'' and ``\textit{KAN 2.0}''. A KAN leverages the Kolmogorov-Arnold
-representation theorem, which states that any multivariate function can be represented as a composition
-of univariate functions. While a traditional MLP has a fixed multivariate activation function at each node,
-a KAN learns a univariate activation function for each edge. Liu et al. showed that KANs can outperform
+relationships in ``\textit{KAN}'' \cite{liu2025kankolmogorovarnoldnetworks} and ``\textit{KAN 2.0}'' \cite{liu2024kan20kolmogorovarnoldnetworks}. A KAN leverages the Kolmogorov-Arnold
+representation theorem, which states that any multivariate function can be represented as a composition of univariate functions. While a traditional MLP has a fixed multivariate activation function at each node,
+a KAN learns a univariate activation function for each edge \cite{liu2025kankolmogorovarnoldnetworks}. Liu et al.\cite{liu2025kankolmogorovarnoldnetworks}\cite{liu2024kan20kolmogorovarnoldnetworks} showed that KANs can outperform
 MLPs in various cases and discussed the benefits of the function composition model in terms of interpretability.
 
 Our goal is to explore the potential of a hybrid Kolmogorov-Arnold graph neural network (GKAN) architecture,
-which replaces the MLP layers in a GNN with KANs. We aim to prove this concept by training a GKAN on the
-$n$-body problem following a similar approach as Cranmer et al., then evaluating the hybrid model against the
-original GNN. We hypothesize that the GKAN can achieve comparable accuracy with the additional benefit
+which replaces the multi-layer perceptron (MLP) layers in a GNN with KANs. We aim to prove this concept by training a GKAN on the
+$n$-body problem following a similar approach as Cranmer et al.\cite{cranmer2020discoveringsymbolicmodelsdeep}, then evaluating the hybrid model against the
+original GNN approach. We hypothesize that the GKAN can achieve comparable accuracy with the additional benefit
 of being directly interpretable without requiring a symbolic regression step. We hope that this work contributes
 to the ongoing research surrounding interpretability of deep models.
 
@@ -73,14 +69,14 @@ to the ongoing research surrounding interpretability of deep models.
 \end{itemize}]
 
 We will be using deep learning methods---specifically, we will focus on GNNs, KANs, and GKANs. We will
-train on the $n$-body problem. The data will be generated via simulation using a numerically stable
-ODE integrator such as leapfrog. We will evaluate our approach both according to quantitative metrics
+train using the $n$-body problem. The data will be generated via simulation using a numerically stable
+ordinary differential equation (ODE) integrator such as leapfrog. We will evaluate our approach using quantitative metrics
 such as training/validation loss, as well as qualitative metrics such as interpretability, and we will
-compare our model against the baseline set by Cranmer et al.
+compare our model against the baseline set by Cranmer et al.\cite{cranmer2020discoveringsymbolicmodelsdeep}.
 
-In general, we aim to follow the baseline set by Cranmer et al. quite closely, as we want to evaluate
-whether the transition from MLP to KAN layers is a meaningful improvement over the baseline model. As we
-continue to develop and iterate on the approach, we may explore other physics problems or add additional steps
+In general, we aim to follow the baseline set by Cranmer et al.\cite{cranmer2020discoveringsymbolicmodelsdeep} quite closely, as we want to evaluate
+whether the transition to KAN layers is a meaningful improvement compared to MLP-based approaches. As we
+continue to develop and iterate on the approach, we may explore other physics problems, or add additional steps
 such as pre-processing.
 
 
@@ -95,16 +91,13 @@ such as pre-processing.
 %   Generalization to new setting | Survey/perspective | Coding project
 %   Reproducibility report | Theory
 
-[State clearly what the contribution of your project will be. Examples:
-\begin{itemize}
-  \item Showing that method X outperforms Y on application Z, with an
-        explanation of why.
-  \item A new algorithm that scales method X to datasets of size $n \gg 10^6$.
-  \item A structured survey of topic X with original insights on future
-        directions.
-  \item Negative result: a careful argument for why approach X does not work
-        in setting Y, and why.
-\end{itemize}]
+%[State clearly what the contribution of your project will be. Examples:
+%\begin{itemize}
+%  \item Showing that method X outperforms Y on application Z, with an explanation of why.
+%  \item A new algorithm that scales method X to datasets of size $n \gg 10^6$.
+%  \item A structured survey of topic X with original insights on future directions.
+% \item Negative result: a careful argument for why approach X does not work in setting Y, and why.
+% \end{itemize}]
 
 Our project is primarily an ``application bake-off'' (GKANs vs. GNNs), though it incorporates elements of
 a few other project types.
@@ -112,8 +105,7 @@ a few other project types.
 Ideally, we will show that GKANs outperform GNNs with symbolic regression as a method of recovering
 physical relationships, both in terms of accuracy and interpretability. We expect this to be the case
 because the Kolmogorov-Arnold representation theorem framing allows us to choose our inductive biases
-in a more physics-informed way, and the composition of univariate functions learned by the KAN layers
-is can be directly visualized.
+in a more physics-informed way, and the composition of univariate functions learned by the KAN layers can be directly visualized.
 
 
 % ─── 4. Team \& Responsibilities (delete if solo) ────────────────────────────
@@ -125,7 +117,7 @@ is can be directly visualized.
 \textbf{Name} & \textbf{Student \#} & \textbf{Primary Responsibilities} \\
 \hline
 Author One   & 12345678 & [e.g., data preprocessing, experiments] \\
-Author Two   & 87654321 & [e.g., method implementation, writeup]   \\
+Eitan Klinger   & 41432253 & ...   \\
 Author Three & 11223344 & [e.g., baseline comparisons, evaluation] \\
 Arthur Guo & 16000796 & method implementation, experiments \\
 \hline
@@ -154,14 +146,8 @@ Apr 27  & [e.g., Draft report finished] \\
 
 % ─── References ──────────────────────────────────────────────────────────────
 \bibliographystyle{plain}
-% \bibliography{references}   % uncomment and point to your .bib file
+\bibliography{references}   % uncomment and point to your .bib file
 
 % Manual references example (remove once you switch to BibTeX):
-\begin{thebibliography}{9}
-  \bibitem{example}
-  Author(s).
-  \textit{Title of Paper}.
-  Venue, Year.
-\end{thebibliography}
 
 \end{document}
