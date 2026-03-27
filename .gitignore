@@ -1,2 +1,9 @@
 .idea
+.venv
+**.egg-info
 __pycache__
+figures/*
+visualizations/*
+data/*
+checkpoints/*
+outputs/*
