@@ -1,0 +1,130 @@
+\documentclass[11pt]{article}
+\usepackage{fullpage}
+\usepackage{times}
+\usepackage{hyperref}
+\usepackage{amsmath, amssymb}
+\usepackage{parskip}
+
+% ─── Title Block ──────────────────────────────────────────────────────────────
+\title{%
+  \textbf{Interpretable N-Body Physics with GKANs}\\[0.4em]
+  \large CPSC 440 Machine Learning --- Project Proposal
+}
+\author{
+  Hanson Sun \quad Eitan Klinger \quad Author Three\\
+  \small\texttt{\{jsun33, ekling01, student3\}@cs.ubc.ca}
+}
+
+\begin{document}
+\maketitle
+\thispagestyle{empty}
+
+% ─── 1. Problem Statement ─────────────────────────────────────────────────────
+\section*{1. Problem Statement}
+
+% What specific problem are you tackling?
+% Introduce any non-ML background that a CS/stat/ECE grad student might not know.
+% You do NOT need to introduce ML background covered in the course.
+
+[Describe the problem you are focusing on. Be precise: What is the input? What
+is the output or goal? Why is this problem interesting or important?
+Introduce any domain-specific background required to understand the setting.]
+
+Approaches towards extracting mathematical equations for n-body systems, where multiple masses affect each other gravitationally, rely on black-box models. Doing so hinders interpretability and limits generalizations.
+
+... more background on MLP approaches?
+
+... stuff about how KAN allows symbolic learning directly without requiring another step
+
+... overall the input would be n-body simulation data, output would be interpretable, symbolic representations of the math governing the simulations...
+
+
+% ─── 2. Proposed Approach ────────────────────────────────────────────────────
+\section*{2. Proposed Approach}
+
+% What do you plan to do?
+% Which methods will you apply, extend, or implement?
+% What data will you use? How will you obtain / preprocess it?
+
+[Describe your plan concretely. For example:
+\begin{itemize}
+  \item \textbf{Methods:} Which ML techniques will you use or build upon?
+        (e.g., logistic regression, kernel methods, deep nets, graphical models)
+  \item \textbf{Dataset:} What data will you work with, and how will you
+        acquire / preprocess it?
+  \item \textbf{Experimental setup:} How will you evaluate your approach?
+        What baselines will you compare against?
+\end{itemize}]
+
+
+% ─── 3. Expected Contribution ────────────────────────────────────────────────
+\section*{3. Expected Contribution}
+
+% What will doing this project add to the world?
+% Choose one of the project types below and explain your specific contribution.
+%
+% Common project types (pick one or mix):
+%   Application bake-off | New application | Scaling up | Improving performance
+%   Generalization to new setting | Survey/perspective | Coding project
+%   Reproducibility report | Theory
+
+[State clearly what the contribution of your project will be. Examples:
+\begin{itemize}
+  \item Showing that method X outperforms Y on application Z, with an
+        explanation of why.
+  \item A new algorithm that scales method X to datasets of size $n \gg 10^6$.
+  \item A structured survey of topic X with original insights on future
+        directions.
+  \item Negative result: a careful argument for why approach X does not work
+        in setting Y, and why.
+\end{itemize}]
+
+
+% ─── 4. Team \& Responsibilities (delete if solo) ────────────────────────────
+\section*{4. Team \& Division of Responsibilities}
+
+\begin{center}
+\begin{tabular}{lll}
+\hline
+\textbf{Name} & \textbf{Student \#} & \textbf{Primary Responsibilities} \\
+\hline
+Author One   & 12345678 & [e.g., data preprocessing, experiments] \\
+Author Two   & 87654321 & [e.g., method implementation, writeup]   \\
+Author Three & 11223344 & [e.g., baseline comparisons, evaluation] \\
+\hline
+\end{tabular}
+\end{center}
+
+
+% ─── 5. Timeline ─────────────────────────────────────────────────────────────
+\section*{5. Timeline}
+
+\begin{center}
+\begin{tabular}{ll}
+\hline
+\textbf{Date}   & \textbf{Milestone} \\
+\hline
+Mar 29  & Proposal submitted \\
+Apr 6   & [e.g., Data collected and preprocessed] \\
+Apr 13  & [e.g., Baseline results obtained] \\
+Apr 20  & [e.g., Main experiments complete] \\
+Apr 27  & [e.g., Draft report finished] \\
+[Final] & Report submitted \\
+\hline
+\end{tabular}
+\end{center}
+
+
+% ─── References ──────────────────────────────────────────────────────────────
+\bibliographystyle{plain}
+% \bibliography{references}   % uncomment and point to your .bib file
+
+% Manual references example (remove once you switch to BibTeX):
+\begin{thebibliography}{9}
+  \bibitem{example}
+  Author(s).
+  \textit{Title of Paper}.
+  Venue, Year.
+\end{thebibliography}
+
+\end{document}
