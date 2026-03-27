@@ -11,8 +11,8 @@
   \large CPSC 440 Machine Learning --- Project Proposal
 }
 \author{
-  Hanson Sun \quad Eitan Klinger \quad Author Three\\
-  \small\texttt{\{jsun33, ekling01, student3\}@cs.ubc.ca}
+  Hanson Sun \quad Eitan Klinger \quad Arthur Guo\\
+  \small\texttt{\{jsun33, ekling01, aguo07\}@cs.ubc.ca}
 }
 
 \begin{document}
@@ -30,13 +30,29 @@
 is the output or goal? Why is this problem interesting or important?
 Introduce any domain-specific background required to understand the setting.]
 
-Approaches towards extracting mathematical equations for n-body systems, where multiple masses affect each other gravitationally, rely on black-box models. Doing so hinders interpretability and limits generalizations.
+In their 2020 paper, ``\textit{Discovering Symbolic Models from Deep Learning with Inductive Biases}'',
+Cranmer et al. introduced a deep learning method for extracting relationships from simulated physics
+interactions. Their work involved training a graph neural network (GNN) on the $n$-body problem then
+performing symbolic regression to recover a generalizable analytical form for Newton's law of universal gravity.
 
-... more background on MLP approaches?
+One limitation of Cranmer et al.'s approach is that the GNN is not directly interpretable. The additional
+symbolic regression step is computationally expensive, and the quality of the obtained analytical form
+depends on whether the deep latent representation is semantically meaningful (as the learned parameters
+may not correspond to real physical quantities like mass and velocity).
 
-... stuff about how KAN allows symbolic learning directly without requiring another step
+In 2024, Liu et al. demonstrated the potential of the Kolmogorov-Arnold network (KAN) to model physical
+relationships in ``\textit{KAN}'' and ``\textit{KAN 2.0}''. A KAN leverages the Kolmogorov-Arnold
+representation theorem, which states that any multivariate function can be represented as a composition
+of univariate functions. While a traditional MLP has a fixed multivariate activation function at each node,
+a KAN learns a univariate activation function for each edge. Liu et al. showed that KANs can outperform
+MLPs in various cases and discussed the benefits of the function composition model in terms of interpretability.
 
-... overall the input would be n-body simulation data, output would be interpretable, symbolic representations of the math governing the simulations...
+Our goal is to explore the potential of a hybrid Kolmogorov-Arnold graph neural network (GKAN) architecture,
+which replaces the MLP layers in a GNN with KANs. We aim to prove this concept by training a GKAN on the
+$n$-body problem following a similar approach as Cranmer et al., then evaluating the hybrid model against the
+original GNN. We hypothesize that the GKAN can achieve comparable accuracy with the additional benefit
+of being directly interpretable without requiring a symbolic regression step. We hope that this work contributes
+to the ongoing research surrounding interpretability of deep models.
 
 
 % ─── 2. Proposed Approach ────────────────────────────────────────────────────
@@ -55,6 +71,17 @@ Approaches towards extracting mathematical equations for n-body systems, where m
   \item \textbf{Experimental setup:} How will you evaluate your approach?
         What baselines will you compare against?
 \end{itemize}]
+
+We will be using deep learning methods---specifically, we will focus on GNNs, KANs, and GKANs. We will
+train on the $n$-body problem. The data will be generated via simulation using a numerically stable
+ODE integrator such as leapfrog. We will evaluate our approach both according to quantitative metrics
+such as training/validation loss, as well as qualitative metrics such as interpretability, and we will
+compare our model against the baseline set by Cranmer et al.
+
+In general, we aim to follow the baseline set by Cranmer et al. quite closely, as we want to evaluate
+whether the transition from MLP to KAN layers is a meaningful improvement over the baseline model. As we
+continue to develop and iterate on the approach, we may explore other physics problems or add additional steps
+such as pre-processing.
 
 
 % ─── 3. Expected Contribution ────────────────────────────────────────────────
@@ -79,6 +106,15 @@ Approaches towards extracting mathematical equations for n-body systems, where m
         in setting Y, and why.
 \end{itemize}]
 
+Our project is primarily an ``application bake-off'' (GKANs vs. GNNs), though it incorporates elements of
+a few other project types.
+
+Ideally, we will show that GKANs outperform GNNs with symbolic regression as a method of recovering
+physical relationships, both in terms of accuracy and interpretability. We expect this to be the case
+because the Kolmogorov-Arnold representation theorem framing allows us to choose our inductive biases
+in a more physics-informed way, and the composition of univariate functions learned by the KAN layers
+is can be directly visualized.
+
 
 % ─── 4. Team \& Responsibilities (delete if solo) ────────────────────────────
 \section*{4. Team \& Division of Responsibilities}
@@ -91,6 +127,7 @@ Approaches towards extracting mathematical equations for n-body systems, where m
 Author One   & 12345678 & [e.g., data preprocessing, experiments] \\
 Author Two   & 87654321 & [e.g., method implementation, writeup]   \\
 Author Three & 11223344 & [e.g., baseline comparisons, evaluation] \\
+Arthur Guo & 16000796 & method implementation, experiments \\
 \hline
 \end{tabular}
 \end{center}
