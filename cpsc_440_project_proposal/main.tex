@@ -20,7 +20,7 @@
 \thispagestyle{empty}
 
 % ─── 1. Problem Statement ─────────────────────────────────────────────────────
-\section*{1. Problem Statement}
+\section{Problem Statement}
 
 % What specific problem are you tackling?
 % Introduce any non-ML background that a CS/stat/ECE grad student might not know.
@@ -28,19 +28,19 @@
 
 % [Describe the problem you are focusing on. Be precise: What is the input? What is the output or goal? Why is this problem interesting or important? Introduce any domain-specific background required to understand the setting.]
 
-In their 2020 paper, ``\textit{Discovering Symbolic Models from Deep Learning with Inductive Biases}'',
+In their 2020 paper, \textit{Discovering Symbolic Models from Deep Learning with Inductive Biases},
 Cranmer et al.\cite{cranmer2020discoveringsymbolicmodelsdeep} introduced a deep learning method for extracting relationships from simulated physics
 interactions. Their work involved training a graph neural network (GNN) on the $n$-body problem then
 performing symbolic regression to recover a generalizable analytical form for Newton's law of universal gravity.
 
 One limitation of Cranmer et al.'s\cite{cranmer2020discoveringsymbolicmodelsdeep} approach is that the GNN is not directly interpretable. The additional symbolic regression step is computationally expensive, and the quality of the obtained analytical form
 depends on whether the deep latent representation is semantically meaningful, as the learned parameters
-may not correspond to real physical quantities like mass and velocity.
+may not correspond to real physical relationships between features (eg. difference in velocity).
 
 In 2024, Liu et al. demonstrated the potential of the Kolmogorov-Arnold network (KAN) to model physical
-relationships in ``\textit{KAN}'' \cite{liu2025kankolmogorovarnoldnetworks} and ``\textit{KAN 2.0}'' \cite{liu2024kan20kolmogorovarnoldnetworks}. A KAN leverages the Kolmogorov-Arnold
+relationships in \textit{KAN} \cite{liu2024kankolmogorovarnoldnetworks} and \textit{KAN 2.0} \cite{liu2024kan20kolmogorovarnoldnetworks}. A KAN leverages the Kolmogorov-Arnold
 representation theorem, which states that any multivariate function can be represented as a composition of univariate functions. While a traditional MLP has a fixed multivariate activation function at each node,
-a KAN learns a univariate activation function for each edge \cite{liu2025kankolmogorovarnoldnetworks}. Liu et al.\cite{liu2025kankolmogorovarnoldnetworks}\cite{liu2024kan20kolmogorovarnoldnetworks} showed that KANs can outperform
+a KAN learns a univariate activation function for each edge \cite{liu2024kankolmogorovarnoldnetworks}. Liu et al.\cite{liu2024kankolmogorovarnoldnetworks}\cite{liu2024kan20kolmogorovarnoldnetworks} showed that KANs can outperform
 MLPs in various cases and discussed the benefits of the function composition model in terms of interpretability.
 
 Our goal is to explore the potential of a hybrid Kolmogorov-Arnold graph neural network (GKAN) architecture,
@@ -48,40 +48,40 @@ which replaces the multi-layer perceptron (MLP) layers in a GNN with KANs. We ai
 $n$-body problem following a similar approach as Cranmer et al.\cite{cranmer2020discoveringsymbolicmodelsdeep}, then evaluating the hybrid model against the
 original GNN approach. We hypothesize that the GKAN can achieve comparable accuracy with the additional benefit
 of being directly interpretable without requiring a symbolic regression step. We hope that this work contributes
-to the ongoing research surrounding interpretability of deep models.
+to the ongoing research surrounding interpretability of deep models, specifically in the domain of physics discovery.
 
 
 % ─── 2. Proposed Approach ────────────────────────────────────────────────────
-\section*{2. Proposed Approach}
+\section{Proposed Approach}
 
 % What do you plan to do?
 % Which methods will you apply, extend, or implement?
 % What data will you use? How will you obtain / preprocess it?
 
-[Describe your plan concretely. For example:
-\begin{itemize}
-  \item \textbf{Methods:} Which ML techniques will you use or build upon?
-        (e.g., logistic regression, kernel methods, deep nets, graphical models)
-  \item \textbf{Dataset:} What data will you work with, and how will you
-        acquire / preprocess it?
-  \item \textbf{Experimental setup:} How will you evaluate your approach?
-        What baselines will you compare against?
-\end{itemize}]
+% [Describe your plan concretely. For example:
+% \begin{itemize}
+%   \item \textbf{Methods:} Which ML techniques will you use or build upon?
+%         (e.g., logistic regression, kernel methods, deep nets, graphical models)
+%   \item \textbf{Dataset:} What data will you work with, and how will you
+%         acquire / preprocess it?
+%   \item \textbf{Experimental setup:} How will you evaluate your approach?
+%         What baselines will you compare against?
+% \end{itemize}]
 
-We will be using deep learning methods---specifically, we will focus on GNNs, KANs, and GKANs. We will
-train using the $n$-body problem. The data will be generated via simulation using a numerically stable
-ordinary differential equation (ODE) integrator such as leapfrog. We will evaluate our approach using quantitative metrics
-such as training/validation loss, as well as qualitative metrics such as interpretability, and we will
-compare our model against the baseline set by Cranmer et al.\cite{cranmer2020discoveringsymbolicmodelsdeep}.
+We will be using deep learning methods---specifically, we will focus on GNNs, KANs, and GKANs. In particular, we will implement a basic GCN architecture (similar to Cranmer et al.'s\cite{cranmer2020discoveringsymbolicmodelsdeep} approach) and a base KAN architecture with b-spline activation functions \cite{liu2024kankolmogorovarnoldnetworks}, and perhaps explore variations of KANs such as the MultKan architecture \cite{liu2024kan20kolmogorovarnoldnetworks} if time permits. We will implement the GKAN by replacing the MLP layers in the GNN with KAN layers.
 
-In general, we aim to follow the baseline set by Cranmer et al.\cite{cranmer2020discoveringsymbolicmodelsdeep} quite closely, as we want to evaluate
+We will focus the domain of the problem to the $n$-body problem, which is a classical physics problem that involves predicting the trajectories of $n$ bodies interacting with each other under the influence of physical forces. The input to our model will be the initial conditions of the system (e.g., positions, velocities, masses), and the output will be the predicted trajectories of the bodies over time. We will generate our own data by simulating the $n$-body problem using a numerically symplectic ODE integrator such as leapfrog.
+
+We will evaluate our approach using quantitative metrics
+such as training/validation loss, as well as qualitative metrics such as interpretability, and by comparing our model against the baseline set by Cranmer et al.\cite{cranmer2020discoveringsymbolicmodelsdeep}. Furthermore, we will perform experiments with different ``gravity'' functions as well \textit{hopefully} ablate the performance of the GKAN with different levels of model complexity and sparsity, to see if we can further improve the performance of the GKAN and understand the relationship between model complexity, interpretability, and generalization performance.
+
+In general, we aim to follow the design set by Cranmer et al.\cite{cranmer2020discoveringsymbolicmodelsdeep} quite closely, as we want to evaluate
 whether the transition to KAN layers is a meaningful improvement compared to MLP-based approaches. As we
-continue to develop and iterate on the approach, we may explore other physics problems, or add additional steps
-such as pre-processing.
+continue to develop and iterate on the approach, we may explore other variations of the architecture, such as different KAN layer designs or ``feature hypothesis'' approaches \cite{liu2024kan20kolmogorovarnoldnetworks}, to see if we can further improve the performance of the GKAN.
 
 
 % ─── 3. Expected Contribution ────────────────────────────────────────────────
-\section*{3. Expected Contribution}
+\section{Expected Contribution}
 
 % What will doing this project add to the world?
 % Choose one of the project types below and explain your specific contribution.
@@ -99,55 +99,54 @@ such as pre-processing.
 % \item Negative result: a careful argument for why approach X does not work in setting Y, and why.
 % \end{itemize}]
 
-Our project is primarily an ``application bake-off'' (GKANs vs. GNNs), though it incorporates elements of
-a few other project types.
+Our project is primarily an ``application bake-off'' (GKANs vs. GNNs), though it incorporates elements of a few other project types (ie. ``New application'', ``Generalization to new setting'').
 
-Ideally, we will show that GKANs outperform GNNs with symbolic regression as a method of recovering
-physical relationships, both in terms of accuracy and interpretability. We expect this to be the case
+Ideally, we will show that GKANs outperform GNNs with symbolic regression as a method of recovering physical relationships, both in terms of accuracy and interpretability. We expect this to be the case
 because the Kolmogorov-Arnold representation theorem framing allows us to choose our inductive biases
 in a more physics-informed way, and the composition of univariate functions learned by the KAN layers can be directly visualized.
 
-
-% ─── 4. Team \& Responsibilities (delete if solo) ────────────────────────────
-\section*{4. Team \& Division of Responsibilities}
-
-\begin{center}
-\begin{tabular}{lll}
-\hline
-\textbf{Name} & \textbf{Student \#} & \textbf{Primary Responsibilities} \\
-\hline
-Author One   & 12345678 & [e.g., data preprocessing, experiments] \\
-Eitan Klinger   & 41432253 & ...   \\
-Author Three & 11223344 & [e.g., baseline comparisons, evaluation] \\
-Arthur Guo & 16000796 & method implementation, experiments \\
-\hline
-\end{tabular}
-\end{center}
+Moreover, from our research, most intrepretability research relating to KANs have been focused on smaller physically informed deep models, without much work on graph-based architectures. We hope that our work can contribute to the ongoing research surrounding interpretability of deep models, by demonstrating the potential of GKANs as a more interpretable alternative to GNNs for modeling spatial physical relationships.
 
 
-% ─── 5. Timeline ─────────────────────────────────────────────────────────────
-\section*{5. Timeline}
+% % ─── 4. Team \& Responsibilities (delete if solo) ────────────────────────────
+% \section*{4. Team \& Division of Responsibilities}
 
-\begin{center}
-\begin{tabular}{ll}
-\hline
-\textbf{Date}   & \textbf{Milestone} \\
-\hline
-Mar 29  & Proposal submitted \\
-Apr 6   & [e.g., Data collected and preprocessed] \\
-Apr 13  & [e.g., Baseline results obtained] \\
-Apr 20  & [e.g., Main experiments complete] \\
-Apr 27  & [e.g., Draft report finished] \\
-[Final] & Report submitted \\
-\hline
-\end{tabular}
-\end{center}
+% \begin{center}
+% \begin{tabular}{lll}
+% \hline
+% \textbf{Name} & \textbf{Student \#} & \textbf{Primary Responsibilities} \\
+% \hline
+% Author One   & 12345678 & [e.g., data preprocessing, experiments] \\
+% Eitan Klinger   & 41432253 & ...   \\
+% Author Three & 11223344 & [e.g., baseline comparisons, evaluation] \\
+% Arthur Guo & 16000796 & method implementation, experiments \\
+% \hline
+% \end{tabular}
+% \end{center}
+
+
+% % ─── 5. Timeline ─────────────────────────────────────────────────────────────
+% \section*{5. Timeline}
+
+% \begin{center}
+% \begin{tabular}{ll}
+% \hline
+% \textbf{Date}   & \textbf{Milestone} \\
+% \hline
+% Mar 29  & Proposal submitted \\
+% Apr 6   & [e.g., Data collected and preprocessed] \\
+% Apr 13  & [e.g., Baseline results obtained] \\
+% Apr 20  & [e.g., Main experiments complete] \\
+% Apr 27  & [e.g., Draft report finished] \\
+% {[Final]} & Report submitted \\
+% \hline
+% \end{tabular}
+% \end{center}
 
 
 % ─── References ──────────────────────────────────────────────────────────────
-\bibliographystyle{plain}
-\bibliography{references}   % uncomment and point to your .bib file
 
-% Manual references example (remove once you switch to BibTeX):
+\bibliographystyle{plain}
+\bibliography{references}
 
 \end{document}
