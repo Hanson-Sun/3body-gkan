@@ -34,3 +34,4 @@ Ideally have GPU accelerated pytorch or else this will be slow af to train...
   - [ ] Try with more complex model and see if sparsity works
   - [ ] Look at some approaches from KAN 2.0 paper
 - [ ] interpretability analysis of learned functions
+
