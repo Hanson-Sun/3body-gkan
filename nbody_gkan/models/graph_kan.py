@@ -42,6 +42,8 @@ class GraphKAN(MessagePassing, GraphMixin):
         KAN: B-spline order (must be >= 1)
     aggr : str, optional (default='add')
         Aggregation method for messages
+    sparse_init : bool, optional (default=False)
+        KAN: Whether to use sparse initialization for layer connectivity
 
     Notes
     -----
@@ -64,7 +66,8 @@ class GraphKAN(MessagePassing, GraphMixin):
             node_hidden_layers: int = 0,
             lamb_l1: float = 1.0,
             lamb_entropy: float = 2.0,
-    ):
+            sparse_init: bool = False,
+        ):
         super().__init__(aggr=aggr)
         self.n_f = n_f
         self.msg_dim = msg_dim
@@ -77,19 +80,20 @@ class GraphKAN(MessagePassing, GraphMixin):
         self.node_hidden_layers = node_hidden_layers
         self.lamb_l1 = lamb_l1
         self.lamb_entropy = lamb_entropy
+        self.sparse_init = sparse_init
 
         # Message function: [x_i, x_j] (2*n_f) → msg_dim
         # 4 layers, configurable hidden (default 300) - matches baseline
         msg_input_dim = 2 * n_f
         self.msg_layers = self._build_kan_network(
-            msg_input_dim, msg_dim, hidden, grid_size, spline_order, hidden_layers
+            msg_input_dim, msg_dim, hidden, grid_size, spline_order, hidden_layers, sparse_init
         )
 
         # Node update function: [x, aggr_msgs] (n_f + msg_dim) → ndim
         # 4 layers, configurable hidden (default 300) - matches baseline
         node_input_dim = n_f + msg_dim
         self.node_layers = self._build_kan_network(
-            node_input_dim, ndim, node_hidden, grid_size, spline_order, node_hidden_layers
+            node_input_dim, ndim, node_hidden, grid_size, spline_order, node_hidden_layers, sparse_init
         )
 
     def _build_kan_network(
@@ -100,6 +104,7 @@ class GraphKAN(MessagePassing, GraphMixin):
             grid_size: int,
             spline_order: int,
             hidden_layers: int = 0,
+            sparse_init: bool = True,
     ) -> nn.ModuleList:
         """
         Build a 4-layer KAN network with configurable hidden dimension (matches baseline).
@@ -124,11 +129,11 @@ class GraphKAN(MessagePassing, GraphMixin):
         """
         layers = []
         # Layer 1: in_dim → hidden
-        layers.append(KANLayer(in_dim=in_dim, out_dim=hidden, num=grid_size, k=spline_order))
+        layers.append(KANLayer(in_dim=in_dim, out_dim=hidden, num=grid_size, k=spline_order, sparse_init=sparse_init))
         for _ in range(hidden_layers):
-            layers.append(KANLayer(in_dim=hidden, out_dim=hidden, num=grid_size, k=spline_order))
+            layers.append(KANLayer(in_dim=hidden, out_dim=hidden, num=grid_size, k=spline_order, sparse_init=sparse_init))
         # Final layer: hidden → out_dim
-        layers.append(KANLayer(in_dim=hidden, out_dim=out_dim, num=grid_size, k=spline_order))
+        layers.append(KANLayer(in_dim=hidden, out_dim=out_dim, num=grid_size, k=spline_order, sparse_init=sparse_init))
 
         return nn.ModuleList(layers)
 
@@ -497,6 +502,8 @@ class OrdinaryGraphKAN(OrdinaryMixin, GraphKAN):
         KAN: B-spline order (must be >= 1)
     aggr : str, optional (default='add')
         Aggregation method
+    sparse_init : bool, optional (default=False)
+        KAN: Whether to use sparse initialization for layer connectivity
     """
 
     def __init__(
@@ -513,10 +520,11 @@ class OrdinaryGraphKAN(OrdinaryMixin, GraphKAN):
             hidden_layers: int = 0,
             node_hidden_layers: int = 0,
             lamb_l1: float = 1.0,
-            lamb_entropy: float = 2.0
+            lamb_entropy: float = 2.0,
+            sparse_init: bool = False
     ):
         super().__init__(
-            n_f, msg_dim, ndim, hidden, node_hidden, grid_size, spline_order, aggr, hidden_layers, node_hidden_layers, lamb_l1, lamb_entropy
+            n_f, msg_dim, ndim, hidden, node_hidden, grid_size, spline_order, aggr, hidden_layers, node_hidden_layers, lamb_l1, lamb_entropy, sparse_init
         )
         self.register_buffer("edge_index", edge_index)
 
