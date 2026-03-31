@@ -1,32 +1,77 @@
-experiment_1a:
-  name: "gravity_small_medium"
+# experiment_1a:
+#   name: "gravity_small_medium"
+#   data_params:
+#     n_train: 200
+#     n_val: 20
+#     force_fn: "gravity"
+#   train_params:
+#     gnn_hp:
+#       hidden: 256
+#       msg_dim: 32
+#     gkan_hp:
+#       hidden_layers: 4
+#       hidden: 4
+#       node_hidden_layers: 0
+#       node_hidden: 4
+#       msg_dim: 2
+#       grid_size: 5
+#       lamb_l1: 0.5
+#       lamb_entropy: 1.0
+#       adam_warmup_epochs: 0
+#       grid_update_freq: 15 # might be important for interpretability but might cause instability, turn off for now.
+#       grid_update_warmup: 5
+#       max_grid_updates: 2
+#     training_hp:
+#       epochs: 67
+#       batch_size: 32
+#       kan_batch_size: 1024 # 32768
+#       lr: 1e-3
+#       lamb: 0.0
+#   visualization_params:
+#     save_video: True
+#     plot_splines: True
+
+experiment_1a_minimal_mult:
+  name: "gravity_small_medium_minimal_mult"
   data_params:
     n_train: 200
     n_val: 20
     force_fn: "gravity"
   train_params:
+    train_baseline: True
     gnn_hp:
       hidden: 256
       msg_dim: 32
     gkan_hp:
-      hidden_layers: 4
-      hidden: 4
-      node_hidden_layers: 0
-      node_hidden: 4
-      msg_dim: 2
+      msg_width: [[10, 0], [4, 0], [2, 2], [2, 0]]
+      node_width: [[7, 0], [4, 0], [2, 2], [2, 0]]
+      msg_mult_arity: [[], [], [4, 4], []]
+      node_mult_arity: [[], [], [4, 4], []]
       grid_size: 5
+      # base_fun: identity
+      # noise_scale: 0.0
+      # scale_base_mu: 1.0
+      # scale_base_sigma: 0.0
       lamb_l1: 0.5
       lamb_entropy: 1.0
-      adam_warmup_epochs: 0
-      grid_update_freq: 15 # might be important for interpretability but might cause instability, turn off for now.
+      lbfgs_lr: 1.0
+      lbfgs_max_iter: 30
+      lbfgs_max_eval: null
+      lbfgs_line_search_fn: strong_wolfe
+      lbfgs_impl: pykan
+      lbfgs_tolerance_ys: 1e-32
+      adam_warmup_epochs: 10
+      grid_update_freq: 15
       grid_update_warmup: 5
-      max_grid_updates: 2
+      max_grid_updates: 0
+      gradient_clip: 1.0
     training_hp:
-      epochs: 67
+      epochs: 50
       batch_size: 32
-      kan_batch_size: 1024 # 32768
-      lr: 1e-3
-      lamb: 0.0
+      kan_batch_size: 262144
+      lr: 5e-3
+      lamb: 0.00
+      kan_square_loss: False
   visualization_params:
     save_video: True
     plot_splines: True

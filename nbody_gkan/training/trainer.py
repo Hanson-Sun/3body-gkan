@@ -1,7 +1,9 @@
 from typing import Optional
 
+import json
 import torch
 from torch_geometric.loader import DataLoader
+from torch.optim.lr_scheduler import OneCycleLR
 from pathlib import Path
 import matplotlib
 matplotlib.use('Agg')
@@ -23,19 +25,28 @@ class Trainer:
         self.device       = device or torch.device("cpu")
         self.model.to(self.device)
 
+        # loss configuration
+        self.square_loss = False
+
         self.checkpoint_dir = Path(checkpoint_dir) if checkpoint_dir else Path("checkpoints")
         self.checkpoint_dir.mkdir(parents=True, exist_ok=True)
 
         self.history = {"train": [], "val": [], "lr": []}
         self.epoch         = 0
         self.best_val_loss = float("inf")
+        self._step_metrics: dict[str, float | int | str] = {}
 
         # subclasses must set these
         self.optimizer: torch.optim.Optimizer
         self.scheduler: torch.optim.lr_scheduler._LRScheduler | None = None
 
-    def _train_step(self, batch, augment: bool = False,
-                    augmentation_scale: float = 3.0) -> float:
+    def _train_step(
+        self,
+        batch,
+        augment: bool = False,
+        augmentation_scale: float = 3.0,
+        square_loss: bool = False,
+    ) -> float:
         """
         Single optimizer step. Override in subclasses that need
         closure-based optimizers (e.g. LBFGS).
@@ -46,20 +57,34 @@ class Trainer:
         """Hook called at the start of each epoch. Override for custom logic."""
         pass
 
+    def _set_step_metrics(self, **metrics):
+        self._step_metrics = metrics
+
     def train_epoch(
             self,
             augment: bool = True,
             augmentation_scale: float = 3.0,
             gradient_clip: float | None = None,
+            square_loss: bool | None = None,
     ) -> float:
         self.model.train()
         total_loss = 0.0
         n_samples  = 0
 
+        # allow per-call override; fall back to trainer setting
+        if square_loss is None:
+            square_loss = self.square_loss
+
         pbar = tqdm(self.train_loader, desc=f"Epoch {self.epoch}", leave=False)
         for i, batch in enumerate(pbar):
             batch      = batch.to(self.device)
-            loss_value = self._train_step(batch, augment=augment, augmentation_scale=augmentation_scale)
+            self._step_metrics = {}
+            loss_value = self._train_step(
+                batch,
+                augment=augment,
+                augmentation_scale=augmentation_scale,
+                square_loss=square_loss,
+            )
 
             if self.scheduler is not None and isinstance(self.scheduler, OneCycleLR):
                 self.scheduler.step()
@@ -69,7 +94,14 @@ class Trainer:
             n_samples  += batch_size
 
             if i % 10 == 0:
-                pbar.set_postfix(loss=f"{loss_value:.4e}")
+                postfix = {"loss": f"{loss_value:.4e}"}
+                postfix.update(
+                    {
+                        key: (f"{value:.2e}" if isinstance(value, float) else str(value))
+                        for key, value in self._step_metrics.items()
+                    }
+                )
+                pbar.set_postfix(postfix)
 
         return total_loss / n_samples
 
@@ -82,7 +114,7 @@ class Trainer:
         n_samples  = 0
         for batch in self.val_loader:
             batch       = batch.to(self.device)
-            loss        = self.model.loss(batch, augment=False)
+            loss        = self.model.loss(batch, augment=False, square=self.square_loss)
             batch_size  = batch.num_graphs if hasattr(batch, "num_graphs") else 1
             total_loss += loss.item() * batch_size
             n_samples  += batch_size
@@ -94,12 +126,16 @@ class Trainer:
             augment: bool = False,
             augmentation_scale: float = 3.0,
             gradient_clip: float | None = None,
+            square_loss: bool = False,
             save_every: int = 10,
             log_every: int = 1,
     ):
         print(f"Training {self.model.__class__.__name__} "
               f"| {sum(p.numel() for p in self.model.parameters()):,} params "
               f"| {self.device}")
+
+        # persist loss mode for validate/_train_step
+        self.square_loss = bool(square_loss)
 
         for epoch in range(n_epochs):
             self.epoch = epoch
@@ -109,6 +145,7 @@ class Trainer:
                 augment=augment,
                 augmentation_scale=augmentation_scale,
                 gradient_clip=gradient_clip,
+                square_loss=self.square_loss,
             )
             val_loss   = self.validate()
 

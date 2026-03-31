@@ -1,24 +1,53 @@
 """Visualize trained models: rollout comparison and spline analysis."""
 
 import argparse
-import tempfile
 from pathlib import Path
 from typing import Optional
+from typing import Any
 
 import numpy as np
 import torch
-from torch_geometric.data import Data
 import matplotlib
+import shutil
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 from matplotlib.animation import FuncAnimation, FFMpegWriter
-from kan.spline import coef2curve
 from torch_geometric.data import Data
 from torch_geometric.loader import DataLoader as PyGLoader
 
 from nbody_gkan.models import OrdinaryGraphKAN, OGN
 from nbody_gkan.nbody import NBodySimulator
 from nbody_gkan.models.model_loader import ModelLoader
+
+
+def _extract_graphkan_subnet_info(model: 'OrdinaryGraphKAN', network: str) -> dict[str, Any]:
+    """Extract GraphKAN subnet metadata with backward-compatible fallbacks."""
+    if network not in {'msg', 'node'}:
+        raise ValueError(f"network must be 'msg' or 'node', got {network!r}")
+
+    if network == 'msg':
+        layers = model.msg_layers
+        subnet = model.msg_kan
+        width = list(getattr(model, 'msg_width', []))
+        mult_arity = getattr(model, 'msg_mult_arity', 2)
+        mult_nodes = getattr(model, 'msg_mult_nodes', 0)
+    else:
+        layers = model.node_layers
+        subnet = model.node_kan
+        width = list(getattr(model, 'node_width', []))
+        mult_arity = getattr(model, 'node_mult_arity', 2)
+        mult_nodes = getattr(model, 'node_mult_nodes', 0)
+
+    if not width:
+        width = [int(layers[0].in_dim)] + [int(l.out_dim) for l in layers]
+
+    return {
+        'layers': layers,
+        'subnet': subnet,
+        'width': width,
+        'mult_arity': mult_arity,
+        'mult_nodes': mult_nodes,
+    }
 
 
 def parse_args(args=None):
@@ -179,127 +208,71 @@ def animate_rollout(positions_dict, dt, video_name='rollout_comparison.mp4'):
 
 
 def visualize_kan_splines(model, save_dir=None):
-    """
-    Visualize learned spline activations in KAN layers.
+    """Use pykan's native plot() to visualize learned activations."""
+    import tempfile
+    from kan import KAN
 
-    Each spline (one per input→output connection) gets its own subplot.
-    Subplots are grouped by layer, with one figure per network (msg/node).
-    The activation plotted is the full ϕ(x) = w_b·SiLU(x) + w_s·spline(x)
-    matching what the network actually computes.
-    """
-    from kan.spline import coef2curve
-    import torch.nn.functional as F
+    save_dir = Path(save_dir).resolve() if save_dir else Path("visualizations/splines").resolve()
+    save_dir.mkdir(parents=True, exist_ok=True)
 
-    save_dir = Path(save_dir) if save_dir else None
-    if save_dir is not None:
-        save_dir.mkdir(parents=True, exist_ok=True)
+    # Build small representative samples to populate activations
+    n_f = model.n_f
+    msg_dim = model.msg_dim
+    msg_sample = torch.randn(64, 2 * n_f)
+    node_sample = torch.randn(64, n_f + msg_dim)
 
-    # Variable name labels for msg and node inputs
-    n_f      = model.n_f
-    msg_dim  = model.msg_dim
-    ndim     = model.ndim
-    base_vars = ['x', 'y', 'vx', 'vy', 'm'][:n_f]
+    def _plot_subnet(subnet, width, sample, tag):
+        safe_mult_arity = subnet.mult_arity
+        tag_dir = save_dir / tag
+        tag_dir.mkdir(parents=True, exist_ok=True)
 
-    input_labels = {
-        'msg':  [f'{v}_i' for v in base_vars] + [f'{v}_j' for v in base_vars],
-        'node': base_vars + [f'msg{i}' for i in range(msg_dim)],
-    }
-    output_labels = {
-        'msg':  [f'msg{i}' for i in range(msg_dim)],
-        'node': ['ax', 'ay'] if ndim == 2 else [f'a{i}' for i in range(ndim)],
-    }
+        with tempfile.TemporaryDirectory() as tmpdir:
+            # Clone weights into a fresh KAN so plot() runs without side-effects
+            clone = KAN(width=width, grid=subnet.grid, k=subnet.k,
+                       mult_arity=safe_mult_arity,
+                       seed=0, auto_save=False, ckpt_path=tmpdir,
+                       symbolic_enabled=False, save_act=True)
 
-    layer_groups = [('msg', model.msg_layers), ('node', model.node_layers)]
+            # Copy parameters
+            for src_layer, dst_layer in zip(subnet.act_fun, clone.act_fun):
+                dst_layer.coef.data.copy_(src_layer.coef.data)
+                dst_layer.grid.data.copy_(src_layer.grid.data)
+                dst_layer.scale_sp.data.copy_(src_layer.scale_sp.data)
+                if hasattr(src_layer, 'scale_base') and hasattr(dst_layer, 'scale_base'):
+                    dst_layer.scale_base.data.copy_(src_layer.scale_base.data)
+                if hasattr(src_layer, 'mask') and hasattr(dst_layer, 'mask'):
+                    dst_layer.mask.data.copy_(src_layer.mask.data)
 
-    for tag, layers in layer_groups:
-        in_labels  = input_labels[tag]
-        out_labels = output_labels[tag]
+            for l in range(len(clone.node_scale)):
+                clone.node_scale[l].data.copy_(subnet.node_scale[l].data)
+                clone.node_bias[l].data.copy_(subnet.node_bias[l].data)
+                clone.subnode_scale[l].data.copy_(subnet.subnode_scale[l].data)
+                clone.subnode_bias[l].data.copy_(subnet.subnode_bias[l].data)
 
-        for layer_idx, layer in enumerate(layers):
-            in_dim  = layer.in_dim
-            out_dim = layer.out_dim
+            # Populate activations, then plot
+            clone.eval()
+            with torch.no_grad():
+                clone(sample)
 
-            # Each spline is one subplot — in_dim × out_dim total
-            n_plots = in_dim * out_dim
-            ncols   = min(out_dim, 4)
-            nrows   = in_dim
-
-            fig, axes = plt.subplots(
-                nrows, ncols,
-                figsize=(ncols * 3, nrows * 2.5),
-                squeeze=False,
+            out_file = tag_dir / "kan_plot"
+            clone.plot(
+                folder=str(tag_dir),
+                metric="forward_n",  # avoid backward attribution path on mult_arity-heavy nets
+                title=f"Graph-KAN — {tag.title()} Network",
+                in_vars=None,
+                out_vars=None,
             )
 
-            layer_label = 'Message' if tag == 'msg' else 'Node Update'
-            fig.suptitle(f'Graph-KAN — {layer_label} Network  |  Layer {layer_idx}  '
-                         f'[{in_dim}→{out_dim}]', fontsize=13, fontweight='bold')
+            # pykan.plot saves figures into the provided folder; rename the default file if present
+            fig_path = tag_dir / "figures.png"
+            alt_figs = sorted(tag_dir.glob("figures*.png"))
+            if fig_path.exists():
+                fig_path.rename(out_file.with_suffix(".png"))
+            elif alt_figs:
+                alt_figs[0].rename(out_file.with_suffix(".png"))
 
-            x_eval = torch.linspace(-3, 3, 300)
-
-            for i in range(in_dim):
-                for j in range(out_dim):
-                    ax = axes[i][j % ncols]
-
-                    # ── Full activation: w_b·SiLU(x) + w_s·spline(x) ──
-                    x_full = torch.zeros(300, in_dim)
-                    x_full[:, i] = x_eval
-
-                    with torch.no_grad():
-                        # Spline component
-                        spline_vals = coef2curve(
-                            x_full, layer.grid, layer.coef, layer.k
-                        )[:, i, j]                              # shape (300,)
-                        w_s = layer.scale_sp[i, j].item()
-
-                        # SiLU residual component
-                        silu_vals = F.silu(x_eval)
-                        w_b = layer.scale_base[i, j].item()
-
-                        # Full activation
-                        full   = w_b * silu_vals + w_s * spline_vals
-                        spline_only = w_s * spline_vals
-                        silu_only   = w_b * silu_vals
-
-                    x_np = x_eval.numpy()
-                    ax.plot(x_np, full.numpy(),
-                            color='steelblue', linewidth=2,
-                            label='ϕ(x) full')
-                    ax.plot(x_np, spline_only.numpy(),
-                            color='orange',    linewidth=1.5,
-                            linestyle='--',    label='spline')
-                    ax.plot(x_np, silu_only.numpy(),
-                            color='green',     linewidth=1.5,
-                            linestyle=':',     label='SiLU')
-                    ax.axhline(0, color='gray', linewidth=0.5, alpha=0.5)
-                    ax.axvline(0, color='gray', linewidth=0.5, alpha=0.5)
-
-                    # Labels
-                    in_label  = in_labels[i]  if i < len(in_labels)  else f'in{i}'
-                    out_label = out_labels[j] if j < len(out_labels) else f'out{j}'
-                    ax.set_title(f'{in_label} → {out_label}', fontsize=9)
-                    ax.set_xlabel('x', fontsize=8)
-                    ax.set_ylabel('ϕ(x)', fontsize=8)
-                    ax.tick_params(labelsize=7)
-                    ax.grid(True, alpha=0.25)
-
-                    if i == 0 and j == 0:
-                        ax.legend(fontsize=7, loc='upper left')
-
-            # Hide any unused axes (if out_dim < ncols)
-            for i in range(in_dim):
-                for j in range(out_dim, ncols):
-                    axes[i][j].set_visible(False)
-
-            plt.tight_layout()
-
-            if save_dir:
-                fname = f'kan_splines_{tag}_layer{layer_idx}.png'
-                plt.savefig(save_dir / fname, dpi=150, bbox_inches='tight')
-                print(f"  Saved: {fname}")
-            else:
-                plt.show()
-
-            plt.close()
+    _plot_subnet(model.msg_kan, model.msg_width, msg_sample, "message")
+    _plot_subnet(model.node_kan, model.node_width, node_sample, "node")
 
 
 def visualize_kan_network(model: 'OrdinaryGraphKAN',
@@ -318,11 +291,15 @@ def visualize_kan_network(model: 'OrdinaryGraphKAN',
         save_path:   If given, save the figure here (e.g. 'kan_msg.png')
     """
     import gc
-    import tempfile
-    from kan import KAN
 
     # ── Select sub-network ────────────────────────────────────────
-    layers    = model.msg_layers if network == 'msg' else model.node_layers
+    info = _extract_graphkan_subnet_info(model, network)
+    layers    = info['layers']
+    src_kan   = info['subnet']
+    width     = info['width']
+    mult_arity = info['mult_arity']
+    mult_nodes = info['mult_nodes']
+
     grid_size = model.grid_size
     k         = model.spline_order
     n_f       = model.n_f
@@ -332,81 +309,93 @@ def visualize_kan_network(model: 'OrdinaryGraphKAN',
     # Clamp sample size — pykan stores all activations, keep it small
     data_sample = data_sample[:50]
 
-    # Infer width from stacked KANLayers — works for any depth
-    width = [int(layers[0].in_dim)] + [int(l.out_dim) for l in layers]
+    print(f"\nPreparing trained '{network}' KAN for plotting (no cloning):")
+    print(f"  width={width}, mult_nodes={mult_nodes}, mult_arity={mult_arity}, grid={grid_size}, k={k}, n_samples={len(data_sample)}")
 
-    print(f"\nBuilding standalone KAN for '{network}' network:")
-    print(f"  width={width}, grid={grid_size}, k={k}, n_samples={len(data_sample)}")
+    # ── Populate activations in the trained subnet ───────────────
+    src_kan.eval()
+    with torch.no_grad():
+        src_kan(data_sample)
 
-    with tempfile.TemporaryDirectory() as tmpdir:
-        kan = KAN(width=width, grid=grid_size, k=k,
-                  seed=0, auto_save=False, ckpt_path=tmpdir)
+    # ── Variable names ─────────────────────────────────────────
+    base_vars = ['x', 'y', 'vx', 'vy', 'm'][:n_f]
+    if network == 'msg':
+        in_vars  = [f'{v}_i' for v in base_vars] + [f'{v}_j' for v in base_vars]
+        out_vars = [f'msg{i}' for i in range(msg_dim)]
+    else:
+        in_vars  = base_vars + [f'msg{i}' for i in range(msg_dim)]
+        out_vars = ['ax', 'ay'] if ndim == 2 else [f'a{i}' for i in range(ndim)]
 
-        # ── Transplant weights ─────────────────────────────────────
-        for src_layer, dst_layer in zip(layers, kan.act_fun):
-            dst_layer.coef.data.copy_(src_layer.coef.data)
-            dst_layer.grid.data.copy_(src_layer.grid.data)
-            dst_layer.scale_sp.data.copy_(src_layer.scale_sp.data)
-            if hasattr(src_layer, 'scale_base') and hasattr(dst_layer, 'scale_base'):
-                dst_layer.scale_base.data.copy_(src_layer.scale_base.data)
+    arch_str = '×'.join(str(w) for w in width)
+    title    = (f"Graph-KAN — {'Message' if network == 'msg' else 'Node Update'} "
+                f"Network  [{arch_str}]")
 
-        # ── Forward pass to populate activations ──────────────────
-        kan.eval()
-        with torch.no_grad():
-            kan(data_sample)
+    print(f"  Plotting '{title}' via pykan.plot()...")
 
-        # ── Variable names ─────────────────────────────────────────
-        base_vars = ['x', 'y', 'vx', 'vy', 'm'][:n_f]
-        if network == 'msg':
-            in_vars  = [f'{v}_i' for v in base_vars] + [f'{v}_j' for v in base_vars]
-            out_vars = [f'msg{i}' for i in range(msg_dim)]
+    # pykan.plot writes to folder/figures.png; direct it to a temp asset folder and rename.
+    folder = None
+    asset_dir = None
+    if save_path:
+        save_path = Path(save_path).resolve()
+        save_path.parent.mkdir(parents=True, exist_ok=True)
+        asset_dir = save_path.parent / f"{save_path.stem}_assets"
+        asset_dir.mkdir(parents=True, exist_ok=True)
+        folder = str(asset_dir)
+
+    # src_kan = src_kan.prune()
+    src_kan.plot(
+        in_vars=in_vars,
+        out_vars=out_vars,
+        title=title,
+        beta=100,            # match pykan doc recommendation for network overview
+        scale=2,
+        varscale=0.2,
+        metric="forward_n",  # use forward scales to skip attribute() for high-arity mult
+        folder=folder,
+    )
+
+    # Optional inset-style scaling: enlarge the smallest-width panels (e.g., the activations grid)
+    fig = plt.gcf()
+    axes = fig.get_axes()
+    if axes:
+        widths = sorted(set(ax.get_position().width for ax in axes))
+        if widths:
+            min_w = widths[0]
+            inset_scale = 3
+            for ax in axes:
+                pos = ax.get_position()
+                # print(pos.width)
+                if abs(pos.width - min_w) < 1e-6:
+                    cx = pos.x0 + pos.width / 2
+                    cy = pos.y0 + pos.height / 2
+                    ax.set_position([
+                        cx - pos.width * inset_scale / 2,
+                        cy - pos.height * inset_scale / 2,
+                        pos.width * inset_scale,
+                        pos.height * inset_scale,
+                    ])
+
+    if save_path:
+        if fig.get_axes():
+            # Save the actual network visualization figure shown by pykan.plot().
+            fig.savefig(save_path, dpi=300, bbox_inches="tight")
+            print(f"  Saved network overview: {save_path}")
         else:
-            in_vars  = base_vars + [f'msg{i}' for i in range(msg_dim)]
-            out_vars = ['ax', 'ay'] if ndim == 2 else [f'a{i}' for i in range(ndim)]
+            print("  Warning: pykan.plot returned no visible axes to save.")
 
-        arch_str = '×'.join(str(w) for w in width)
-        title    = (f"Graph-KAN — {'Message' if network == 'msg' else 'Node Update'} "
-                    f"Network  [{arch_str}]")
+        if asset_dir:
+            generated_images = sorted(
+                [p for p in asset_dir.rglob("*")
+                 if p.is_file() and p.suffix.lower() in {".png", ".pdf", ".svg", ".jpg", ".jpeg"}]
+            )
+            if generated_images:
+                print(f"  Auxiliary pykan assets retained at: {asset_dir}")
+            else:
+                shutil.rmtree(asset_dir, ignore_errors=True)
+    else:
+        plt.show()
 
-        print(f"  Plotting '{title}'...")
-        kan.plot(in_vars=in_vars, out_vars=out_vars,
-                 title=title, beta=3, scale=2, varscale=0.2)
-
-        fig = plt.gcf()
-        w, h = fig.get_size_inches()
-        fig.set_size_inches(w * 8, h * 4)
-
-        widths = sorted(set(ax.get_position().width for ax in fig.get_axes()))
-
-        INSET_SCALE = 3
-        for ax in fig.get_axes():
-            pos = ax.get_position()
-            # print(pos.width)
-            if abs(pos.width - widths[0]) < 1e-6:
-                cx = pos.x0 + pos.width  / 2
-                cy = pos.y0 + pos.height / 2
-                ax.set_position([
-                    cx - pos.width  * INSET_SCALE / 2,
-                    cy - pos.height * INSET_SCALE / 2,
-                    pos.width  * INSET_SCALE,
-                    pos.height * INSET_SCALE,
-                ])
-
-        if save_path:
-            plt.savefig(save_path, dpi=300, bbox_inches='tight')
-            print(f"  Saved: {save_path}")
-        else:
-            plt.show()
-
-        plt.close()
-
-        # ── Explicit cleanup — pykan holds large activation buffers ─
-        for attr in ('acts', 'acts_scale', 'spline_preacts',
-                     'spline_postacts', 'spline_postacts_symb'):
-            try:
-                delattr(kan, attr)
-            except AttributeError:
-                pass
+    plt.close(fig)
 
     gc.collect()
     torch.cuda.empty_cache()
@@ -450,11 +439,7 @@ def visualize_symbolic_expressions(
 
     if lib is None:
         lib = ['x', 'x^2', 'x^3', '1/x', '1/x^2',
-               'sqrt(x)', 'log(x)', 'abs(x)', 'sin(x)']
-
-    print("\n" + "=" * 60)
-    print("Symbolic Regression Analysis")
-    print("=" * 60)
+               'sqrt(x)', 'log(x)', 'abs(x)', 'sin(x)', 'cos(x)', 'exp(x)']
 
     sym_graph  = Data(x=x_nodes, edge_index=kan_model.edge_index)
     sym_loader = PyGLoader([sym_graph] * max_batches, batch_size=1)
@@ -466,22 +451,32 @@ def visualize_symbolic_expressions(
         threshold=threshold,
     )
 
-    kan_model.print_symbolic_suggestions(suggestions)
+    kan_model.print_symbolic_suggestions(
+        suggestions,
+        threshold=threshold,
+        max_edges_per_layer=25,
+    )
 
-    # Serialize — tuple keys need converting for JSON
-    serializable = {}
-    for layer_key in ['msg_layers', 'node_layers']:
-        serializable[layer_key] = {}
-        for layer_idx, edges in suggestions[layer_key].items():
-            serializable[layer_key][str(layer_idx)] = {}
-            for (in_i, out_i), info in edges.items():
-                serializable[layer_key][str(layer_idx)][f'{in_i}->{out_i}'] = {
-                    'fn':         info['fn'],
-                    'r2':         round(float(info['r2']), 6),
-                    'a':          round(float(info['a']),  6),
-                    'b':          round(float(info['b']),  6),
-                    'expression': f"{info['a']:.4f} * {info['fn']} + {info['b']:.4f}",
-                }
+    msg_edges = sum(len(edges) for edges in suggestions.get('msg_layers', {}).values())
+    node_edges = sum(len(edges) for edges in suggestions.get('node_layers', {}).values())
+    print(f"  Symbolic edge coverage: msg={msg_edges}, node={node_edges}")
+
+    if hasattr(kan_model, 'serialize_symbolic_suggestions'):
+        serializable = kan_model.serialize_symbolic_suggestions(
+            suggestions,
+            threshold=threshold,
+            lib=lib,
+        )
+    else:
+        # Fallback for older checkpoints/models lacking the helper method.
+        serializable = {
+            'metadata': {
+                'threshold': float(threshold),
+                'library': list(lib),
+            },
+            'msg_layers': {},
+            'node_layers': {},
+        }
 
     save_path = output_dir / 'symbolic_regression.json'
     with open(save_path, 'w') as f:
@@ -515,8 +510,15 @@ def main(
 
     # Load models
     print("\nLoading trained models...")
-    kan_model, kan_ckpt = ModelLoader(OrdinaryGraphKAN, f'{args.checkpoint_dir}/graph_kan.pt').load()
-    gnn_model, _        = ModelLoader(OGN             , f'{args.checkpoint_dir}/baseline_gnn.pt').load()
+    kan_model, _ = ModelLoader(OrdinaryGraphKAN, f'{args.checkpoint_dir}/graph_kan.pt').load()
+    gnn_ckpt_path = Path(args.checkpoint_dir) / 'baseline_gnn.pt'
+    gnn_model = None
+    if gnn_ckpt_path.exists():
+        gnn_model, _ = ModelLoader(OGN, str(gnn_ckpt_path)).load()
+    else:
+        print(f"Baseline checkpoint not found at {gnn_ckpt_path}; skipping baseline visualization.")
+    print(f"Graph-KAN msg_width={getattr(kan_model, 'msg_width', 'N/A')}, node_width={getattr(kan_model, 'node_width', 'N/A')}")
+    print(f"Graph-KAN msg_mult_nodes={getattr(kan_model, 'msg_mult_nodes', 0)}, node_mult_nodes={getattr(kan_model, 'node_mult_nodes', 0)}")
     print("Models loaded successfully")
 
     # Load initial conditions
@@ -526,7 +528,7 @@ def main(
     pos0       = torch.from_numpy(data['positions'][idx, 0]).float()
     vel0       = torch.from_numpy(data['velocities'][idx, 0]).float()
     masses     = torch.from_numpy(data['masses']).float()
-    edge_index = kan_ckpt['edge_index']
+    edge_index = kan_model.edge_index
 
     # Ground truth rollout
     print("Generating ground truth...")
@@ -539,8 +541,10 @@ def main(
     print(f"Rolling out Graph-KAN ({n_steps} steps)...")
     kan_pos, _ = rollout(kan_model, pos0, vel0, masses, args.dt, n_steps, edge_index)
 
-    print(f"Rolling out Baseline GNN ({n_steps} steps)...")
-    gnn_pos, _ = rollout(gnn_model, pos0, vel0, masses, args.dt, n_steps, edge_index)
+    gnn_pos = None
+    if gnn_model is not None:
+        print(f"Rolling out Baseline GNN ({n_steps} steps)...")
+        gnn_pos, _ = rollout(gnn_model, pos0, vel0, masses, args.dt, n_steps, edge_index)
 
     # Animate (sampled to match ground truth cadence)
     if (args.save_video):
@@ -548,16 +552,18 @@ def main(
         print("Creating Animated Comparison")
         print("=" * 60)
         animate_rollout(
-            {
+            ({
                 'Ground Truth': gt_pos,
                 'Graph-KAN':    kan_pos[::5],
                 'Baseline GNN': gnn_pos[::5],
-            },
+            } if gnn_pos is not None else {
+                'Ground Truth': gt_pos,
+                'Graph-KAN': kan_pos[::5],
+            }),
             dt=args.dt * 5,
             video_name=f'{args.output_dir}/rollout_comparison.mp4',
         )
 
-    # Spline visualizations
     # Spline visualizations
     if args.plot_splines:
         print("\n" + "=" * 60)
@@ -591,18 +597,22 @@ def main(
         print("\n" + "=" * 60)
         print("Symbolic Regression Analysis")
         print("=" * 60)
-        suggestions = visualize_symbolic_expressions(
-                    kan_model,
-                    x_nodes=x_nodes,
-                    output_dir=args.output_dir,
-                    threshold=0.85,
-                )
+        visualize_symbolic_expressions(
+            kan_model,
+            x_nodes=x_nodes,
+            output_dir=args.output_dir,
+            threshold=0.85,
+        )
 
     print("\n" + "=" * 60)
     print("Done! Generated files:")
-    print("  - rollout_comparison.mp4 (or .gif)")
-    print("  - kan_splines_msg.png")
-    print("  - kan_splines_node.png")
+    if args.save_video:
+        print("  - rollout_comparison.mp4 (or .gif)")
+    if args.plot_splines:
+        print("  - splines/*.png")
+        print("  - kan_msg_network.png")
+        print("  - kan_node_network.png")
+        print("  - symbolic_regression.json")
     print("=" * 60)
 
 

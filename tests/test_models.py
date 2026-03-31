@@ -10,6 +10,7 @@ Tests:
 
 import sys
 
+import pytest
 import torch
 from torch_geometric.data import Data
 
@@ -31,10 +32,12 @@ def test_graph_kan_forward():
 
     edge_index = get_edge_index(n_nodes)
 
+    msg_width = [2 * n_features, 24, msg_dim]
+    node_width = [n_features + msg_dim, 24, ndim]
     model = GraphKAN(
         n_f=n_features,
-        msg_dim=msg_dim,
-        ndim=ndim,
+        msg_width=msg_width,
+        node_width=node_width,
         grid_size=5,
         spline_order=3,
     )
@@ -64,10 +67,12 @@ def test_graph_kan_gradients():
     ndim = 2
     edge_index = get_edge_index(n_nodes)
 
+    msg_width = [2 * n_features, 20, msg_dim]
+    node_width = [n_features + msg_dim, 20, ndim]
     model = GraphKAN(
         n_f=n_features,
-        msg_dim=msg_dim,
-        ndim=ndim,
+        msg_width=msg_width,
+        node_width=node_width,
         grid_size=5,
         spline_order=3,
     )
@@ -90,6 +95,44 @@ def test_graph_kan_gradients():
     print(f"✓ Input gradients: {x.grad.shape}")
     print(f"✓ All {n_params_with_grad} trainable parameters have gradients")
     print("PASS")
+
+
+def test_graph_kan_custom_width_spec():
+    """GraphKAN should accept explicit pykan width specs."""
+    n_nodes = 3
+    n_features = 5
+    msg_dim = 6
+    ndim = 2
+    edge_index = get_edge_index(n_nodes)
+
+    msg_width = [2 * n_features, [6, 1], msg_dim]
+    node_width = [n_features + msg_dim, [5, 0], ndim]
+
+    model = GraphKAN(
+        n_f=n_features,
+        msg_width=msg_width,
+        node_width=node_width,
+        grid_size=3,
+        spline_order=2,
+    )
+
+    x = torch.randn(n_nodes, n_features)
+    out = model(x, edge_index)
+
+    assert model.msg_width == msg_width
+    assert model.node_width == node_width
+    assert model.msg_mult_nodes == 1
+    assert model.node_mult_nodes == 0
+    assert out.shape == (n_nodes, ndim)
+
+
+def test_graph_kan_width_validation_errors():
+    """Invalid width specs should fail fast with clear messages."""
+    with pytest.raises(ValueError, match="msg_width.*input dimension"):
+        GraphKAN(n_f=3, msg_width=[5, 4], node_width=[7, 2])
+
+    with pytest.raises(ValueError, match="node_width.*output dimension"):
+        GraphKAN(n_f=3, msg_width=[6, 4], node_width=[7, 3])
 
 
 def test_baseline_gnn_forward():
@@ -189,10 +232,12 @@ def test_model_comparison():
     edge_index = get_edge_index(n_nodes)
 
     # GraphKAN (4 layers, 300 hidden - hardcoded)
+    msg_width = [2 * n_features, 32, msg_dim]
+    node_width = [n_features + msg_dim, 32, ndim]
     kan_model = OrdinaryGraphKAN(
         n_f=n_features,
-        msg_dim=msg_dim,
-        ndim=ndim,
+        msg_width=msg_width,
+        node_width=node_width,
         edge_index=edge_index,
         grid_size=5,
         spline_order=3,
@@ -247,10 +292,12 @@ def test_translation_invariance():
         print(f"\nTesting {model_name}...")
 
         if model_class == GraphKAN:
+            msg_width = [2 * n_features, 20, msg_dim]
+            node_width = [n_features + msg_dim, 20, ndim]
             model = model_class(
                 n_f=n_features,
-                msg_dim=msg_dim,
-                ndim=ndim,
+                msg_width=msg_width,
+                node_width=node_width,
                 grid_size=5,
                 spline_order=3,
             )
@@ -309,10 +356,12 @@ def test_augmentation_matches_original():
     edge_index = get_edge_index(n_nodes)
 
     # Create test model
+    msg_width = [2 * n_features, 16, msg_dim]
+    node_width = [n_features + msg_dim, 16, ndim]
     model = OrdinaryGraphKAN(
         n_f=n_features,
-        msg_dim=msg_dim,
-        ndim=ndim,
+        msg_width=msg_width,
+        node_width=node_width,
         edge_index=edge_index,
         grid_size=5,
         spline_order=3,
@@ -492,6 +541,8 @@ def run_all_tests():
     try:
         test_graph_kan_forward()
         test_graph_kan_gradients()
+        test_graph_kan_custom_width_spec()
+        test_graph_kan_width_validation_errors()
         test_baseline_gnn_forward()
         test_overfit_single_batch()
         test_model_comparison()
