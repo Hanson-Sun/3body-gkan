@@ -29,11 +29,9 @@ def simple_model():
     edge_index = get_edge_index(3)
     model = OrdinaryGraphKAN(
         n_f=5,
-        msg_dim=10,
-        ndim=2,
+        msg_width=[10, 8, 10],
+        node_width=[15, 8, 2],
         edge_index=edge_index,
-        n_msg_layers=2,
-        n_node_layers=2,
         grid_size=3,
         spline_order=2,
     )

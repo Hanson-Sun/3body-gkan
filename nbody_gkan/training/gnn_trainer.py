@@ -17,9 +17,11 @@ class GNNTrainer(Trainer):
         self.lamb          = 0.0
         self.gradient_clip = gradient_clip
 
-    def _train_step(self, batch, augment: bool = False, augmentation_scale: float = 3.0) -> float:
+    def _train_step(self, batch, augment: bool = False, augmentation_scale: float = 3.0,
+                    square_loss: bool = False) -> float:
         self.optimizer.zero_grad()
-        loss = self.model.loss(batch, augment=augment, augmentation=augmentation_scale, lamb=self.lamb)
+        loss = self.model.loss(batch, augment=augment, augmentation=augmentation_scale,
+                               lamb=self.lamb, square=square_loss)
         loss.backward()
         if self.gradient_clip is not None:
             torch.nn.utils.clip_grad_norm_(self.model.parameters(), self.gradient_clip)
