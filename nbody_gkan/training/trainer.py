@@ -3,7 +3,7 @@ from typing import Optional
 import json
 import torch
 from torch_geometric.loader import DataLoader
-from torch.optim.lr_scheduler import OneCycleLR
+from torch.optim.lr_scheduler import OneCycleLR, ReduceLROnPlateau
 from pathlib import Path
 import matplotlib
 matplotlib.use('Agg')
@@ -149,10 +149,14 @@ class Trainer:
             )
             val_loss   = self.validate()
 
-            if self.scheduler is not None and not isinstance(
-                self.scheduler, OneCycleLR
+            if (
+                    self.scheduler is not None
+                    and not isinstance(self.scheduler, OneCycleLR)
             ):
-                self.scheduler.step()
+                if isinstance(self.scheduler, ReduceLROnPlateau):
+                    self.scheduler.step(train_loss)
+                else:
+                    self.scheduler.step()
 
             current_lr = self.optimizer.param_groups[0]["lr"]
             self.history["train"].append(train_loss)

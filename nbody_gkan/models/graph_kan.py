@@ -18,6 +18,7 @@ from torch_geometric.nn import MessagePassing
 from .ordinary_mixin import OrdinaryMixin
 from .graph_mixin import GraphMixin
 from .symbolic_mixin import SymbolicGraphKANMixin
+from .edge_features import compute_edge_features, edge_feature_dim
 
 
 class GraphKAN(SymbolicGraphKANMixin, MessagePassing, GraphMixin):
@@ -77,10 +78,14 @@ class GraphKAN(SymbolicGraphKANMixin, MessagePassing, GraphMixin):
             scale_base_sigma: Optional[float] = None,
             msg_dim: Optional[int] = None,
             ndim: Optional[int] = None,
+            edge_augmentations: Optional[list[str]] = None,
+            softening: float = 1e-2,
             **_: Any,
         ):
         super().__init__(aggr=aggr)
         self.n_f = n_f
+        self.edge_augmentations = list(edge_augmentations) if edge_augmentations else []
+        self.softening = float(softening)
         self.grid_size = self._validate_positive_int(grid_size, "grid_size")
         self.spline_order = self._validate_positive_int(spline_order, "spline_order")
         self.lamb_l1 = float(lamb_l1)
@@ -103,10 +108,11 @@ class GraphKAN(SymbolicGraphKANMixin, MessagePassing, GraphMixin):
             )
         self.msg_dim = msg_dim
         self.ndim = ndim
+        self.n_aug = edge_feature_dim(ndim, self.edge_augmentations)
         self._grid_updates_disabled = False
 
-        # Message function: [x_i, x_j] (2*n_f) → msg_dim
-        msg_input_dim = 2 * n_f
+        # Message function: [x_i, x_j, edge_features] → msg_dim
+        msg_input_dim = 2 * n_f + self.n_aug
         self.msg_width = self._normalize_width_spec(
             width=msg_width,
             in_dim=msg_input_dim,
@@ -450,8 +456,12 @@ class GraphKAN(SymbolicGraphKANMixin, MessagePassing, GraphMixin):
         torch.Tensor
             Messages, shape (n_edges, msg_dim)
         """
-        # Concatenate all features: [x_i, x_j]
         tmp = torch.cat([x_i, x_j], dim=1)  # (n_edges, 2*n_f)
+        if self.edge_augmentations:
+            aug = compute_edge_features(
+                x_i, x_j, self.ndim, self.edge_augmentations, self.softening
+            )
+            tmp = torch.cat([tmp, aug], dim=1)
         return self.msg_kan(tmp)
 
     def update(
@@ -549,7 +559,14 @@ class GraphKAN(SymbolicGraphKANMixin, MessagePassing, GraphMixin):
                 batch = batch.to(device)
                 x = batch.x
                 row, col = batch.edge_index
-                msg_inputs.append(torch.cat([x[row], x[col]], dim=1))
+                msg_in = torch.cat([x[row], x[col]], dim=1)
+                if self.edge_augmentations:
+                    aug = compute_edge_features(
+                        x[row], x[col], self.ndim,
+                        self.edge_augmentations, self.softening,
+                    )
+                    msg_in = torch.cat([msg_in, aug], dim=1)
+                msg_inputs.append(msg_in)
 
             if msg_inputs:
                 msg_samples = _with_jitter(torch.cat(msg_inputs, dim=0))
@@ -658,6 +675,8 @@ class GraphKAN(SymbolicGraphKANMixin, MessagePassing, GraphMixin):
         model_total = self._count_parameters(self)
         model_trainable = self._count_parameters(self, trainable_only=True)
 
+        if self.edge_augmentations:
+            print(f"  Edge aug:      {self.edge_augmentations} (+{self.n_aug} dims)")
         print(f"  Grid size:     {self.grid_size}")
         print(f"  Spline order:  {self.spline_order}")
         print(f"  Msg mult:      {self.msg_mult_nodes} (arity={self.msg_mult_arity})")
@@ -738,6 +757,8 @@ class OrdinaryGraphKAN(OrdinaryMixin, GraphKAN):
         sparse_init: bool = True,
         msg_dim: Optional[int] = None,
         ndim: Optional[int] = None,
+        edge_augmentations: Optional[list[str]] = None,
+        softening: float = 1e-2,
         **kwargs: Any,
     ):
         super().__init__(
@@ -754,6 +775,8 @@ class OrdinaryGraphKAN(OrdinaryMixin, GraphKAN):
             sparse_init=sparse_init,
             msg_dim=msg_dim,
             ndim=ndim,
+            edge_augmentations=edge_augmentations,
+            softening=softening,
             **kwargs,
         )
         self.register_buffer("edge_index", edge_index)
