@@ -1,6 +1,6 @@
 # Experiments configuration (all tunables)
 
-Use these keys either via CLI flags in `scripts/train_comparison.py` or via `experiments.yaml` (mapped into the same args). Paths are workspace-relative.
+Use these keys either via CLI flags in `scripts/run_experiments.py` or via `experiments.yaml` (mapped into the same args). Paths are workspace-relative.
 
 ## Data
 - `train_data`, `val_data`: NPZ files with datasets.
