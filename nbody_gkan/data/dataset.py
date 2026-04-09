@@ -4,9 +4,10 @@ PyTorch Geometric dataset for N-body dynamics.
 Generates graph data with:
 - Node features: [pos_x, pos_y, vel_x, vel_y, mass] for 2D
 - Edge index: fully connected graph
-- Targets: accelerations from gravitational force law
+- Targets: accelerations from a configured force law
 """
 
+import json
 from pathlib import Path
 from typing import Optional
 
@@ -15,7 +16,16 @@ import torch
 from torch.utils.data import Dataset
 from torch_geometric.data import Data
 
-from ..nbody import gravity as compute_accelerations
+from .. import nbody_force_fns
+
+
+FORCE_FN_MAP = {
+    "gravity": nbody_force_fns.gravity,
+    "linear_gravity": nbody_force_fns.linear_gravity,
+    "cubic_gravity": nbody_force_fns.cubic_gravity,
+    "linear_spring": nbody_force_fns.linear_spring,
+    "hooke_pairwise": nbody_force_fns.hooke_pairwise,
+}
 
 
 def get_edge_index(n: int) -> torch.Tensor:
@@ -54,10 +64,16 @@ class NBodyDataset(Dataset):
     data_path : str or Path
         Path to .npz file with trajectory data
         Expected keys: 'positions', 'velocities', 'masses'
+        Optional metadata keys: 'force_name', 'force_kwargs'
     G : float, optional (default=1.0)
-        Gravitational constant for computing accelerations
+        Default gravity coefficient used when force metadata is absent
     softening : float, optional (default=1e-2)
-        Softening parameter
+        Default gravity softening used when force metadata is absent
+    force_fn : str, optional
+        Override force function name. If omitted, uses NPZ metadata when
+        available, else falls back to 'gravity'.
+    force_kwargs : dict, optional
+        Override kwargs passed to the selected force function.
     """
 
     def __init__(
@@ -65,6 +81,8 @@ class NBodyDataset(Dataset):
             data_path: str | Path,
             G: float = 1.0,
             softening: float = 1e-2,
+            force_fn: Optional[str] = None,
+            force_kwargs: Optional[dict] = None,
     ):
         self.data_path = Path(data_path)
 
@@ -76,6 +94,34 @@ class NBodyDataset(Dataset):
 
         self.G = G
         self.softening = softening
+
+        # Force selection priority: explicit args -> file metadata -> gravity fallback.
+        if force_fn is not None:
+            self.force_name = str(force_fn)
+        elif "force_name" in data.files:
+            self.force_name = self._decode_scalar(data["force_name"])
+        else:
+            self.force_name = "gravity"
+
+        if force_kwargs is not None:
+            parsed_kwargs = dict(force_kwargs)
+        elif "force_kwargs" in data.files:
+            parsed_kwargs = self._decode_force_kwargs(data["force_kwargs"])
+        else:
+            parsed_kwargs = {}
+
+        # Backward-compatible default for older files with no metadata.
+        if not parsed_kwargs and self.force_name in {"gravity", "linear_gravity", "cubic_gravity", "hooke_pairwise"}:
+            parsed_kwargs = {"G": self.G, "softening": self.softening}
+
+        if self.force_name not in FORCE_FN_MAP:
+            valid = ", ".join(sorted(FORCE_FN_MAP))
+            raise ValueError(
+                f"Unknown force function {self.force_name!r} in {self.data_path}. "
+                f"Available: {valid}"
+            )
+        self.force_fn = FORCE_FN_MAP[self.force_name]
+        self.force_kwargs = parsed_kwargs
 
         # Flatten trajectories: treat each timestep as a separate sample
         self.n_traj, self.T, self.n, self.dim = self.positions.shape
@@ -107,8 +153,8 @@ class NBodyDataset(Dataset):
         pos = self.positions[idx]  # (n, dim)
         vel = self.velocities[idx]  # (n, dim)
 
-        # Compute accelerations
-        acc = compute_accelerations(pos, self.masses, self.G, self.softening)
+        # Compute force-consistent targets on-the-fly.
+        acc = self.force_fn(pos, self.masses, **self.force_kwargs)
 
         # Node features: [pos, vel, mass]
         # Expand mass to (n, 1) and concatenate
@@ -128,6 +174,32 @@ class NBodyDataset(Dataset):
         from torch_geometric.data import Batch
 
         return Batch.from_data_list(batch)
+
+    @staticmethod
+    def _decode_scalar(value) -> str:
+        """Decode NPZ scalar/string payloads into a Python string."""
+        if isinstance(value, np.ndarray):
+            if value.shape == ():
+                value = value.item()
+            elif value.size == 1:
+                value = value.reshape(()).item()
+        if isinstance(value, bytes):
+            return value.decode("utf-8")
+        return str(value)
+
+    @classmethod
+    def _decode_force_kwargs(cls, value) -> dict:
+        """Decode serialized force kwargs metadata from NPZ."""
+        raw = cls._decode_scalar(value)
+        if not raw or raw == "None":
+            return {}
+        try:
+            parsed = json.loads(raw)
+        except json.JSONDecodeError:
+            return {}
+        if isinstance(parsed, dict):
+            return parsed
+        return {}
 
 
 def create_dataset_from_simulator(
@@ -188,6 +260,9 @@ def create_dataset_from_simulator(
     times = results[0]["times"]
     masses = sim.masses
 
+    force_name = getattr(sim.force_fn, "__name__", "gravity")
+    force_kwargs = json.dumps(sim.force_kwargs)
+
     # Save
     np.savez_compressed(
         output_path,
@@ -195,9 +270,15 @@ def create_dataset_from_simulator(
         velocities=velocities,
         times=times,
         masses=masses,
+        force_name=force_name,
+        force_kwargs=force_kwargs,
     )
 
     print(f"Saved {n_trajectories} trajectories to {output_path}")
-    print(f"Data shape: positions {positions.shape}, velocities {velocities.shape}")
+    print(
+        "Data shape: "
+        f"positions {positions.shape}, "
+        f"velocities {velocities.shape}"
+    )
 
     return output_path

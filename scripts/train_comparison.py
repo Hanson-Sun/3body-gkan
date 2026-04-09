@@ -74,6 +74,18 @@ def parse_args(args=None):
     parser.add_argument("--epochs", type=int, default=50)
     parser.add_argument("--batch_size", type=int, default=16)
     parser.add_argument("--kan_batch_size", type=int, default=16)
+    parser.add_argument(
+        "--kan_adam_batch_size",
+        type=int,
+        default=None,
+        help="Batch size for Adam warmup (defaults to kan_batch_size).",
+    )
+    parser.add_argument(
+        "--kan_lbfgs_batch_size",
+        type=int,
+        default=None,
+        help="Batch size for LBFGS phase (defaults to kan_batch_size).",
+    )
     parser.add_argument("--lr", type=float, default=1e-3)
     parser.add_argument("--lamb", type=float, default=0)
     parser.add_argument(
@@ -205,9 +217,11 @@ def train_kan(model, train_loader, val_loader, n_epochs, device, lamb,
               lbfgs_line_search_fn: str | None = "strong_wolfe",
               lbfgs_impl: str = "torch",
               lbfgs_tolerance_ys: float = 1e-32,
+          lbfgs_train_loader=None,
               square_loss: bool = False):
     trainer = KANTrainer(
         model, train_loader, val_loader,
+    lbfgs_train_loader=lbfgs_train_loader,
         lbfgs_lr=lbfgs_lr,
         lbfgs_max_iter=lbfgs_max_iter,
         lbfgs_max_eval=lbfgs_max_eval,
@@ -304,6 +318,12 @@ def main(yaml_params: Optional[dict] = None, checkpoint_dir: Optional[str] = Non
         args.epochs = yaml_params.get("training_hp", {}).get("epochs", args.epochs)
         args.batch_size = yaml_params.get("training_hp", {}).get("batch_size", args.batch_size)
         args.kan_batch_size = yaml_params.get("training_hp", {}).get("kan_batch_size", args.kan_batch_size)
+        args.kan_adam_batch_size = yaml_params.get("training_hp", {}).get(
+            "kan_adam_batch_size", args.kan_adam_batch_size
+        )
+        args.kan_lbfgs_batch_size = yaml_params.get("training_hp", {}).get(
+            "kan_lbfgs_batch_size", args.kan_lbfgs_batch_size
+        )
         args.lr = float(yaml_params.get("training_hp", {}).get("lr", args.lr))
         args.lamb = yaml_params.get("training_hp", {}).get("lamb", args.lamb)
         args.train_baseline = yaml_params.get("train_baseline", args.train_baseline)
@@ -312,6 +332,11 @@ def main(yaml_params: Optional[dict] = None, checkpoint_dir: Optional[str] = Non
     args.kan_node_width = _coerce_width_arg(args.kan_node_width)
     args.kan_msg_mult_arity = _coerce_mult_arity_arg(args.kan_msg_mult_arity, "kan_msg_mult_arity")
     args.kan_node_mult_arity = _coerce_mult_arity_arg(args.kan_node_mult_arity, "kan_node_mult_arity")
+
+    if args.kan_adam_batch_size is None:
+        args.kan_adam_batch_size = args.kan_batch_size
+    if args.kan_lbfgs_batch_size is None:
+        args.kan_lbfgs_batch_size = args.kan_batch_size
 
     # Infer msg_dim from width if provided to avoid mismatch with pykan spec.
     if not args.kan_msg_width or not args.kan_node_width:
@@ -334,18 +359,23 @@ def main(yaml_params: Optional[dict] = None, checkpoint_dir: Optional[str] = Non
     train_loader = DataLoader(train_dataset, batch_size=args.batch_size, shuffle=True, num_workers=8, pin_memory=True, persistent_workers=True)
     val_loader = DataLoader(val_dataset, batch_size=args.batch_size, shuffle=True, num_workers=8, pin_memory=True, persistent_workers=True)
 
-    kan_train_loader = DataLoader(train_dataset, batch_size=args.kan_batch_size, shuffle=True, num_workers=8, pin_memory=True, persistent_workers=True)
-    kan_val_loader = DataLoader(val_dataset, batch_size=args.kan_batch_size, shuffle=True, num_workers=8, pin_memory=True, persistent_workers=True)
+    kan_adam_train_loader = DataLoader(train_dataset, batch_size=args.kan_adam_batch_size, shuffle=True, num_workers=8, pin_memory=True, persistent_workers=True)
+    if args.kan_lbfgs_batch_size == args.kan_adam_batch_size:
+        kan_lbfgs_train_loader = kan_adam_train_loader
+    else:
+        kan_lbfgs_train_loader = DataLoader(train_dataset, batch_size=args.kan_lbfgs_batch_size, shuffle=True, num_workers=8, pin_memory=True, persistent_workers=True)
+    kan_val_loader = DataLoader(val_dataset, batch_size=args.kan_lbfgs_batch_size, shuffle=True, num_workers=8, pin_memory=True, persistent_workers=True)
 
     print(
         "Loader steps/epoch: "
         f"GNN={len(train_loader)} (batch={args.batch_size}), "
-        f"Graph-KAN={len(kan_train_loader)} (batch={args.kan_batch_size})"
+        f"Graph-KAN Adam={len(kan_adam_train_loader)} (batch={args.kan_adam_batch_size}), "
+        f"LBFGS={len(kan_lbfgs_train_loader)} (batch={args.kan_lbfgs_batch_size})"
     )
-    if len(kan_train_loader) <= 1:
+    if len(kan_lbfgs_train_loader) <= 1:
         print(
-            "Warning: Graph-KAN is effectively full-batch (<=1 step/epoch). "
-            "If convergence per epoch is slow, reduce kan_batch_size."
+            "Warning: Graph-KAN LBFGS phase is effectively full-batch (<=1 step/epoch). "
+            "If convergence per epoch is slow, reduce kan_lbfgs_batch_size."
         )
 
     n_features = 2 * train_dataset.dim + 1
@@ -391,7 +421,7 @@ def main(yaml_params: Optional[dict] = None, checkpoint_dir: Optional[str] = Non
     print(" ")
 
     kan_model, kan_history = train_kan(
-        kan_model, kan_train_loader, kan_val_loader,
+        kan_model, kan_adam_train_loader, kan_val_loader,
         n_epochs=args.epochs,
         device=device,
         lamb=args.lamb,
@@ -407,6 +437,7 @@ def main(yaml_params: Optional[dict] = None, checkpoint_dir: Optional[str] = Non
         lbfgs_line_search_fn=args.kan_lbfgs_line_search_fn,
         lbfgs_impl=args.kan_lbfgs_impl,
         lbfgs_tolerance_ys=args.kan_lbfgs_tolerance_ys,
+        lbfgs_train_loader=kan_lbfgs_train_loader,
         square_loss=args.kan_square_loss,
     )
     visualize_training_loss(kan_history,

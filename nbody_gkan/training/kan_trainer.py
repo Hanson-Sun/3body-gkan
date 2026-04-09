@@ -38,6 +38,7 @@ class KANTrainer(Trainer):
     """
 
     def __init__(self, model, train_loader, val_loader=None,
+                 lbfgs_train_loader=None,
                  lbfgs_lr: float = 1.0,
                  lbfgs_max_iter: int = 10,
                  lbfgs_max_eval: int | None = None,
@@ -52,6 +53,12 @@ class KANTrainer(Trainer):
                  scheduler=None,
                  **kwargs):
         super().__init__(model, train_loader, val_loader, **kwargs)
+
+        # Allow different loaders/batch sizes for warmup (Adam) vs LBFGS phase.
+        self.adam_train_loader = train_loader
+        self.lbfgs_train_loader = (
+            lbfgs_train_loader if lbfgs_train_loader is not None else train_loader
+        )
 
         self.adam_warmup_epochs = adam_warmup_epochs
 
@@ -153,6 +160,9 @@ class KANTrainer(Trainer):
     def current_phase(self) -> str:
         return "LBFGS" if self._using_lbfgs else "Adam"
 
+    def _active_train_loader(self):
+        return self.lbfgs_train_loader if self._using_lbfgs else self.adam_train_loader
+
     def _on_epoch_start(self, epoch: int):
         # Phase switch check comes first
         self._maybe_switch_to_lbfgs(epoch)
@@ -166,7 +176,7 @@ class KANTrainer(Trainer):
                 and self._n_grid_updates < self.max_grid_updates
                 and hasattr(self.model, 'update_grids')):
             tqdm.write(f"  Updating KAN grids (update #{self._n_grid_updates + 1})...")
-            self.model.update_grids(self.train_loader, device=self.device)
+            self.model.update_grids(self.lbfgs_train_loader, device=self.device)
             # Reset LBFGS history after grid changes to avoid stale curvature info
             if hasattr(self.optimizer, 'state'):
                 self.optimizer.state.clear()
@@ -238,9 +248,15 @@ class KANTrainer(Trainer):
             gradient_clip = None
         else:
             self._current_gradient_clip = gradient_clip
-        return super().train_epoch(
-            augment=augment,
-            augmentation_scale=augmentation_scale,
-            gradient_clip=gradient_clip,  # passes through for Adam phase
-            square_loss=square_loss,
-        )
+
+        original_loader = self.train_loader
+        self.train_loader = self._active_train_loader()
+        try:
+            return super().train_epoch(
+                augment=augment,
+                augmentation_scale=augmentation_scale,
+                gradient_clip=gradient_clip,  # passes through for Adam phase
+                square_loss=square_loss,
+            )
+        finally:
+            self.train_loader = original_loader
