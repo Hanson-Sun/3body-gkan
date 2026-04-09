@@ -11,11 +11,23 @@ import train_comparison
 import visualize_comparison
 
 
-def main(overwrite: bool = True) -> None:
+def main(overwrite: bool = True, selected: list[str] | None = None) -> None:
     with open("experiments.yaml") as f:
         experiments = yaml.safe_load(f)
 
-    for exp in tqdm(experiments.values(), desc="Experiments"):
+    if selected:
+        missing = [name for name in selected if name not in experiments]
+        if missing:
+            available = ", ".join(experiments.keys())
+            raise SystemExit(
+                f"Unknown experiment(s): {', '.join(missing)}\n"
+                f"Available: {available}"
+            )
+        items = [(k, experiments[k]) for k in selected]
+    else:
+        items = list(experiments.items())
+
+    for _key, exp in tqdm(items, desc="Experiments"):
         name = exp["name"]
         checkpoint_dir = Path("checkpoints") / name
         data_dir       = Path("data")        / name
@@ -60,10 +72,16 @@ def main(overwrite: bool = True) -> None:
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Run experiments from experiments.yaml.")
     parser.add_argument(
+        "experiments",
+        nargs="*",
+        help="Run only these experiment keys (default: all). "
+             "E.g.: python run_experiments.py experiment_1a_analytical_min",
+    )
+    parser.add_argument(
         "--no-overwrite",
         dest="overwrite",
         action="store_false",
         help="Skip phases whose output directories are already non-empty.",
     )
     args = parser.parse_args()
-    main(overwrite=args.overwrite)
+    main(overwrite=args.overwrite, selected=args.experiments or None)
