@@ -189,7 +189,7 @@ def _extract_width_output_dim(width, label: str) -> int:
 
 
 
-def train_gnn(model, train_loader, val_loader, n_epochs, lr, device, lamb):
+def train_gnn(model, train_loader, val_loader, n_epochs, lr, device, lamb, augment=False, augmentation_scale=3.0):
     trainer = GNNTrainer(
         model, train_loader, val_loader,
         lr=lr, device=device,
@@ -198,7 +198,8 @@ def train_gnn(model, train_loader, val_loader, n_epochs, lr, device, lamb):
     trainer.lamb = lamb
     trainer.train(
         n_epochs=n_epochs,
-        augment=False,
+        augment=augment,
+        augmentation_scale=augmentation_scale,
         save_every=n_epochs,
     )
     return model, trainer.history
@@ -218,7 +219,9 @@ def train_kan(model, train_loader, val_loader, n_epochs, device, lamb,
               lbfgs_impl: str = "torch",
               lbfgs_tolerance_ys: float = 1e-32,
           lbfgs_train_loader=None,
-              square_loss: bool = False):
+              square_loss: bool = False,
+              augment: bool = False,
+              augmentation_scale: float = 3.0):
     trainer = KANTrainer(
         model, train_loader, val_loader,
     lbfgs_train_loader=lbfgs_train_loader,
@@ -240,7 +243,8 @@ def train_kan(model, train_loader, val_loader, n_epochs, device, lamb,
     clip_value = None if (gradient_clip is None or gradient_clip <= 0) else gradient_clip
     trainer.train(
         n_epochs=n_epochs,
-        augment=False,
+        augment=augment,
+        augmentation_scale=augmentation_scale,
         save_every=n_epochs,
         gradient_clip=clip_value,
         square_loss=square_loss,
@@ -326,6 +330,8 @@ def main(yaml_params: Optional[dict] = None, checkpoint_dir: Optional[str] = Non
         )
         args.lr = float(yaml_params.get("training_hp", {}).get("lr", args.lr))
         args.lamb = yaml_params.get("training_hp", {}).get("lamb", args.lamb)
+        args.augment = yaml_params.get("training_hp", {}).get("augment", False)
+        args.augmentation_scale = yaml_params.get("training_hp", {}).get("augmentation_scale", 3.0)
         args.train_baseline = yaml_params.get("train_baseline", args.train_baseline)
 
     args.kan_msg_width = _coerce_width_arg(args.kan_msg_width)
@@ -439,6 +445,8 @@ def main(yaml_params: Optional[dict] = None, checkpoint_dir: Optional[str] = Non
         lbfgs_tolerance_ys=args.kan_lbfgs_tolerance_ys,
         lbfgs_train_loader=kan_lbfgs_train_loader,
         square_loss=args.kan_square_loss,
+        augment=args.augment,
+        augmentation_scale=args.augmentation_scale,
     )
     visualize_training_loss(kan_history,
                             title='Graph-KAN Training Loss',
@@ -460,7 +468,7 @@ def main(yaml_params: Optional[dict] = None, checkpoint_dir: Optional[str] = Non
         gnn_model.summary()
         print(" ")
 
-        gnn_model, gnn_history = train_gnn(gnn_model, train_loader, val_loader, args.epochs, args.lr, device, args.lamb)
+        gnn_model, gnn_history = train_gnn(gnn_model, train_loader, val_loader, args.epochs, args.lr, device, args.lamb, args.augment, args.augmentation_scale)
         visualize_training_loss(gnn_history,
                                 title='GNN Training Loss',
                                 save_path=f'{checkpoint_dir}/gnn_loss.png')

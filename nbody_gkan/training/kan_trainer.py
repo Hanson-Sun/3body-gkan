@@ -166,12 +166,14 @@ class KANTrainer(Trainer):
     def _on_epoch_start(self, epoch: int):
         # Phase switch check comes first
         self._maybe_switch_to_lbfgs(epoch)
+        # Also gate on Adam warmup so first grid update is not on switch epoch.
+        grid_warmup_epoch = max(self.grid_update_warmup, self.adam_warmup_epochs)
 
         # Grid updates only during LBFGS phase — noisy Adam gradients
         # make grid updates unreliable during warmup
         if (self._using_lbfgs
                 and self.grid_update_freq > 0
-                and epoch > self.grid_update_warmup
+                and epoch > grid_warmup_epoch
                 and epoch % self.grid_update_freq == 0
                 and self._n_grid_updates < self.max_grid_updates
                 and hasattr(self.model, 'update_grids')):

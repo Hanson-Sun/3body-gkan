@@ -12,13 +12,13 @@ baseline:
     gnn_hp:
       hidden: 300
       msg_dim: 100
-      augment: True
-      augmentation_scale: 3.0
     training_hp:
       epochs: 50
       batch_size: 64
       lr: 1e-3
       lamb: 0.00
+      augment: True
+      augmentation_scale: 3.0
   visualization_params:
     save_video: True
     plot_splines: True
@@ -69,6 +69,8 @@ minimal:
       kan_adam_batch_size: 64
       kan_lbfgs_batch_size: 262144
       lr: 5e-3
+      augment: True
+      augmentation_scale: 3.0
   visualization_params:
     save_video: True
     plot_splines: True
@@ -91,6 +93,8 @@ minimal_adam:
       kan_adam_batch_size: 64
       kan_lbfgs_batch_size: 64
       lr: 5e-3
+      augment: True
+      augmentation_scale: 3.0
   visualization_params:
     save_video: True
     plot_splines: True
@@ -140,6 +144,8 @@ minimal_merged:
       kan_adam_batch_size: 64
       kan_lbfgs_batch_size: 262144
       lr: 5e-3
+      augment: True
+      augmentation_scale: 3.0
   visualization_params:
     save_video: True
     plot_splines: True
@@ -162,6 +168,8 @@ minimal_merged_adam:
       kan_adam_batch_size: 64
       kan_lbfgs_batch_size: 64
       lr: 5e-3
+      augment: True
+      augmentation_scale: 3.0
   visualization_params:
     save_video: True
     plot_splines: True
@@ -174,9 +182,6 @@ minimal_hooke_hybrid:
     n_train: 200
     n_val: 20
     force_fn: "hooke_pairwise"
-    mass_min: 0.5
-    mass_max: 2.0
-    mass_seed: 17
   train_params:
     train_baseline: False
     gkan_hp:
@@ -187,13 +192,75 @@ minimal_hooke_hybrid:
       adam_warmup_epochs: 10
       grid_update_freq: 10
       grid_update_warmup: 5
-      max_grid_updates: 3
+      max_grid_updates: 0
     training_hp:
       epochs: 50
       kan_adam_batch_size: 64
       kan_lbfgs_batch_size: 262144
-      lr: 5e-3
+      lr: 2e-3
       kan_square_loss: True
+      augment: False
+      augmentation_scale: 3.0
+  visualization_params:
+    save_video: True
+    plot_splines: True
+
+minimal_mult_hooke_hybrid:
+  name: "minimal_mult_hooke_hybrid"
+  data_params:
+    n_train: 200
+    n_val: 20
+    force_fn: "hooke_pairwise"
+  train_params:
+    train_baseline: False
+    gkan_hp:
+      msg_width: [10, [3, 2], [5, 2], [3, 2], [4, 2], 2]
+      node_width: [7, 2]
+      msg_mult_arity: [[], [10, 10], [3, 3], [5, 5], [3, 3], []]
+      node_mult_arity: [[], []]
+      lbfgs_max_iter: 30
+      lbfgs_impl: pykan
+      adam_warmup_epochs: 10
+      grid_update_freq: 10
+      grid_update_warmup: 5
+      max_grid_updates: 0
+    training_hp:
+      epochs: 20
+      kan_adam_batch_size: 64
+      kan_lbfgs_batch_size: 32768
+      lr: 2e-3
+      kan_square_loss: True
+      augment: False
+      augmentation_scale: 3.0
+  visualization_params:
+    save_video: True
+    plot_splines: True
+
+maximal_hooke_hybrid:
+  name: "maximal_hooke_hybrid"
+  data_params:
+    n_train: 200
+    n_val: 20
+    force_fn: "hooke_pairwise"
+  train_params:
+    train_baseline: False
+    gkan_hp:
+      msg_width: [10, 50, 50, 50, 50, 2]
+      node_width: [7, 2]
+      lbfgs_max_iter: 30
+      lbfgs_impl: pykan
+      adam_warmup_epochs: 3
+      grid_update_freq: 10
+      grid_update_warmup: 5
+      max_grid_updates: 0
+    training_hp:
+      epochs: 8
+      kan_adam_batch_size: 64
+      kan_lbfgs_batch_size: 4096
+      lr: 2e-3
+      kan_square_loss: True
+      augment: False
+      augmentation_scale: 3.0
   visualization_params:
     save_video: True
     plot_splines: True

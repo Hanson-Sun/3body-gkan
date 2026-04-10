@@ -44,6 +44,10 @@ def main(yaml_params: Optional[dict] = None, output_dir: Optional[str] = None) -
     out.mkdir(parents=True, exist_ok=True)
 
     force_fn = FORCE_FN_MAP.get(args.force_fn)
+    if force_fn is None:
+        valid = ", ".join(sorted(FORCE_FN_MAP))
+        raise ValueError(f"Unknown force function {args.force_fn!r}. Available: {valid}")
+
     mass_rng = np.random.default_rng(args.mass_seed)
     masses = mass_rng.uniform(args.mass_min, args.mass_max, size=args.n_bodies)
     print(
@@ -53,6 +57,7 @@ def main(yaml_params: Optional[dict] = None, output_dir: Optional[str] = None) -
 
     sim = NBodySimulator(masses, force_fn=force_fn)
 
+    print(f"Generating data with force function: {args.force_fn}")
     for split, n, seed in [("train", args.n_train, 42), ("val", args.n_val, 123)]:
         print(f"Generating {n} {split} trajectories...")
         create_dataset_from_simulator(
