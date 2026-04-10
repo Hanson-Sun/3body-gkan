@@ -195,6 +195,7 @@ minimal_merged_hybrid:
       grid_update_freq: 10
       grid_update_warmup: 5
       max_grid_updates: 0
+      gradient_clip: 5.0
     training_hp:
       epochs: 10
       kan_adam_batch_size: 64
