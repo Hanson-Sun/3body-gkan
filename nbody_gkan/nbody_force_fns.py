@@ -127,3 +127,49 @@ def linear_spring(positions: np.ndarray, masses: np.ndarray, k: float = 1.0,
                 if r_norm > 0:
                     acc[i] += (k / masses[i]) * (r_norm - rest_length) * r / r_norm
     return acc
+
+
+def hooke_pairwise(positions: np.ndarray, masses: np.ndarray, G: float = 1.0,
+                   softening: float = 1e-2) -> np.ndarray:
+    """
+    Compute pairwise Hooke-style accelerations without inverse-distance terms.
+
+    This uses a linear displacement law for each pair:
+        F_ij = G * (x_j - x_i)
+        a_i += F_ij / m_i
+
+    Notes
+    -----
+    - No distance normalization is used, so this is intentionally easier than
+      gravity for optimization/debugging.
+    - Because every pair interacts, each body is pulled toward the mean
+      position of the system.
+
+    Parameters
+    ----------
+    positions : np.ndarray
+        Positions of shape (n, dim)
+    masses : np.ndarray
+        Masses of shape (n,)
+    G : float
+        Linear interaction coefficient (kept as ``G`` for gravity-compatible
+        function signatures in shared code paths).
+    softening : float
+        Unused placeholder for gravity-compatible signatures.
+
+    Returns
+    -------
+    np.ndarray
+        Accelerations of shape (n, dim)
+    """
+    n = len(masses)
+    dim = positions.shape[1]
+    acc = np.zeros((n, dim))
+
+    for i in range(n):
+        for j in range(n):
+            if i != j:
+                r = positions[j] - positions[i]
+                acc[i] += (G / masses[i]) * r
+
+    return acc

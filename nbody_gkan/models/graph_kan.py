@@ -481,7 +481,7 @@ class GraphKAN(SymbolicGraphKANMixin, MessagePassing, GraphMixin):
         data_loader,
         device: torch.device | str = 'cpu',
         max_batches: int = 10,
-        jitter_scale: float = 5e-1,
+        jitter_scale: float = 1e-2,
         corr_threshold: float = 0.9,
     ):
         """
