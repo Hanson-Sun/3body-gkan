@@ -60,6 +60,12 @@ def parse_args(args=None):
                         help="Curvature threshold for pykan LBFGS memory updates (ignored for torch LBFGS).")
     parser.add_argument("--kan_lamb_l1", type=float, default=1.0)
     parser.add_argument("--kan_lamb_entropy", type=float, default=2.0)
+    parser.add_argument(
+        "--kan_sparse_init",
+        type=lambda x: str(x).strip().lower() in {"1", "true", "yes", "y", "on"},
+        default=True,
+        help="Use sparse initialization in pykan KANLayer connections (default: true).",
+    )
 
     # TODO: add these to yaml
     parser.add_argument("--kan_adam_warmup_epochs", type=int, default=10)
@@ -313,6 +319,7 @@ def main(yaml_params: Optional[dict] = None, checkpoint_dir: Optional[str] = Non
         args.kan_lbfgs_tolerance_ys    = yaml_params.get("gkan_hp", {}).get("lbfgs_tolerance_ys",  args.kan_lbfgs_tolerance_ys)
         args.kan_lamb_l1               = yaml_params.get("gkan_hp", {}).get("lamb_l1",              args.kan_lamb_l1)
         args.kan_lamb_entropy          = yaml_params.get("gkan_hp", {}).get("lamb_entropy",         args.kan_lamb_entropy)
+        args.kan_sparse_init           = yaml_params.get("gkan_hp", {}).get("sparse_init",          args.kan_sparse_init)
         args.kan_adam_warmup_epochs    = yaml_params.get("gkan_hp", {}).get("adam_warmup_epochs",   args.kan_adam_warmup_epochs)
         args.kan_grid_update_freq      = yaml_params.get("gkan_hp", {}).get("grid_update_freq",     args.kan_grid_update_freq)
         args.kan_grid_update_warmup    = yaml_params.get("gkan_hp", {}).get("grid_update_warmup",   args.kan_grid_update_warmup)
@@ -416,6 +423,7 @@ def main(yaml_params: Optional[dict] = None, checkpoint_dir: Optional[str] = Non
         aggr="add",
         lamb_l1=args.kan_lamb_l1,
         lamb_entropy=args.kan_lamb_entropy,
+        sparse_init=args.kan_sparse_init,
         msg_mult_arity=args.kan_msg_mult_arity,
         node_mult_arity=args.kan_node_mult_arity,
         base_fun=args.kan_base_fun,
