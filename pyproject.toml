@@ -24,7 +24,6 @@ dependencies = [
     "sympy>=1.13.0",
     "torch>=2.10.0",
     "torch-geometric>=2.5.0",
-    "torch-scatter>=2.1.0",
     "torch-sparse>=0.6.0",
     "tqdm>=4.67.3"
 ]
