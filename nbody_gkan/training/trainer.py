@@ -8,7 +8,7 @@ from pathlib import Path
 import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
-from tqdm.notebook import tqdm
+from tqdm.auto import tqdm
 
 class Trainer:
     def __init__(
@@ -75,7 +75,7 @@ class Trainer:
         if square_loss is None:
             square_loss = self.square_loss
 
-        pbar = tqdm(self.train_loader, desc=f"Epoch {self.epoch}", leave=False)
+        pbar = tqdm(self.train_loader, desc=f"Epoch {self.epoch}", leave=False, ncols=100)
         for i, batch in enumerate(pbar):
             batch      = batch.to(self.device)
             self._step_metrics = {}

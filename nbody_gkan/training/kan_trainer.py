@@ -1,6 +1,6 @@
 import torch
 import warnings
-from tqdm.notebook import tqdm
+from tqdm.auto import tqdm
 from .trainer import Trainer
 
 try:

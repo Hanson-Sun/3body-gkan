@@ -11,7 +11,7 @@ from pathlib import Path
 import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
-from tqdm.notebook import tqdm
+from tqdm.auto import tqdm
 
 from nbody_gkan.data.dataset import NBodyDataset
 from nbody_gkan.models import OrdinaryGraphKAN, OGN
