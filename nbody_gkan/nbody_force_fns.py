@@ -172,8 +172,6 @@ def hooke_pairwise(positions: np.ndarray, masses: np.ndarray, G: float = 1.0,
                 r = positions[j] - positions[i]
                 acc[i] += (G / masses[i]) * r
 
-<<<<<<< HEAD
-=======
     return acc
 
 
@@ -193,5 +191,4 @@ def nice_function(positions: np.ndarray, masses: np.ndarray, G: float = 1.0,
                 r = positions[j] - positions[i]
                 r_norm = np.sqrt(np.sum(r**2) + softening**2)
                 acc[i] += (G / masses[i]) * np.exp(-r_norm**exponent) * r
->>>>>>> 7beff6e0831990acae26b5e177a3d70c6a5ea524
     return acc
