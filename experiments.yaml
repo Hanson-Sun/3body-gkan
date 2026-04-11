@@ -14,6 +14,9 @@ baseline:
     gnn_hp:
       hidden: 300
       msg_dim: 100
+    gkan_hp:
+      msg_width: [10, 2, 2, 2]
+      node_width: [7, 2]
     training_hp:
       epochs: 50
       batch_size: 64

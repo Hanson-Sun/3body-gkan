@@ -340,6 +340,7 @@ def main(yaml_params: Optional[dict] = None, checkpoint_dir: Optional[str] = Non
         args.augment = yaml_params.get("training_hp", {}).get("augment", False)
         args.augmentation_scale = yaml_params.get("training_hp", {}).get("augmentation_scale", 3.0)
         args.train_baseline = yaml_params.get("train_baseline", args.train_baseline)
+        args.train_gkan = yaml_params.get("train_gkan", args.train_gkan)
 
     args.kan_msg_width = _coerce_width_arg(args.kan_msg_width)
     args.kan_node_width = _coerce_width_arg(args.kan_node_width)
@@ -408,62 +409,66 @@ def main(yaml_params: Optional[dict] = None, checkpoint_dir: Optional[str] = Non
     # Create checkpoint directory
     checkpoint_dir = Path(args.checkpoint_dir)
     checkpoint_dir.mkdir(parents=True, exist_ok=True)
+    if args.train_gkan:
+        # Create and train Graph-KAN
+        print("="*60)
+        print("Graph-KAN")
+        print("="*60)
+        kan_model = OrdinaryGraphKAN(
+            n_f=n_features,
+            msg_width=args.kan_msg_width,
+            node_width=args.kan_node_width,
+            edge_index=edge_index,
+            grid_size=args.kan_grid_size,
+            spline_order=3,
+            aggr="add",
+            lamb_l1=args.kan_lamb_l1,
+            lamb_entropy=args.kan_lamb_entropy,
+            sparse_init=args.kan_sparse_init,
+            msg_mult_arity=args.kan_msg_mult_arity,
+            node_mult_arity=args.kan_node_mult_arity,
+            base_fun=args.kan_base_fun,
+            noise_scale=args.kan_noise_scale,
+            scale_base_mu=args.kan_scale_base_mu,
+            scale_base_sigma=args.kan_scale_base_sigma,
+        )
+        kan_model.summary()
+        print(" ")
 
-    # Create and train Graph-KAN
-    print("="*60)
-    print("Graph-KAN")
-    print("="*60)
-    kan_model = OrdinaryGraphKAN(
-        n_f=n_features,
-        msg_width=args.kan_msg_width,
-        node_width=args.kan_node_width,
-        edge_index=edge_index,
-        grid_size=args.kan_grid_size,
-        spline_order=3,
-        aggr="add",
-        lamb_l1=args.kan_lamb_l1,
-        lamb_entropy=args.kan_lamb_entropy,
-        sparse_init=args.kan_sparse_init,
-        msg_mult_arity=args.kan_msg_mult_arity,
-        node_mult_arity=args.kan_node_mult_arity,
-        base_fun=args.kan_base_fun,
-        noise_scale=args.kan_noise_scale,
-        scale_base_mu=args.kan_scale_base_mu,
-        scale_base_sigma=args.kan_scale_base_sigma,
-    )
-    kan_model.summary()
-    print(" ")
-
-    kan_model, kan_history = train_kan(
-        kan_model, kan_adam_train_loader, kan_val_loader,
-        n_epochs=args.epochs,
-        device=device,
-        lamb=args.lamb,
-        adam_warmup_epochs=args.kan_adam_warmup_epochs,
-        adam_lr=args.lr,
-        grid_update_freq=args.kan_grid_update_freq,
-        grid_update_warmup=args.kan_grid_update_warmup,
-        max_grid_updates=args.kan_max_grid_updates,
-        gradient_clip=args.kan_gradient_clip,
-        lbfgs_lr=args.kan_lbfgs_lr,
-        lbfgs_max_iter=args.kan_lbfgs_max_iter,
-        lbfgs_max_eval=args.kan_lbfgs_max_eval,
-        lbfgs_line_search_fn=args.kan_lbfgs_line_search_fn,
-        lbfgs_impl=args.kan_lbfgs_impl,
-        lbfgs_tolerance_ys=args.kan_lbfgs_tolerance_ys,
-        lbfgs_train_loader=kan_lbfgs_train_loader,
-        square_loss=args.kan_square_loss,
-        augment=args.augment,
-        augmentation_scale=args.augmentation_scale,
-    )
-    visualize_training_loss(kan_history,
-                            title='Graph-KAN Training Loss',
-                            save_path=f'{checkpoint_dir}/kan_loss.png')
-    gkan_checkpoint_path = f"{checkpoint_dir}/graph_kan.pt"
-    loader = ModelLoader(OrdinaryGraphKAN, gkan_checkpoint_path)
-    loader.save(kan_model, gkan_checkpoint_path)
-    print(f"Saved checkpoint: {gkan_checkpoint_path}\n")
-
+        kan_model, kan_history = train_kan(
+            kan_model, kan_adam_train_loader, kan_val_loader,
+            n_epochs=args.epochs,
+            device=device,
+            lamb=args.lamb,
+            adam_warmup_epochs=args.kan_adam_warmup_epochs,
+            adam_lr=args.lr,
+            grid_update_freq=args.kan_grid_update_freq,
+            grid_update_warmup=args.kan_grid_update_warmup,
+            max_grid_updates=args.kan_max_grid_updates,
+            gradient_clip=args.kan_gradient_clip,
+            lbfgs_lr=args.kan_lbfgs_lr,
+            lbfgs_max_iter=args.kan_lbfgs_max_iter,
+            lbfgs_max_eval=args.kan_lbfgs_max_eval,
+            lbfgs_line_search_fn=args.kan_lbfgs_line_search_fn,
+            lbfgs_impl=args.kan_lbfgs_impl,
+            lbfgs_tolerance_ys=args.kan_lbfgs_tolerance_ys,
+            lbfgs_train_loader=kan_lbfgs_train_loader,
+            square_loss=args.kan_square_loss,
+            augment=args.augment,
+            augmentation_scale=args.augmentation_scale,
+        )
+        visualize_training_loss(kan_history,
+                                title='Graph-KAN Training Loss',
+                                save_path=f'{checkpoint_dir}/kan_loss.png')
+        gkan_checkpoint_path = f"{checkpoint_dir}/graph_kan.pt"
+        loader = ModelLoader(OrdinaryGraphKAN, gkan_checkpoint_path)
+        loader.save(kan_model, gkan_checkpoint_path)
+        print(f"Saved checkpoint: {gkan_checkpoint_path}\n")
+    else:
+        print("="*60)
+        print("GKAN")
+        print("="*60)
+        print("Skipping GKAN training (train_gkan=False).\n")
     if args.train_baseline:
         # Create and train Baseline GNN
         print("="*60)
