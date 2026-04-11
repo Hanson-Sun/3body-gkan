@@ -593,7 +593,7 @@ def main(
             f"Unsupported positions shape {positions.shape}; expected 4D or 3D arrays."
         )
     masses     = torch.from_numpy(data['masses']).float()
-    edge_index = kan_model.edge_index
+
     force_name, force_fn, force_kwargs = _load_force_config(data)
     print(f"Using rollout force function from data: {force_name} with kwargs={force_kwargs}")
 
@@ -608,11 +608,13 @@ def main(
     kan_pos = None
     if kan_model is not None:
         print(f"Rolling out Graph-KAN ({n_steps} steps)...")
+        edge_index = kan_model.edge_index
         kan_pos, _ = rollout(kan_model, pos0, vel0, masses, args.dt, n_steps, edge_index)
 
     gnn_pos = None
     if gnn_model is not None:
         print(f"Rolling out Baseline GNN ({n_steps} steps)...")
+        edge_index = gnn_model.edge_index
         gnn_pos, _ = rollout(gnn_model, pos0, vel0, masses, args.dt, n_steps, edge_index)
 
     # Animate (sampled to match ground truth cadence)
@@ -639,7 +641,7 @@ def main(
         )
 
     # Spline visualizations
-    if args.plot_splines:
+    if args.plot_splines and args.train_gkan:
         print("\n" + "=" * 60)
         print("Graph-KAN Spline Analysis")
         print("=" * 60)
