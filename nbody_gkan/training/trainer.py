@@ -75,7 +75,7 @@ class Trainer:
         if square_loss is None:
             square_loss = self.square_loss
 
-        pbar = tqdm(self.train_loader, desc=f"Epoch {self.epoch}", leave=False, ncols=100)
+        pbar = tqdm(self.train_loader, desc=f"Epoch {self.epoch}", leave=False)
         for i, batch in enumerate(pbar):
             batch      = batch.to(self.device)
             self._step_metrics = {}
