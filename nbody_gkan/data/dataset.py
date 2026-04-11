@@ -25,7 +25,46 @@ FORCE_FN_MAP = {
     "cubic_gravity": nbody_force_fns.cubic_gravity,
     "linear_spring": nbody_force_fns.linear_spring,
     "hooke_pairwise": nbody_force_fns.hooke_pairwise,
+    "nice_function": nbody_force_fns.nice_function,
 }
+
+
+def _trajectory_min_pairwise_distance(positions: np.ndarray) -> float:
+    """Return the minimum pairwise distance over all timesteps of one trajectory."""
+    # positions shape: (T, n, dim)
+    t_steps, n_bodies, _ = positions.shape
+    if n_bodies < 2 or t_steps == 0:
+        return float("inf")
+
+    dmin = float("inf")
+    for t in range(t_steps):
+        pos_t = positions[t]
+        for i in range(n_bodies):
+            for j in range(i + 1, n_bodies):
+                d = float(np.linalg.norm(pos_t[j] - pos_t[i]))
+                if d < dmin:
+                    dmin = d
+    return dmin
+
+
+def _safe_frame_mask(positions: np.ndarray, min_separation: float) -> np.ndarray:
+    """Return a boolean mask of frames where all pairwise distances are >= threshold."""
+    t_steps, n_bodies, _ = positions.shape
+    if n_bodies < 2 or t_steps == 0:
+        return np.ones(t_steps, dtype=bool)
+
+    mask = np.ones(t_steps, dtype=bool)
+    for t in range(t_steps):
+        pos_t = positions[t]
+        for i in range(n_bodies):
+            for j in range(i + 1, n_bodies):
+                d = float(np.linalg.norm(pos_t[j] - pos_t[i]))
+                if d < min_separation:
+                    mask[t] = False
+                    break
+            if not mask[t]:
+                break
+    return mask
 
 
 def get_edge_index(n: int) -> torch.Tensor:
@@ -64,7 +103,7 @@ class NBodyDataset(Dataset):
     data_path : str or Path
         Path to .npz file with trajectory data
         Expected keys: 'positions', 'velocities', 'masses'
-        Optional metadata keys: 'force_name', 'force_kwargs'
+        Optional metadata keys: 'force_name', 'force_kwargs', 'traj_offsets'
     G : float, optional (default=1.0)
         Default gravity coefficient used when force metadata is absent
     softening : float, optional (default=1e-2)
@@ -88,8 +127,8 @@ class NBodyDataset(Dataset):
 
         # Load data
         data = np.load(self.data_path)
-        self.positions = data["positions"]  # (n_traj, T, n, dim)
-        self.velocities = data["velocities"]  # (n_traj, T, n, dim)
+        self.positions = data["positions"]
+        self.velocities = data["velocities"]
         self.masses = data["masses"]  # (n,)
 
         self.G = G
@@ -123,12 +162,42 @@ class NBodyDataset(Dataset):
         self.force_fn = FORCE_FN_MAP[self.force_name]
         self.force_kwargs = parsed_kwargs
 
-        # Flatten trajectories: treat each timestep as a separate sample
-        self.n_traj, self.T, self.n, self.dim = self.positions.shape
-
-        # Reshape to (n_samples, n, dim)
-        self.positions = self.positions.reshape(-1, self.n, self.dim)
-        self.velocities = self.velocities.reshape(-1, self.n, self.dim)
+        # Support both trajectory-major (n_traj, T, n, dim) and pre-flattened
+        # frame-major (n_samples, n, dim) datasets.
+        if self.positions.ndim == 4:
+            self.n_traj, self.T, self.n, self.dim = self.positions.shape
+            self.positions = self.positions.reshape(-1, self.n, self.dim)
+            self.velocities = self.velocities.reshape(-1, self.n, self.dim)
+            self.traj_offsets = None
+        elif self.positions.ndim == 3:
+            if self.velocities.shape != self.positions.shape:
+                raise ValueError(
+                    f"positions and velocities must have matching shapes; got "
+                    f"{self.positions.shape} and {self.velocities.shape}."
+                )
+            self.T, self.n, self.dim = self.positions.shape
+            if "traj_offsets" in data.files:
+                offsets = np.asarray(data["traj_offsets"], dtype=np.int64)
+                if offsets.ndim != 1 or offsets.size < 2:
+                    raise ValueError(
+                        f"traj_offsets must be a 1D array with at least 2 entries; got {offsets.shape}."
+                    )
+                if offsets[0] != 0 or offsets[-1] != self.positions.shape[0]:
+                    raise ValueError(
+                        "traj_offsets must start at 0 and end at n_samples for frame-major datasets."
+                    )
+                if np.any(offsets[1:] < offsets[:-1]):
+                    raise ValueError("traj_offsets must be non-decreasing.")
+                self.traj_offsets = offsets
+                self.n_traj = offsets.size - 1
+            else:
+                self.traj_offsets = None
+                self.n_traj = 1
+        else:
+            raise ValueError(
+                f"positions must have shape (n_traj, T, n, dim) or (n_samples, n, dim); "
+                f"got {self.positions.shape}."
+            )
 
         self.n_samples = self.positions.shape[0]
 
@@ -246,33 +315,113 @@ def create_dataset_from_simulator(
 
     output_path.parent.mkdir(parents=True, exist_ok=True)
 
-    # Generate initial conditions
-    pos_batch, vel_batch = sim.batch_initial_conditions(
-        n_trajectories=n_trajectories, seed=seed, **ic_kwargs
-    )
+    # Optional trajectory-level filtering using minimum pairwise separation.
+    min_separation = float(ic_kwargs.pop("min_separation", 0.0))
+    max_retries = ic_kwargs.pop("max_retries", None)
+    if min_separation < 0:
+        raise ValueError("min_separation must be >= 0.")
+    if max_retries is None:
+        max_retries = 3
+    else:
+        max_retries = int(max_retries)
+    if max_retries < 1:
+        raise ValueError("max_retries must be >= 1.")
 
-    # Simulate
-    results = sim.simulate_batch(pos_batch, vel_batch, t_end, dt, save_every)
+    n_frame_filtered = 0
+    if min_separation <= 0:
+        # Generate initial conditions
+        pos_batch, vel_batch = sim.batch_initial_conditions(
+            n_trajectories=n_trajectories, seed=seed, **ic_kwargs
+        )
 
-    # Stack results
-    positions = np.stack([r["positions"] for r in results])
-    velocities = np.stack([r["velocities"] for r in results])
-    times = results[0]["times"]
+        # Simulate
+        results = sim.simulate_batch(pos_batch, vel_batch, t_end, dt, save_every)
+    else:
+        # Per trajectory: retry a small number of times for a fully safe rollout,
+        # then fall back to dropping unsafe frames from that trajectory.
+        results = []
+        total_simulations = 0
+
+        for traj_idx in range(n_trajectories):
+            accepted = False
+            candidate = None
+
+            for attempt_idx in range(max_retries):
+                total_simulations += 1
+                pos_batch, vel_batch = sim.batch_initial_conditions(
+                    n_trajectories=1,
+                    seed=seed + traj_idx * max_retries + attempt_idx,
+                    **ic_kwargs,
+                )
+                candidate = sim.simulate(pos_batch[0], vel_batch[0], t_end, dt, save_every)
+                if _trajectory_min_pairwise_distance(candidate["positions"]) >= min_separation:
+                    results.append(candidate)
+                    accepted = True
+                    break
+
+            if accepted:
+                continue
+
+            if candidate is None:
+                raise RuntimeError("Trajectory sampling failed unexpectedly.")
+
+            safe_mask = _safe_frame_mask(candidate["positions"], min_separation)
+            if not np.any(safe_mask):
+                raise ValueError(
+                    f"No safe frames remain for trajectory {traj_idx} after {max_retries} retries "
+                    f"with min_separation={min_separation}. Relax min_separation or increase max_retries."
+                )
+
+            results.append(
+                {
+                    "positions": candidate["positions"][safe_mask],
+                    "velocities": candidate["velocities"][safe_mask],
+                    "times": candidate["times"][safe_mask],
+                }
+            )
+            n_frame_filtered += 1
+
+        print(
+            f"Trajectory filter produced {len(results)} trajectories in {total_simulations} simulations "
+            f"with {n_frame_filtered} frame-filtered fallback trajectories "
+            f"(min_separation={min_separation}, max_retries={max_retries})."
+        )
+
+    # Stack when all trajectories have equal frame counts, otherwise preserve all
+    # data by concatenating frames across trajectories.
+    lengths = [r["positions"].shape[0] for r in results]
+    traj_offsets = None
+    used_frame_filtering = min_separation > 0 and n_frame_filtered > 0
+    if len(set(lengths)) == 1 and not used_frame_filtering:
+        positions = np.stack([r["positions"] for r in results])
+        velocities = np.stack([r["velocities"] for r in results])
+        times = results[0]["times"]
+    else:
+        positions = np.concatenate([r["positions"] for r in results], axis=0)
+        velocities = np.concatenate([r["velocities"] for r in results], axis=0)
+        times = np.concatenate([r["times"] for r in results], axis=0)
+        lengths_arr = np.asarray(lengths, dtype=np.int64)
+        traj_offsets = np.concatenate(
+            [np.array([0], dtype=np.int64), np.cumsum(lengths_arr, dtype=np.int64)]
+        )
     masses = sim.masses
 
     force_name = getattr(sim.force_fn, "__name__", "gravity")
     force_kwargs = json.dumps(sim.force_kwargs)
 
     # Save
-    np.savez_compressed(
-        output_path,
-        positions=positions,
-        velocities=velocities,
-        times=times,
-        masses=masses,
-        force_name=force_name,
-        force_kwargs=force_kwargs,
-    )
+    payload = {
+        "positions": positions,
+        "velocities": velocities,
+        "times": times,
+        "masses": masses,
+        "force_name": force_name,
+        "force_kwargs": force_kwargs,
+    }
+    if traj_offsets is not None:
+        payload["traj_offsets"] = traj_offsets
+
+    np.savez_compressed(output_path, **payload)
 
     print(f"Saved {n_trajectories} trajectories to {output_path}")
     print(

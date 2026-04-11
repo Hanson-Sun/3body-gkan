@@ -568,8 +568,25 @@ def main(
     print("\nLoading initial conditions...")
     data       = np.load(args.data_file)
     idx        = 1
-    pos0       = torch.from_numpy(data['positions'][idx, 0]).float()
-    vel0       = torch.from_numpy(data['velocities'][idx, 0]).float()
+    positions  = data['positions']
+    velocities = data['velocities']
+    if positions.ndim == 4:
+        pos0 = torch.from_numpy(positions[idx, 0]).float()
+        vel0 = torch.from_numpy(velocities[idx, 0]).float()
+    elif positions.ndim == 3:
+        if 'traj_offsets' in data.files:
+            offsets = np.asarray(data['traj_offsets'], dtype=np.int64)
+            n_traj = max(1, offsets.size - 1)
+            traj_idx = min(idx, n_traj - 1)
+            frame_idx = int(offsets[traj_idx])
+        else:
+            frame_idx = min(idx, positions.shape[0] - 1)
+        pos0 = torch.from_numpy(positions[frame_idx]).float()
+        vel0 = torch.from_numpy(velocities[frame_idx]).float()
+    else:
+        raise ValueError(
+            f"Unsupported positions shape {positions.shape}; expected 4D or 3D arrays."
+        )
     masses     = torch.from_numpy(data['masses']).float()
     edge_index = kan_model.edge_index
     force_name, force_fn, force_kwargs = _load_force_config(data)
