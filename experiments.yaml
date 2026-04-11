@@ -1,3 +1,346 @@
+# Cranmer-comparable OGN baseline. Architecture matches the reference
+# implementation (hidden=300, msg_dim=100). Uses our mean() loss convention
+# (Cranmer used sum()), so lr is not directly comparable to his 1e-3.
+baseline:
+  name: "baseline"
+  data_params:
+    n_train: 200
+    n_val: 20
+    force_fn: "gravity"
+    min_separation: 0.4
+    max_retries: 50
+  train_params:
+    train_gkan: False
+    gnn_hp:
+      hidden: 300
+      msg_dim: 100
+    training_hp:
+      epochs: 50
+      batch_size: 64
+      lr: 1e-3
+      lamb: 0.00
+      augment: True
+      augmentation_scale: 3.0
+  visualization_params:
+    save_video: True
+    plot_splines: True
+
+# Analytical minimum pure-KAN for gravity (no mult nodes).
+# Derived from K-A decomposition of Newton's law a = G*m_j*(r_j-r_i)/|r|^3:
+#   msg Layer 1 (10->3): extract dx=px_j-px_i, dy=py_j-py_i, m_j
+#     h_1 = id(px_j) + (-id)(px_i) = dx
+#     h_2 = id(py_j) + (-id)(py_i) = dy
+#     h_3 = id(m_j)
+#   msg Layer 2 (3->5):  r^2 via squaring; polarization sums m_j+/-dx, m_j+/-dy
+#     h_4 = sq(dx)  + sq(dy) = r^2      (sum of univariate squares)
+#     h_5 = id(m_j) + id(dx) = m_j + dx (prepare m_j*dx)
+#     h_6 = id(m_j) - id(dx) = m_j - dx
+#     h_7 = id(m_j) + id(dy) = m_j + dy (prepare m_j*dy)
+#     h_8 = id(m_j) - id(dy) = m_j - dy
+#   msg Layer 3 (5->3):  products m_j*dx, m_j*dy via polarization; r^{-3} univariate
+#     h_9  = sq(h_5)/4 - sq(h_6)/4 = m_j * dx
+#     h_10 = sq(h_7)/4 - sq(h_8)/4 = m_j * dy
+#     h_11 = pow_{-3/2}(h_4)       = r^{-3}   (univariate: t -> t^{-3/2})
+#   msg Layer 4 (3->4):  polarization sums (m_j*dx)+/-r^{-3}, (m_j*dy)+/-r^{-3}
+#     h_12 = id(h_9)  + id(h_11) = m_j*dx + r^{-3}
+#     h_13 = id(h_9)  - id(h_11) = m_j*dx - r^{-3}
+#     h_14 = id(h_10) + id(h_11) = m_j*dy + r^{-3}
+#     h_15 = id(h_10) - id(h_11) = m_j*dy - r^{-3}
+#   msg Layer 5 (4->2):  final products -> (a_x, a_y)
+#     msg_x = sq(h_12)/4 - sq(h_13)/4 = m_j * dx * r^{-3}
+#     msg_y = sq(h_14)/4 - sq(h_15)/4 = m_j * dy * r^{-3}
+#   node Layer 1 (7->2): identity passthrough of aggregated acceleration
+#     a_x = id(msg_x)
+#     a_y = id(msg_y)
+minimal:
+  name: "minimal"
+  data_params:
+    n_train: 200
+    n_val: 20
+    force_fn: "gravity"
+  train_params:
+    train_baseline: False
+    gkan_hp:
+      msg_width: [10, 3, 5, 3, 4, 2]
+      node_width: [7, 2]
+      lbfgs_max_iter: 30
+      lbfgs_impl: pykan
+      max_grid_updates: 0
+    training_hp:
+      epochs: 50
+      kan_adam_batch_size: 64
+      kan_lbfgs_batch_size: 262144
+      lr: 5e-3
+      augment: True
+      augmentation_scale: 3.0
+  visualization_params:
+    save_video: True
+    plot_splines: True
+
+minimal_adam:
+  name: "minimal_adam"
+  data_params:
+    n_train: 200
+    n_val: 20
+    force_fn: "gravity"
+  train_params:
+    train_baseline: False
+    gkan_hp:
+      msg_width: [10, 3, 5, 3, 4, 2]
+      node_width: [7, 2]
+      adam_warmup_epochs: 50
+      max_grid_updates: 0
+    training_hp:
+      epochs: 50
+      kan_adam_batch_size: 64
+      kan_lbfgs_batch_size: 64
+      lr: 5e-3
+      augment: True
+      augmentation_scale: 3.0
+  visualization_params:
+    save_video: True
+    plot_splines: True
+
+# Optimized 4-layer minimal: merges extraction with polarization prep.
+# Trades width for depth (max width 6 vs 5, but 4 layers vs 5).
+# Eliminates the width-3 bottleneck that caused activation collapse.
+# K-A decomposition of a = G*m_j*(r_j-r_i)/|r|^3:
+#   msg Layer 1 (10->6): extract dx,dy AND prepare polarization sums
+#     h_1 = id(px_j) + (-id)(px_i) = dx
+#     h_2 = id(py_j) + (-id)(py_i) = dy
+#     h_3 = id(m_j) + id(px_j) + (-id)(px_i) = m_j + dx
+#     h_4 = id(m_j) - id(px_j) + id(px_i) = m_j - dx
+#     h_5 = id(m_j) + id(py_j) + (-id)(py_i) = m_j + dy
+#     h_6 = id(m_j) - id(py_j) + id(py_i) = m_j - dy
+#   msg Layer 2 (6->3): r^2 via squaring; products m_j*dx, m_j*dy via polarization
+#     h_7 = sq(h_1) + sq(h_2) = dx^2 + dy^2 = r^2
+#     h_8 = sq(h_3)/4 - sq(h_4)/4 = m_j * dx     (polarization identity)
+#     h_9 = sq(h_5)/4 - sq(h_6)/4 = m_j * dy
+#   msg Layer 3 (3->4): r^{-3} merged with polarization prep for final products
+#     h_10 = pow_{-3/2}(h_7) + id(h_8) = r^{-3} + m_j*dx
+#     h_11 = -pow_{-3/2}(h_7) + id(h_8) = m_j*dx - r^{-3}
+#     h_12 = pow_{-3/2}(h_7) + id(h_9) = r^{-3} + m_j*dy
+#     h_13 = -pow_{-3/2}(h_7) + id(h_9) = m_j*dy - r^{-3}
+#   msg Layer 4 (4->2): final products -> (a_x, a_y)
+#     F_x = sq(h_10)/4 - sq(h_11)/4 = m_j * dx * r^{-3}
+#     F_y = sq(h_12)/4 - sq(h_13)/4 = m_j * dy * r^{-3}
+#   node Layer 1 (7->2): identity passthrough of aggregated acceleration
+#     a_x = id(F_x)
+#     a_y = id(F_y)
+minimal_merged:
+  name: "minimal_merged"
+  data_params:
+    n_train: 200
+    n_val: 20
+    force_fn: "gravity"
+  train_params:
+    train_baseline: False
+    gkan_hp:
+      msg_width: [10, 6, 3, 4, 2]
+      node_width: [7, 2]
+      lbfgs_max_iter: 30
+      lbfgs_impl: pykan
+      max_grid_updates: 0
+    training_hp:
+      epochs: 50
+      kan_adam_batch_size: 64
+      kan_lbfgs_batch_size: 262144
+      lr: 5e-3
+      augment: True
+      augmentation_scale: 3.0
+  visualization_params:
+    save_video: True
+    plot_splines: True
+
+minimal_merged_adam:
+  name: "minimal_merged_adam"
+  data_params:
+    n_train: 200
+    n_val: 20
+    force_fn: "gravity"
+  train_params:
+    train_baseline: False
+    gkan_hp:
+      msg_width: [10, 6, 3, 4, 2]
+      node_width: [7, 2]
+      adam_warmup_epochs: 50
+      max_grid_updates: 0
+      sparse_init: False
+    training_hp:
+      epochs: 50
+      kan_adam_batch_size: 64
+      kan_lbfgs_batch_size: 64
+      lr: 5e-3
+      augment: True
+      augmentation_scale: 3.0
+  visualization_params:
+    save_video: True
+    plot_splines: True
+
+minimal_merged_hybrid:
+  name: "minimal_merged_hybrid"
+  data_params:
+    n_train: 500
+    n_val: 50
+    force_fn: "gravity"
+    min_separation: 0.4
+    max_retries: 50
+  train_params:
+    train_baseline: True
+    gnn_hp:
+      hidden: 300
+      msg_dim: 100
+    gkan_hp:
+      msg_width: [10, 6, 3, 4, 2]
+      node_width: [7, 2]
+      lbfgs_max_iter: 30
+      lbfgs_impl: pykan
+      sparse_init: False
+      adam_warmup_epochs: 30
+      grid_update_freq: 7
+      grid_update_warmup: 5
+      max_grid_updates: 1
+      gradient_clip: 5.0
+    training_hp:
+      epochs: 100
+      batch_size: 64
+      kan_adam_batch_size: 64
+      kan_lbfgs_batch_size: 131072
+      lr: 2e-3
+      kan_square_loss: False
+      augment: True
+      augmentation_scale: 3.0
+      lamb: 0.05
+  visualization_params:
+    save_video: True
+    plot_splines: True
+
+minimal_nice_hybrid:
+  name: "minimal_nice_hybrid"
+  data_params:
+    n_train: 200
+    n_val: 20
+    force_fn: "nice_function"
+  train_params:
+    train_baseline: False
+    gkan_hp:
+      msg_width: [10, 6, 3, 4, 2]
+      node_width: [7, 2]
+      lbfgs_max_iter: 30
+      lbfgs_impl: pykan
+      sparse_init: True
+      adam_warmup_epochs: 5
+      grid_update_freq: 7
+      grid_update_warmup: 5
+      max_grid_updates: 0
+      gradient_clip: 5.0
+    training_hp:
+      epochs: 10
+      kan_adam_batch_size: 64
+      kan_lbfgs_batch_size: 262144
+      lr: 2e-3
+      kan_square_loss: True
+      augment: False
+      augmentation_scale: 3.0
+      lamb: 0.0
+  visualization_params:
+    save_video: True
+    plot_splines: True
+
+# Minimal architecture with an easier non-inverse force for optimization debugging.
+# Uses true hybrid optimization with separate SGD/LBFGS batch sizes and grid updates.
+minimal_hooke_hybrid:
+  name: "minimal_hooke_hybrid"
+  data_params:
+    n_train: 200
+    n_val: 20
+    force_fn: "hooke_pairwise"
+  train_params:
+    train_baseline: False
+    gkan_hp:
+      msg_width: [10, 6, 3, 4, 2]
+      node_width: [7, 2]
+      lbfgs_max_iter: 30
+      lbfgs_impl: pykan
+      sparse_init: False
+      adam_warmup_epochs: 5
+      grid_update_freq: 10
+      grid_update_warmup: 5
+      max_grid_updates: 0
+    training_hp:
+      epochs: 10
+      kan_adam_batch_size: 64
+      kan_lbfgs_batch_size: 262144
+      lr: 2e-3
+      kan_square_loss: True
+      augment: False
+      augmentation_scale: 3.0
+  visualization_params:
+    save_video: True
+    plot_splines: True
+
+minimal_mult_hooke_hybrid:
+  name: "minimal_mult_hooke_hybrid"
+  data_params:
+    n_train: 200
+    n_val: 20
+    force_fn: "hooke_pairwise"
+  train_params:
+    train_baseline: False
+    gkan_hp:
+      msg_width: [10, [4, 2], [5, 2], [4, 2], [4, 2], 2]
+      node_width: [7, 2]
+      msg_mult_arity: [[], [2, 2], [2, 2], [2, 2], [2, 2], []]
+      node_mult_arity: [[], []]
+      lbfgs_max_iter: 30
+      lbfgs_impl: pykan
+      sparse_init: False
+      adam_warmup_epochs: 3
+      grid_update_freq: 10
+      grid_update_warmup: 5
+      max_grid_updates: 0
+    training_hp:
+      epochs: 8
+      kan_adam_batch_size: 64
+      kan_lbfgs_batch_size: 32768
+      lr: 2e-3
+      kan_square_loss: True
+      augment: False
+      augmentation_scale: 3.0
+  visualization_params:
+    save_video: True
+    plot_splines: True
+
+maximal_hooke_hybrid:
+  name: "maximal_hooke_hybrid"
+  data_params:
+    n_train: 200
+    n_val: 20
+    force_fn: "hooke_pairwise"
+  train_params:
+    train_baseline: False
+    gkan_hp:
+      msg_width: [10, 50, 50, 50, 50, 2]
+      node_width: [7, 2]
+      lbfgs_max_iter: 30
+      lbfgs_impl: pykan
+      sparse_init: True
+      adam_warmup_epochs: 3
+      grid_update_freq: 10
+      grid_update_warmup: 5
+      max_grid_updates: 0
+    training_hp:
+      epochs: 8
+      kan_adam_batch_size: 64
+      kan_lbfgs_batch_size: 4096
+      lr: 2e-3
+      kan_square_loss: True
+      augment: False
+      augmentation_scale: 3.0
+  visualization_params:
+    save_video: True
+    plot_splines: True
+
 # experiment_1a:
 #   name: "gravity_small_medium"
 #   data_params:
@@ -31,50 +374,50 @@
 #     save_video: True
 #     plot_splines: True
 
-experiment_1a_minimal_mult:
-  name: "gravity_small_medium_minimal_mult"
-  data_params:
-    n_train: 200
-    n_val: 20
-    force_fn: "gravity"
-  train_params:
-    train_baseline: True
-    gnn_hp:
-      hidden: 256
-      msg_dim: 32
-    gkan_hp:
-      msg_width: [[10, 0], [4, 0], [2, 2], [2, 0]]
-      node_width: [[7, 0], [4, 0], [2, 2], [2, 0]]
-      msg_mult_arity: [[], [], [4, 4], []]
-      node_mult_arity: [[], [], [4, 4], []]
-      grid_size: 5
-      # base_fun: identity
-      # noise_scale: 0.0
-      # scale_base_mu: 1.0
-      # scale_base_sigma: 0.0
-      lamb_l1: 0.5
-      lamb_entropy: 1.0
-      lbfgs_lr: 1.0
-      lbfgs_max_iter: 30
-      lbfgs_max_eval: null
-      lbfgs_line_search_fn: strong_wolfe
-      lbfgs_impl: pykan
-      lbfgs_tolerance_ys: 1e-32
-      adam_warmup_epochs: 10
-      grid_update_freq: 15
-      grid_update_warmup: 5
-      max_grid_updates: 0
-      gradient_clip: 1.0
-    training_hp:
-      epochs: 50
-      batch_size: 32
-      kan_batch_size: 262144
-      lr: 5e-3
-      lamb: 0.00
-      kan_square_loss: False
-  visualization_params:
-    save_video: True
-    plot_splines: True
+# experiment_1a_minimal_mult:
+#   name: "gravity_small_medium_minimal_mult"
+#   data_params:
+#     n_train: 200
+#     n_val: 20
+#     force_fn: "gravity"
+#   train_params:
+#     train_baseline: True
+#     gnn_hp:
+#       hidden: 256
+#       msg_dim: 32
+#     gkan_hp:
+#       msg_width: [[10, 0], [4, 0], [2, 2], [2, 0]]
+#       node_width: [[7, 0], [4, 0], [2, 2], [2, 0]]
+#       msg_mult_arity: [[], [], [4, 4], []]
+#       node_mult_arity: [[], [], [4, 4], []]
+#       grid_size: 5
+#       # base_fun: identity
+#       # noise_scale: 0.0
+#       # scale_base_mu: 1.0
+#       # scale_base_sigma: 0.0
+#       lamb_l1: 0.5
+#       lamb_entropy: 1.0
+#       lbfgs_lr: 1.0
+#       lbfgs_max_iter: 30
+#       lbfgs_max_eval: null
+#       lbfgs_line_search_fn: strong_wolfe
+#       lbfgs_impl: pykan
+#       lbfgs_tolerance_ys: 1e-32
+#       adam_warmup_epochs: 10
+#       grid_update_freq: 15
+#       grid_update_warmup: 5
+#       max_grid_updates: 0
+#       gradient_clip: 1.0
+#     training_hp:
+#       epochs: 50
+#       batch_size: 32
+#       kan_batch_size: 262144
+#       lr: 5e-3
+#       lamb: 0.00
+#       kan_square_loss: False
+#   visualization_params:
+#     save_video: True
+#     plot_splines: True
 
 # experiment_1b:
 #   name: "linear_gravity_small_medium"

@@ -70,7 +70,7 @@ class GraphKAN(SymbolicGraphKANMixin, MessagePassing, GraphMixin):
             aggr: str = "add",
             lamb_l1: float = 1.0,
             lamb_entropy: float = 2.0,
-            sparse_init: bool = False,
+            sparse_init: bool = True,
             base_fun: Optional[str] = None,
             noise_scale: Optional[float] = None,
             scale_base_mu: Optional[float] = None,
@@ -481,7 +481,7 @@ class GraphKAN(SymbolicGraphKANMixin, MessagePassing, GraphMixin):
         data_loader,
         device: torch.device | str = 'cpu',
         max_batches: int = 10,
-        jitter_scale: float = 5e-1,
+        jitter_scale: float = 1e-2,
         corr_threshold: float = 0.9,
     ):
         """
