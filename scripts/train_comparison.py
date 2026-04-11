@@ -120,6 +120,12 @@ def parse_args(args=None):
         action="store_false",
         help="Skip GKAN training.",
     )
+    parser.add_argument(
+        "--num_workers",
+        dest="num_workers",
+        default=8,
+        help="Number of workers"
+    )
     
 
 
@@ -355,6 +361,7 @@ def main(yaml_params: Optional[dict] = None, checkpoint_dir: Optional[str] = Non
         args.augmentation_scale = yaml_params.get("training_hp", {}).get("augmentation_scale", 3.0)
         args.train_baseline = yaml_params.get("train_baseline", args.train_baseline)
         args.train_gkan = yaml_params.get("train_gkan", args.train_gkan)
+        args.num_workers = yaml_params.get("num_workers", args.num_workers)
 
     args.kan_msg_width = _coerce_width_arg(args.kan_msg_width)
     args.kan_node_width = _coerce_width_arg(args.kan_node_width)
@@ -384,15 +391,15 @@ def main(yaml_params: Optional[dict] = None, checkpoint_dir: Optional[str] = Non
     train_dataset = NBodyDataset(args.train_data)
     val_dataset = NBodyDataset(args.val_data)
 
-    train_loader = DataLoader(train_dataset, batch_size=args.batch_size, shuffle=True, num_workers=8, pin_memory=True, persistent_workers=True)
-    val_loader = DataLoader(val_dataset, batch_size=args.batch_size, shuffle=True, num_workers=8, pin_memory=True, persistent_workers=True)
+    train_loader = DataLoader(train_dataset, batch_size=args.batch_size, shuffle=True, num_workers=args.num_workers, pin_memory=True, persistent_workers=True)
+    val_loader = DataLoader(val_dataset, batch_size=args.batch_size, shuffle=True, num_workers=args.num_workers, pin_memory=True, persistent_workers=True)
 
-    kan_adam_train_loader = DataLoader(train_dataset, batch_size=args.kan_adam_batch_size, shuffle=True, num_workers=8, pin_memory=True, persistent_workers=True)
+    kan_adam_train_loader = DataLoader(train_dataset, batch_size=args.kan_adam_batch_size, shuffle=True, num_workers=args.num_workers, pin_memory=True, persistent_workers=True)
     if args.kan_lbfgs_batch_size == args.kan_adam_batch_size:
         kan_lbfgs_train_loader = kan_adam_train_loader
     else:
-        kan_lbfgs_train_loader = DataLoader(train_dataset, batch_size=args.kan_lbfgs_batch_size, shuffle=True, num_workers=8, pin_memory=True, persistent_workers=True)
-    kan_val_loader = DataLoader(val_dataset, batch_size=args.kan_lbfgs_batch_size, shuffle=True, num_workers=8, pin_memory=True, persistent_workers=True)
+        kan_lbfgs_train_loader = DataLoader(train_dataset, batch_size=args.kan_lbfgs_batch_size, shuffle=True, num_workers=args.num_workers, pin_memory=True, persistent_workers=True)
+    kan_val_loader = DataLoader(val_dataset, batch_size=args.kan_lbfgs_batch_size, shuffle=True, num_workers=args.num_workers, pin_memory=True, persistent_workers=True)
 
     print(
         "Loader steps/epoch: "
