@@ -107,6 +107,20 @@ def parse_args(args=None):
         action="store_false",
         help="Skip OGN baseline training.",
     )
+    parser.add_argument(
+        "--train-gkan",
+        dest="train_gkan",
+        action="store_false",
+        default=True,
+        help="Train the GKAN model.",
+    )
+    parser.add_argument(
+        "--no-train-gkan",
+        dest="train_gkan",
+        action="store_false",
+        help="Skip GKAN training.",
+    )
+    
 
 
     return parser.parse_args(args)
