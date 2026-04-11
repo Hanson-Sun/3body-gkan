@@ -641,7 +641,7 @@ def main(
         )
 
     # Spline visualizations
-    if args.plot_splines and args.train_gkan:
+    if args.plot_splines and kan_model is not None:
         print("\n" + "=" * 60)
         print("Graph-KAN Spline Analysis")
         print("=" * 60)
