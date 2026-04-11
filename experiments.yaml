@@ -1,3 +1,83 @@
+testing_gnn:
+  name: "testing_gnn"
+  data_params:
+    n_train: 10
+    n_val: 1
+    force_fn: "gravity"
+    min_separation: 0.4
+    max_retries: 50
+  train_params:
+    num_workers: 2
+    train_gkan: False
+    gnn_hp:
+      hidden: 300
+      msg_dim: 100
+    gkan_hp:
+      msg_width: [10, 2, 2, 2]
+      node_width: [7, 2]
+    training_hp:
+      epochs: 2
+      batch_size: 64
+      lr: 1e-3
+      lamb: 0.00
+      augment: True
+      augmentation_scale: 3.0
+  visualization_params:
+    save_video: True
+    plot_splines: True
+testing_gkan:
+  name: "testing_gkan"
+  data_params:
+    n_train: 10
+    n_val: 1
+    force_fn: "gravity"
+    min_separation: 0.4
+    max_retries: 50
+  train_params:
+    num_workers: 2
+    train_baseline: False
+    gnn_hp:
+      hidden: 300
+      msg_dim: 100
+    gkan_hp:
+      msg_width: [10, 2, 2, 2]
+      node_width: [7, 2]
+    training_hp:
+      epochs: 2
+      batch_size: 64
+      lr: 1e-3
+      lamb: 0.00
+      augment: True
+      augmentation_scale: 3.0
+  visualization_params:
+    save_video: True
+    plot_splines: True
+testing_both:
+  name: "testing_both"
+  data_params:
+    n_train: 10
+    n_val: 1
+    force_fn: "gravity"
+    min_separation: 0.4
+    max_retries: 50
+  train_params:
+    num_workers: 2
+    gnn_hp:
+      hidden: 300
+      msg_dim: 100
+    gkan_hp:
+      msg_width: [10, 2, 2, 2]
+      node_width: [7, 2]
+    training_hp:
+      epochs: 2
+      batch_size: 64
+      lr: 1e-3
+      lamb: 0.00
+      augment: True
+      augmentation_scale: 3.0
+  visualization_params:
+    save_video: True
+    plot_splines: True
 # Cranmer-comparable OGN baseline. Architecture matches the reference
 # implementation (hidden=300, msg_dim=100). Uses our mean() loss convention
 # (Cranmer used sum()), so lr is not directly comparable to his 1e-3.
