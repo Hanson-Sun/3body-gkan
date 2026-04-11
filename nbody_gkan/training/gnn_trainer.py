@@ -1,6 +1,6 @@
 import torch
 from torch.optim import Adam
-from tqdm import tqdm
+from tqdm.notebook import tqdm
 from .trainer import Trainer
 
 class GNNTrainer(Trainer):

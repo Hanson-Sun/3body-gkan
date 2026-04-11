@@ -4,7 +4,7 @@ import argparse
 from pathlib import Path
 
 import yaml
-from tqdm import tqdm
+from tqdm.notebook import tqdm
 
 import generate_training_data
 import train_comparison
