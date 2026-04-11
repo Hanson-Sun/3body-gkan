@@ -553,7 +553,12 @@ def main(
 
     # Load models
     print("\nLoading trained models...")
-    kan_model, _ = ModelLoader(OrdinaryGraphKAN, f'{args.checkpoint_dir}/graph_kan.pt').load()
+    kan_model = None
+    kan_ckpt_path = Path(args.checkpoint_dir) / 'graph_kan.pt'
+    if kan_ckpt_path.exists():
+        kan_model, _ = ModelLoader(OrdinaryGraphKAN, f'{args.checkpoint_dir}/graph_kan.pt').load()
+    else:
+        print(f"Graph-KAN checkpoint not found at {kan_ckpt_path}; skipping Graph-KAN visualization.")
     gnn_ckpt_path = Path(args.checkpoint_dir) / 'baseline_gnn.pt'
     gnn_model = None
     if gnn_ckpt_path.exists():
@@ -600,8 +605,10 @@ def main(
 
     # Model rollouts
     n_steps = int(args.rollout_time / args.dt)
-    print(f"Rolling out Graph-KAN ({n_steps} steps)...")
-    kan_pos, _ = rollout(kan_model, pos0, vel0, masses, args.dt, n_steps, edge_index)
+    kan_pos = None
+    if kan_model is not None:
+        print(f"Rolling out Graph-KAN ({n_steps} steps)...")
+        kan_pos, _ = rollout(kan_model, pos0, vel0, masses, args.dt, n_steps, edge_index)
 
     gnn_pos = None
     if gnn_model is not None:
@@ -618,9 +625,14 @@ def main(
                 'Ground Truth': gt_pos,
                 'Graph-KAN':    kan_pos[::5],
                 'Baseline GNN': gnn_pos[::5],
-            } if gnn_pos is not None else {
+            } if gnn_pos is not None and kan_pos is not None else {
                 'Ground Truth': gt_pos,
                 'Graph-KAN': kan_pos[::5],
+            } if gnn_pos is None and kan_pos is not None else {
+                'Ground Truth': gt_pos,
+                'Baseline GNN': gnn_pos[::5],
+            } if gnn_pos is not None and kan_pos is None else {
+                'Ground Truth': gt_pos,
             }),
             dt=args.dt * 5,
             video_name=f'{args.output_dir}/rollout_comparison.mp4',
