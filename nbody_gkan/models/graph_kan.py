@@ -70,7 +70,7 @@ class GraphKAN(SymbolicGraphKANMixin, MessagePassing, GraphMixin):
             aggr: str = "add",
             lamb_l1: float = 1.0,
             lamb_entropy: float = 2.0,
-            sparse_init: bool = False,
+            sparse_init: bool = True,
             base_fun: Optional[str] = None,
             noise_scale: Optional[float] = None,
             scale_base_mu: Optional[float] = None,

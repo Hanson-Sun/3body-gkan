@@ -1,6 +1,7 @@
 """Visualize trained models: rollout comparison and spline analysis."""
 
 import argparse
+import json
 from pathlib import Path
 from typing import Optional
 from typing import Any
@@ -15,6 +16,7 @@ from matplotlib.animation import FuncAnimation, FFMpegWriter
 from torch_geometric.data import Data
 from torch_geometric.loader import DataLoader as PyGLoader
 
+from nbody_gkan.data.dataset import FORCE_FN_MAP as DATASET_FORCE_FN_MAP
 from nbody_gkan.models import OrdinaryGraphKAN, OGN
 from nbody_gkan.nbody import NBodySimulator
 from nbody_gkan.models.model_loader import ModelLoader
@@ -61,6 +63,47 @@ def parse_args(args=None):
     parser.add_argument("--plot_trajectories", action=argparse.BooleanOptionalAction, default=True)
     parser.add_argument("--plot_splines",      action=argparse.BooleanOptionalAction, default=True)
     return parser.parse_args(args)
+
+
+def _decode_npz_scalar(value) -> str:
+    """Decode scalar or byte payloads loaded from NPZ metadata."""
+    if isinstance(value, np.ndarray):
+        if value.shape == ():
+            value = value.item()
+        elif value.size == 1:
+            value = value.reshape(()).item()
+    if isinstance(value, bytes):
+        return value.decode("utf-8")
+    return str(value)
+
+
+def _load_force_config(data) -> tuple[str, Any, dict]:
+    """Load force function name/callable/kwargs from dataset metadata."""
+    if "force_name" in data.files:
+        force_name = _decode_npz_scalar(data["force_name"])
+    else:
+        force_name = "gravity"
+
+    force_kwargs: dict[str, Any] = {}
+    if "force_kwargs" in data.files:
+        raw_kwargs = _decode_npz_scalar(data["force_kwargs"])
+        if raw_kwargs and raw_kwargs != "None":
+            try:
+                parsed = json.loads(raw_kwargs)
+                if isinstance(parsed, dict):
+                    force_kwargs = parsed
+            except json.JSONDecodeError:
+                force_kwargs = {}
+
+    if not force_kwargs and force_name in {"gravity", "linear_gravity", "cubic_gravity", "hooke_pairwise"}:
+        force_kwargs = {"G": 1.0, "softening": 1e-2}
+
+    force_fn = DATASET_FORCE_FN_MAP.get(force_name)
+    if force_fn is None:
+        valid = ", ".join(sorted(DATASET_FORCE_FN_MAP))
+        raise ValueError(f"Unknown force function {force_name!r} in {data}; available: {valid}")
+
+    return force_name, force_fn, force_kwargs
 
 
 # def load_model(checkpoint_path, model_class):
@@ -525,14 +568,33 @@ def main(
     print("\nLoading initial conditions...")
     data       = np.load(args.data_file)
     idx        = 1
-    pos0       = torch.from_numpy(data['positions'][idx, 0]).float()
-    vel0       = torch.from_numpy(data['velocities'][idx, 0]).float()
+    positions  = data['positions']
+    velocities = data['velocities']
+    if positions.ndim == 4:
+        pos0 = torch.from_numpy(positions[idx, 0]).float()
+        vel0 = torch.from_numpy(velocities[idx, 0]).float()
+    elif positions.ndim == 3:
+        if 'traj_offsets' in data.files:
+            offsets = np.asarray(data['traj_offsets'], dtype=np.int64)
+            n_traj = max(1, offsets.size - 1)
+            traj_idx = min(idx, n_traj - 1)
+            frame_idx = int(offsets[traj_idx])
+        else:
+            frame_idx = min(idx, positions.shape[0] - 1)
+        pos0 = torch.from_numpy(positions[frame_idx]).float()
+        vel0 = torch.from_numpy(velocities[frame_idx]).float()
+    else:
+        raise ValueError(
+            f"Unsupported positions shape {positions.shape}; expected 4D or 3D arrays."
+        )
     masses     = torch.from_numpy(data['masses']).float()
     edge_index = kan_model.edge_index
+    force_name, force_fn, force_kwargs = _load_force_config(data)
+    print(f"Using rollout force function from data: {force_name} with kwargs={force_kwargs}")
 
     # Ground truth rollout
     print("Generating ground truth...")
-    sim       = NBodySimulator(masses.numpy())
+    sim       = NBodySimulator(masses.numpy(), force_fn=force_fn, **force_kwargs)
     gt_result = sim.simulate(pos0.numpy(), vel0.numpy(), t_end=args.rollout_time, dt=args.dt, save_every=5)
     gt_pos    = gt_result['positions']
 

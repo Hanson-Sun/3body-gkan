@@ -172,4 +172,26 @@ def hooke_pairwise(positions: np.ndarray, masses: np.ndarray, G: float = 1.0,
                 r = positions[j] - positions[i]
                 acc[i] += (G / masses[i]) * r
 
+<<<<<<< HEAD
+=======
+    return acc
+
+
+def nice_function(positions: np.ndarray, masses: np.ndarray, G: float = 1.0,
+                    softening: float = 1e-2, exponent: float = 2.0) -> np.ndarray:
+    """
+    This is literally just some random  function that is "nicer" to learn hopefully with no asymptotes
+
+    e^(-||x_j - x_i||^2) * (x_j - x_i) * (G / m_i)
+    """
+    n = len(masses)
+    dim = positions.shape[1]
+    acc = np.zeros((n, dim))
+    for i in range(n):
+        for j in range(n):
+            if i != j:
+                r = positions[j] - positions[i]
+                r_norm = np.sqrt(np.sum(r**2) + softening**2)
+                acc[i] += (G / masses[i]) * np.exp(-r_norm**exponent) * r
+>>>>>>> 7beff6e0831990acae26b5e177a3d70c6a5ea524
     return acc

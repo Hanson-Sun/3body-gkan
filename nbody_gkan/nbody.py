@@ -35,7 +35,7 @@ class NBodySimulator:
         self.masses = np.asarray(masses)
         self.n = len(masses)
         self.force_fn = force_fn or gravity
-        self.force_kwargs = force_kwargs if force_kwargs else {'G': 1.0, 'softening': 1e-2}
+        self.force_kwargs = dict(force_kwargs) if force_kwargs else {}
 
     def _accelerations(self, positions: np.ndarray) -> np.ndarray:
         """Compute accelerations from positions."""

@@ -17,6 +17,7 @@ FORCE_FN_MAP = {
     "cubic_gravity":  nbody_force_fns.cubic_gravity,
     "linear_spring":  nbody_force_fns.linear_spring,
     "hooke_pairwise": nbody_force_fns.hooke_pairwise,
+    "nice_function":  nbody_force_fns.nice_function,
 }
 
 
@@ -31,6 +32,10 @@ def main(yaml_params: Optional[dict] = None, output_dir: Optional[str] = None) -
     parser.add_argument("--mass_min",   type=float, default=0.5,       help="Minimum body mass")
     parser.add_argument("--mass_max",   type=float, default=2.0,       help="Maximum body mass")
     parser.add_argument("--mass_seed",  type=int,   default=7,         help="Random seed for sampling masses")
+    parser.add_argument("--min_separation", type=float, default=0.0,
+                        help="Minimum pairwise distance required over entire trajectory; 0 disables filtering.")
+    parser.add_argument("--max_retries", type=int, default=3,
+                        help="Per-trajectory retries before falling back to dropping unsafe frames (default: 3).")
     parser.add_argument("--output_dir", type=str,   default="data",    help="Output directory")
     args = parser.parse_args([] if yaml_params is not None else None)
 
@@ -64,6 +69,8 @@ def main(yaml_params: Optional[dict] = None, output_dir: Optional[str] = None) -
             sim, n, args.t_end, args.dt,
             output_path=out / f"{split}.npz",
             seed=seed,
+            min_separation=args.min_separation,
+            max_retries=args.max_retries,
         )
 
     print(f"\nDone! Data saved to {out}")

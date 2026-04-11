@@ -60,6 +60,12 @@ def parse_args(args=None):
                         help="Curvature threshold for pykan LBFGS memory updates (ignored for torch LBFGS).")
     parser.add_argument("--kan_lamb_l1", type=float, default=1.0)
     parser.add_argument("--kan_lamb_entropy", type=float, default=2.0)
+    parser.add_argument(
+        "--kan_sparse_init",
+        type=lambda x: str(x).strip().lower() in {"1", "true", "yes", "y", "on"},
+        default=True,
+        help="Use sparse initialization in pykan KANLayer connections (default: true).",
+    )
 
     # TODO: add these to yaml
     parser.add_argument("--kan_adam_warmup_epochs", type=int, default=10)
@@ -74,6 +80,18 @@ def parse_args(args=None):
     parser.add_argument("--epochs", type=int, default=50)
     parser.add_argument("--batch_size", type=int, default=16)
     parser.add_argument("--kan_batch_size", type=int, default=16)
+    parser.add_argument(
+        "--kan_adam_batch_size",
+        type=int,
+        default=None,
+        help="Batch size for Adam warmup (defaults to kan_batch_size).",
+    )
+    parser.add_argument(
+        "--kan_lbfgs_batch_size",
+        type=int,
+        default=None,
+        help="Batch size for LBFGS phase (defaults to kan_batch_size).",
+    )
     parser.add_argument("--lr", type=float, default=1e-3)
     parser.add_argument("--lamb", type=float, default=0)
     parser.add_argument(
@@ -177,7 +195,7 @@ def _extract_width_output_dim(width, label: str) -> int:
 
 
 
-def train_gnn(model, train_loader, val_loader, n_epochs, lr, device, lamb):
+def train_gnn(model, train_loader, val_loader, n_epochs, lr, device, lamb, augment=False, augmentation_scale=3.0):
     trainer = GNNTrainer(
         model, train_loader, val_loader,
         lr=lr, device=device,
@@ -186,7 +204,8 @@ def train_gnn(model, train_loader, val_loader, n_epochs, lr, device, lamb):
     trainer.lamb = lamb
     trainer.train(
         n_epochs=n_epochs,
-        augment=False,
+        augment=augment,
+        augmentation_scale=augmentation_scale,
         save_every=n_epochs,
     )
     return model, trainer.history
@@ -205,9 +224,13 @@ def train_kan(model, train_loader, val_loader, n_epochs, device, lamb,
               lbfgs_line_search_fn: str | None = "strong_wolfe",
               lbfgs_impl: str = "torch",
               lbfgs_tolerance_ys: float = 1e-32,
-              square_loss: bool = False):
+          lbfgs_train_loader=None,
+              square_loss: bool = False,
+              augment: bool = False,
+              augmentation_scale: float = 3.0):
     trainer = KANTrainer(
         model, train_loader, val_loader,
+    lbfgs_train_loader=lbfgs_train_loader,
         lbfgs_lr=lbfgs_lr,
         lbfgs_max_iter=lbfgs_max_iter,
         lbfgs_max_eval=lbfgs_max_eval,
@@ -226,7 +249,8 @@ def train_kan(model, train_loader, val_loader, n_epochs, device, lamb,
     clip_value = None if (gradient_clip is None or gradient_clip <= 0) else gradient_clip
     trainer.train(
         n_epochs=n_epochs,
-        augment=False,
+        augment=augment,
+        augmentation_scale=augmentation_scale,
         save_every=n_epochs,
         gradient_clip=clip_value,
         square_loss=square_loss,
@@ -295,6 +319,7 @@ def main(yaml_params: Optional[dict] = None, checkpoint_dir: Optional[str] = Non
         args.kan_lbfgs_tolerance_ys    = yaml_params.get("gkan_hp", {}).get("lbfgs_tolerance_ys",  args.kan_lbfgs_tolerance_ys)
         args.kan_lamb_l1               = yaml_params.get("gkan_hp", {}).get("lamb_l1",              args.kan_lamb_l1)
         args.kan_lamb_entropy          = yaml_params.get("gkan_hp", {}).get("lamb_entropy",         args.kan_lamb_entropy)
+        args.kan_sparse_init           = yaml_params.get("gkan_hp", {}).get("sparse_init",          args.kan_sparse_init)
         args.kan_adam_warmup_epochs    = yaml_params.get("gkan_hp", {}).get("adam_warmup_epochs",   args.kan_adam_warmup_epochs)
         args.kan_grid_update_freq      = yaml_params.get("gkan_hp", {}).get("grid_update_freq",     args.kan_grid_update_freq)
         args.kan_grid_update_warmup    = yaml_params.get("gkan_hp", {}).get("grid_update_warmup",   args.kan_grid_update_warmup)
@@ -304,14 +329,27 @@ def main(yaml_params: Optional[dict] = None, checkpoint_dir: Optional[str] = Non
         args.epochs = yaml_params.get("training_hp", {}).get("epochs", args.epochs)
         args.batch_size = yaml_params.get("training_hp", {}).get("batch_size", args.batch_size)
         args.kan_batch_size = yaml_params.get("training_hp", {}).get("kan_batch_size", args.kan_batch_size)
+        args.kan_adam_batch_size = yaml_params.get("training_hp", {}).get(
+            "kan_adam_batch_size", args.kan_adam_batch_size
+        )
+        args.kan_lbfgs_batch_size = yaml_params.get("training_hp", {}).get(
+            "kan_lbfgs_batch_size", args.kan_lbfgs_batch_size
+        )
         args.lr = float(yaml_params.get("training_hp", {}).get("lr", args.lr))
         args.lamb = yaml_params.get("training_hp", {}).get("lamb", args.lamb)
+        args.augment = yaml_params.get("training_hp", {}).get("augment", False)
+        args.augmentation_scale = yaml_params.get("training_hp", {}).get("augmentation_scale", 3.0)
         args.train_baseline = yaml_params.get("train_baseline", args.train_baseline)
 
     args.kan_msg_width = _coerce_width_arg(args.kan_msg_width)
     args.kan_node_width = _coerce_width_arg(args.kan_node_width)
     args.kan_msg_mult_arity = _coerce_mult_arity_arg(args.kan_msg_mult_arity, "kan_msg_mult_arity")
     args.kan_node_mult_arity = _coerce_mult_arity_arg(args.kan_node_mult_arity, "kan_node_mult_arity")
+
+    if args.kan_adam_batch_size is None:
+        args.kan_adam_batch_size = args.kan_batch_size
+    if args.kan_lbfgs_batch_size is None:
+        args.kan_lbfgs_batch_size = args.kan_batch_size
 
     # Infer msg_dim from width if provided to avoid mismatch with pykan spec.
     if not args.kan_msg_width or not args.kan_node_width:
@@ -334,18 +372,23 @@ def main(yaml_params: Optional[dict] = None, checkpoint_dir: Optional[str] = Non
     train_loader = DataLoader(train_dataset, batch_size=args.batch_size, shuffle=True, num_workers=8, pin_memory=True, persistent_workers=True)
     val_loader = DataLoader(val_dataset, batch_size=args.batch_size, shuffle=True, num_workers=8, pin_memory=True, persistent_workers=True)
 
-    kan_train_loader = DataLoader(train_dataset, batch_size=args.kan_batch_size, shuffle=True, num_workers=8, pin_memory=True, persistent_workers=True)
-    kan_val_loader = DataLoader(val_dataset, batch_size=args.kan_batch_size, shuffle=True, num_workers=8, pin_memory=True, persistent_workers=True)
+    kan_adam_train_loader = DataLoader(train_dataset, batch_size=args.kan_adam_batch_size, shuffle=True, num_workers=8, pin_memory=True, persistent_workers=True)
+    if args.kan_lbfgs_batch_size == args.kan_adam_batch_size:
+        kan_lbfgs_train_loader = kan_adam_train_loader
+    else:
+        kan_lbfgs_train_loader = DataLoader(train_dataset, batch_size=args.kan_lbfgs_batch_size, shuffle=True, num_workers=8, pin_memory=True, persistent_workers=True)
+    kan_val_loader = DataLoader(val_dataset, batch_size=args.kan_lbfgs_batch_size, shuffle=True, num_workers=8, pin_memory=True, persistent_workers=True)
 
     print(
         "Loader steps/epoch: "
         f"GNN={len(train_loader)} (batch={args.batch_size}), "
-        f"Graph-KAN={len(kan_train_loader)} (batch={args.kan_batch_size})"
+        f"Graph-KAN Adam={len(kan_adam_train_loader)} (batch={args.kan_adam_batch_size}), "
+        f"LBFGS={len(kan_lbfgs_train_loader)} (batch={args.kan_lbfgs_batch_size})"
     )
-    if len(kan_train_loader) <= 1:
+    if len(kan_lbfgs_train_loader) <= 1:
         print(
-            "Warning: Graph-KAN is effectively full-batch (<=1 step/epoch). "
-            "If convergence per epoch is slow, reduce kan_batch_size."
+            "Warning: Graph-KAN LBFGS phase is effectively full-batch (<=1 step/epoch). "
+            "If convergence per epoch is slow, reduce kan_lbfgs_batch_size."
         )
 
     n_features = 2 * train_dataset.dim + 1
@@ -380,6 +423,7 @@ def main(yaml_params: Optional[dict] = None, checkpoint_dir: Optional[str] = Non
         aggr="add",
         lamb_l1=args.kan_lamb_l1,
         lamb_entropy=args.kan_lamb_entropy,
+        sparse_init=args.kan_sparse_init,
         msg_mult_arity=args.kan_msg_mult_arity,
         node_mult_arity=args.kan_node_mult_arity,
         base_fun=args.kan_base_fun,
@@ -391,7 +435,7 @@ def main(yaml_params: Optional[dict] = None, checkpoint_dir: Optional[str] = Non
     print(" ")
 
     kan_model, kan_history = train_kan(
-        kan_model, kan_train_loader, kan_val_loader,
+        kan_model, kan_adam_train_loader, kan_val_loader,
         n_epochs=args.epochs,
         device=device,
         lamb=args.lamb,
@@ -407,7 +451,10 @@ def main(yaml_params: Optional[dict] = None, checkpoint_dir: Optional[str] = Non
         lbfgs_line_search_fn=args.kan_lbfgs_line_search_fn,
         lbfgs_impl=args.kan_lbfgs_impl,
         lbfgs_tolerance_ys=args.kan_lbfgs_tolerance_ys,
+        lbfgs_train_loader=kan_lbfgs_train_loader,
         square_loss=args.kan_square_loss,
+        augment=args.augment,
+        augmentation_scale=args.augmentation_scale,
     )
     visualize_training_loss(kan_history,
                             title='Graph-KAN Training Loss',
@@ -429,7 +476,7 @@ def main(yaml_params: Optional[dict] = None, checkpoint_dir: Optional[str] = Non
         gnn_model.summary()
         print(" ")
 
-        gnn_model, gnn_history = train_gnn(gnn_model, train_loader, val_loader, args.epochs, args.lr, device, args.lamb)
+        gnn_model, gnn_history = train_gnn(gnn_model, train_loader, val_loader, args.epochs, args.lr, device, args.lamb, args.augment, args.augmentation_scale)
         visualize_training_loss(gnn_history,
                                 title='GNN Training Loss',
                                 save_path=f'{checkpoint_dir}/gnn_loss.png')
