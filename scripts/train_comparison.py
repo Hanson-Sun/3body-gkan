@@ -61,13 +61,31 @@ def parse_args(args=None):
     parser.add_argument("--kan_lamb_l1", type=float, default=1.0)
     parser.add_argument("--kan_lamb_entropy", type=float, default=2.0)
     parser.add_argument(
+        "--kan_optimizer_mode",
+        type=str,
+        default="two_phase",
+        choices=["two_phase", "alternating"],
+        help="KAN optimizer schedule: Adam->LBFGS warmup ('two_phase') or alternating Adam/LBFGS.",
+    )
+    parser.add_argument(
+        "--kan_alternating_adam_epochs",
+        type=int,
+        default=10,
+        help="Adam exploration epochs per cycle in alternating mode.",
+    )
+    parser.add_argument(
+        "--kan_lbfgs_rise_tol",
+        type=float,
+        default=0.0,
+        help="Switch LBFGS->Adam when current LBFGS epoch loss rises above previous by this tolerance.",
+    )
+    parser.add_argument(
         "--kan_sparse_init",
         type=lambda x: str(x).strip().lower() in {"1", "true", "yes", "y", "on"},
         default=True,
         help="Use sparse initialization in pykan KANLayer connections (default: true).",
     )
 
-    # TODO: add these to yaml
     parser.add_argument("--kan_adam_warmup_epochs", type=int, default=10)
     parser.add_argument("--kan_grid_update_freq", type=int, default=10)
     parser.add_argument("--kan_grid_update_warmup", type=int, default=5)
@@ -215,7 +233,8 @@ def _extract_width_output_dim(width, label: str) -> int:
 
 
 
-def train_gnn(model, train_loader, val_loader, n_epochs, lr, device, lamb, augment=False, augmentation_scale=3.0):
+def train_gnn(model, train_loader, val_loader, n_epochs, lr, device, lamb,
+              augment=False, augmentation_scale=3.0):
     trainer = GNNTrainer(
         model, train_loader, val_loader,
         lr=lr, device=device,
@@ -232,7 +251,10 @@ def train_gnn(model, train_loader, val_loader, n_epochs, lr, device, lamb, augme
 
 
 def train_kan(model, train_loader, val_loader, n_epochs, device, lamb,
+              optimizer_mode: str = "two_phase",
               adam_warmup_epochs: int = 0,
+              alternating_adam_epochs: int = 4,
+              lbfgs_rise_tol: float = 0.0,
               adam_lr: float = 1e-3,
               grid_update_freq: int = 10,
               grid_update_warmup: int = 5,
@@ -244,13 +266,14 @@ def train_kan(model, train_loader, val_loader, n_epochs, device, lamb,
               lbfgs_line_search_fn: str | None = "strong_wolfe",
               lbfgs_impl: str = "torch",
               lbfgs_tolerance_ys: float = 1e-32,
-          lbfgs_train_loader=None,
+              lbfgs_train_loader=None,
               square_loss: bool = False,
               augment: bool = False,
               augmentation_scale: float = 3.0):
     trainer = KANTrainer(
         model, train_loader, val_loader,
         lbfgs_train_loader=lbfgs_train_loader,
+        optimizer_mode=optimizer_mode,
         lbfgs_lr=lbfgs_lr,
         lbfgs_max_iter=lbfgs_max_iter,
         lbfgs_max_eval=lbfgs_max_eval,
@@ -259,6 +282,8 @@ def train_kan(model, train_loader, val_loader, n_epochs, device, lamb,
         lbfgs_tolerance_ys=lbfgs_tolerance_ys,
         adam_lr=adam_lr,
         adam_warmup_epochs=adam_warmup_epochs,
+        alternating_adam_epochs=alternating_adam_epochs,
+        lbfgs_rise_tol=lbfgs_rise_tol,
         device=device,
         checkpoint_dir=None,
         grid_update_freq=grid_update_freq,
@@ -339,6 +364,9 @@ def main(yaml_params: Optional[dict] = None, checkpoint_dir: Optional[str] = Non
         args.kan_lbfgs_tolerance_ys    = yaml_params.get("gkan_hp", {}).get("lbfgs_tolerance_ys",  args.kan_lbfgs_tolerance_ys)
         args.kan_lamb_l1               = yaml_params.get("gkan_hp", {}).get("lamb_l1",              args.kan_lamb_l1)
         args.kan_lamb_entropy          = yaml_params.get("gkan_hp", {}).get("lamb_entropy",         args.kan_lamb_entropy)
+        args.kan_optimizer_mode        = yaml_params.get("gkan_hp", {}).get("optimizer_mode",       args.kan_optimizer_mode)
+        args.kan_alternating_adam_epochs = yaml_params.get("gkan_hp", {}).get("alternating_adam_epochs", args.kan_alternating_adam_epochs)
+        args.kan_lbfgs_rise_tol        = yaml_params.get("gkan_hp", {}).get("lbfgs_rise_tol",       args.kan_lbfgs_rise_tol)
         args.kan_sparse_init           = yaml_params.get("gkan_hp", {}).get("sparse_init",          args.kan_sparse_init)
         args.kan_adam_warmup_epochs    = yaml_params.get("gkan_hp", {}).get("adam_warmup_epochs",   args.kan_adam_warmup_epochs)
         args.kan_grid_update_freq      = yaml_params.get("gkan_hp", {}).get("grid_update_freq",     args.kan_grid_update_freq)
@@ -367,6 +395,11 @@ def main(yaml_params: Optional[dict] = None, checkpoint_dir: Optional[str] = Non
     args.kan_node_width = _coerce_width_arg(args.kan_node_width)
     args.kan_msg_mult_arity = _coerce_mult_arity_arg(args.kan_msg_mult_arity, "kan_msg_mult_arity")
     args.kan_node_mult_arity = _coerce_mult_arity_arg(args.kan_node_mult_arity, "kan_node_mult_arity")
+    args.kan_optimizer_mode = str(args.kan_optimizer_mode).strip().lower()
+    if args.kan_optimizer_mode not in {"two_phase", "alternating"}:
+        raise ValueError(
+            f"kan_optimizer_mode must be 'two_phase' or 'alternating' (got {args.kan_optimizer_mode!r})."
+        )
 
     if args.kan_adam_batch_size is None:
         args.kan_adam_batch_size = args.kan_batch_size
@@ -457,40 +490,39 @@ def main(yaml_params: Optional[dict] = None, checkpoint_dir: Optional[str] = Non
         kan_model.summary()
         print(" ")
 
-        kan_model, kan_history = train_kan(
-            kan_model, kan_adam_train_loader, kan_val_loader,
-            n_epochs=args.epochs,
-            device=device,
-            lamb=args.lamb,
-            adam_warmup_epochs=args.kan_adam_warmup_epochs,
-            adam_lr=args.lr,
-            grid_update_freq=args.kan_grid_update_freq,
-            grid_update_warmup=args.kan_grid_update_warmup,
-            max_grid_updates=args.kan_max_grid_updates,
-            gradient_clip=args.kan_gradient_clip,
-            lbfgs_lr=args.kan_lbfgs_lr,
-            lbfgs_max_iter=args.kan_lbfgs_max_iter,
-            lbfgs_max_eval=args.kan_lbfgs_max_eval,
-            lbfgs_line_search_fn=args.kan_lbfgs_line_search_fn,
-            lbfgs_impl=args.kan_lbfgs_impl,
-            lbfgs_tolerance_ys=args.kan_lbfgs_tolerance_ys,
-            lbfgs_train_loader=kan_lbfgs_train_loader,
-            square_loss=args.kan_square_loss,
-            augment=args.augment,
-            augmentation_scale=args.augmentation_scale,
-        )
-        visualize_training_loss(kan_history,
-                                title='Graph-KAN Training Loss',
-                                save_path=f'{checkpoint_dir}/kan_loss.png')
-        gkan_checkpoint_path = f"{checkpoint_dir}/graph_kan.pt"
-        loader = ModelLoader(OrdinaryGraphKAN, gkan_checkpoint_path)
-        loader.save(kan_model, gkan_checkpoint_path)
-        print(f"Saved checkpoint: {gkan_checkpoint_path}\n")
-    else:
-        print("="*60)
-        print("GKAN")
-        print("="*60)
-        print("Skipping GKAN training (train_gkan=False).\n")
+    kan_model, kan_history = train_kan(
+        kan_model, kan_adam_train_loader, kan_val_loader,
+        n_epochs=args.epochs,
+        device=device,
+        lamb=args.lamb,
+        optimizer_mode=args.kan_optimizer_mode,
+        adam_warmup_epochs=args.kan_adam_warmup_epochs,
+        alternating_adam_epochs=args.kan_alternating_adam_epochs,
+        lbfgs_rise_tol=args.kan_lbfgs_rise_tol,
+        adam_lr=args.lr,
+        grid_update_freq=args.kan_grid_update_freq,
+        grid_update_warmup=args.kan_grid_update_warmup,
+        max_grid_updates=args.kan_max_grid_updates,
+        gradient_clip=args.kan_gradient_clip,
+        lbfgs_lr=args.kan_lbfgs_lr,
+        lbfgs_max_iter=args.kan_lbfgs_max_iter,
+        lbfgs_max_eval=args.kan_lbfgs_max_eval,
+        lbfgs_line_search_fn=args.kan_lbfgs_line_search_fn,
+        lbfgs_impl=args.kan_lbfgs_impl,
+        lbfgs_tolerance_ys=args.kan_lbfgs_tolerance_ys,
+        lbfgs_train_loader=kan_lbfgs_train_loader,
+        square_loss=args.kan_square_loss,
+        augment=args.augment,
+        augmentation_scale=args.augmentation_scale,
+    )
+    visualize_training_loss(kan_history,
+                            title='Graph-KAN Training Loss',
+                            save_path=f'{checkpoint_dir}/kan_loss.png')
+    gkan_checkpoint_path = f"{checkpoint_dir}/graph_kan.pt"
+    loader = ModelLoader(OrdinaryGraphKAN, gkan_checkpoint_path)
+    loader.save(kan_model, gkan_checkpoint_path)
+    print(f"Saved checkpoint: {gkan_checkpoint_path}\n")
+
     if args.train_baseline:
         # Create and train Baseline GNN
         print("="*60)
@@ -503,7 +535,17 @@ def main(yaml_params: Optional[dict] = None, checkpoint_dir: Optional[str] = Non
         gnn_model.summary()
         print(" ")
 
-        gnn_model, gnn_history = train_gnn(gnn_model, train_loader, val_loader, args.epochs, args.lr, device, args.lamb, args.augment, args.augmentation_scale)
+        gnn_model, gnn_history = train_gnn(
+            gnn_model,
+            train_loader,
+            val_loader,
+            args.epochs,
+            args.lr,
+            device,
+            args.lamb,
+            args.augment,
+            args.augmentation_scale,
+        )
         visualize_training_loss(gnn_history,
                                 title='GNN Training Loss',
                                 save_path=f'{checkpoint_dir}/gnn_loss.png')

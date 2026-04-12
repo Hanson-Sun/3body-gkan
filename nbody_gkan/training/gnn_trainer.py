@@ -4,7 +4,7 @@ from tqdm.auto import tqdm
 from .trainer import Trainer
 
 class GNNTrainer(Trainer):
-    """Trainer for standard GNN with Adam optimizer."""
+    """Trainer for standard GNN with AdamW optimizer."""
 
     def __init__(self, model, train_loader, val_loader=None,
                  lr: float = 1e-3, weight_decay: float = 0.0,
@@ -12,7 +12,7 @@ class GNNTrainer(Trainer):
                  scheduler: torch.optim.lr_scheduler._LRScheduler | None = None,
                  **kwargs):
         super().__init__(model, train_loader, val_loader, **kwargs)
-        self.optimizer     = Adam(model.parameters(), lr=lr, weight_decay=weight_decay)
+        self.optimizer     = AdamW(model.parameters(), lr=lr, weight_decay=weight_decay)
         self.scheduler     = scheduler
         self.lamb          = 0.0
         self.gradient_clip = gradient_clip

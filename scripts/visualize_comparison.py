@@ -62,7 +62,17 @@ def parse_args(args=None):
     parser.add_argument("--save_video",        action=argparse.BooleanOptionalAction, default=True)
     parser.add_argument("--plot_trajectories", action=argparse.BooleanOptionalAction, default=True)
     parser.add_argument("--plot_splines",      action=argparse.BooleanOptionalAction, default=True)
+    parser.add_argument("--prune_kan",         action=argparse.BooleanOptionalAction, default=False)
+    parser.add_argument("--prune_edge_threshold", type=float, default=3e-2)
+    parser.add_argument("--prune_node_threshold", type=float, default=None)
     return parser.parse_args(args)
+
+
+def _threshold_or_none(value: float | None) -> float | None:
+    if value is None:
+        return None
+    value = float(value)
+    return value if value > 0 else None
 
 
 def _decode_npz_scalar(value) -> str:
@@ -105,36 +115,6 @@ def _load_force_config(data) -> tuple[str, Any, dict]:
 
     return force_name, force_fn, force_kwargs
 
-
-# def load_model(checkpoint_path, model_class):
-#     """Load model from checkpoint."""
-#     ckpt = torch.load(checkpoint_path, map_location='cpu')
-
-#     if model_class == OrdinaryGraphKAN:
-#         model = model_class(
-#             n_f=ckpt['n_features'],
-#             msg_dim=ckpt['msg_dim'],
-#             ndim=ckpt['dim'],
-#             edge_index=ckpt['edge_index'],
-#             hidden=ckpt['hidden'],
-#             grid_size=ckpt['grid_size'],
-#             spline_order=ckpt.get('spline_order', 3),
-#             aggr="add",
-#             hidden_layers=ckpt.get('hidden_layers', 0),
-#         )
-#     else:  # OGN
-#         model = model_class(
-#             n_f=ckpt['n_features'],
-#             msg_dim=ckpt['msg_dim'],
-#             ndim=ckpt['dim'],
-#             edge_index=ckpt['edge_index'],
-#             hidden=ckpt['hidden'],
-#             aggr="add",
-#         )
-
-#     model.load_state_dict(ckpt['model_state'])
-#     model.eval()
-#     return model, ckpt
 
 def rollout(model, pos0, vel0, masses, dt, n_steps, edge_index):
     """Rollout dynamics using leapfrog integration."""
@@ -390,7 +370,7 @@ def visualize_kan_network(model: 'OrdinaryGraphKAN',
         in_vars=in_vars,
         out_vars=out_vars,
         title=title,
-        beta=100,            # match pykan doc recommendation for network overview
+        beta=120,            # match pykan doc recommendation for network overview
         scale=2,
         varscale=0.2,
         metric="forward_n",  # use forward scales to skip attribute() for high-arity mult
@@ -544,6 +524,13 @@ def main(
         args.save_video        = yaml_params.get("save_video",        args.save_video)
         args.plot_trajectories = yaml_params.get("plot_trajectories", args.plot_trajectories)
         args.plot_splines      = yaml_params.get("plot_splines",      args.plot_splines)
+        args.prune_kan         = yaml_params.get("prune_kan",         args.prune_kan)
+        args.prune_edge_threshold = yaml_params.get(
+            "prune_edge_threshold", args.prune_edge_threshold
+        )
+        args.prune_node_threshold = yaml_params.get(
+            "prune_node_threshold", args.prune_node_threshold
+        )
 
     Path(args.output_dir).mkdir(parents=True, exist_ok=True)
 
@@ -567,6 +554,18 @@ def main(
         print(f"Baseline checkpoint not found at {gnn_ckpt_path}; skipping baseline visualization.")
     print(f"Graph-KAN msg_width={getattr(kan_model, 'msg_width', 'N/A')}, node_width={getattr(kan_model, 'node_width', 'N/A')}")
     print(f"Graph-KAN msg_mult_nodes={getattr(kan_model, 'msg_mult_nodes', 0)}, node_mult_nodes={getattr(kan_model, 'node_mult_nodes', 0)}")
+
+    if args.prune_kan:
+        print("Applying Graph-KAN pruning...")
+        prune_summary = kan_model.prune_subnets(
+            edge_threshold=_threshold_or_none(args.prune_edge_threshold),
+            node_threshold=_threshold_or_none(args.prune_node_threshold),
+        )
+        print(
+            "Graph-KAN pruned widths: "
+            f"msg={prune_summary['msg_width']}, node={prune_summary['node_width']}"
+        )
+
     print("Models loaded successfully")
 
     # Load initial conditions

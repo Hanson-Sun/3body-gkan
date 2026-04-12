@@ -126,6 +126,35 @@ def test_graph_kan_custom_width_spec():
     assert out.shape == (n_nodes, ndim)
 
 
+def test_graph_kan_promotes_arity_one_for_pykan_compat():
+    """Arity=1 is promoted to 2 to avoid upstream pykan forward crashes."""
+    n_nodes = 3
+    n_features = 5
+    msg_dim = 6
+    ndim = 2
+    edge_index = get_edge_index(n_nodes)
+
+    msg_width = [2 * n_features, [6, 1], msg_dim]
+    node_width = [n_features + msg_dim, ndim]
+
+    with pytest.warns(UserWarning, match="unsupported by pykan"):
+        model = GraphKAN(
+            n_f=n_features,
+            msg_width=msg_width,
+            node_width=node_width,
+            msg_mult_arity=[[], [1], []],
+            node_mult_arity=[[], []],
+            grid_size=3,
+            spline_order=2,
+        )
+
+    assert model.msg_mult_arity[1] == [2]
+
+    x = torch.randn(n_nodes, n_features)
+    out = model(x, edge_index)
+    assert out.shape == (n_nodes, ndim)
+
+
 def test_graph_kan_width_validation_errors():
     """Invalid width specs should fail fast with clear messages."""
     with pytest.raises(ValueError, match="msg_width.*input dimension"):
