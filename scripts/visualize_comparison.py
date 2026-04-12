@@ -62,6 +62,7 @@ def parse_args(args=None):
     parser.add_argument("--save_video",        action=argparse.BooleanOptionalAction, default=True)
     parser.add_argument("--plot_trajectories", action=argparse.BooleanOptionalAction, default=True)
     parser.add_argument("--plot_splines",      action=argparse.BooleanOptionalAction, default=True)
+    parser.add_argument("--symbolic_regression", action=argparse.BooleanOptionalAction, default=True)
     parser.add_argument("--prune_kan",         action=argparse.BooleanOptionalAction, default=False)
     parser.add_argument("--prune_edge_threshold", type=float, default=3e-2)
     parser.add_argument("--prune_node_threshold", type=float, default=None)
@@ -524,6 +525,7 @@ def main(
         args.save_video        = yaml_params.get("save_video",        args.save_video)
         args.plot_trajectories = yaml_params.get("plot_trajectories", args.plot_trajectories)
         args.plot_splines      = yaml_params.get("plot_splines",      args.plot_splines)
+        args.symbolic_regression = yaml_params.get("symbolic_regression", args.symbolic_regression)
         args.prune_kan         = yaml_params.get("prune_kan",         args.prune_kan)
         args.prune_edge_threshold = yaml_params.get(
             "prune_edge_threshold", args.prune_edge_threshold
@@ -668,10 +670,16 @@ def main(
                                 network='node',
                                 save_path=f'{args.output_dir}/kan_node_network.png')
 
-        # ── Symbolic regression — only once, after network viz ────
+    # ── Symbolic regression — only once ────
+    if args.symbolic_regression and kan_model is not None:
         print("\n" + "=" * 60)
         print("Symbolic Regression Analysis")
         print("=" * 60)
+
+        with torch.no_grad():
+            mass_expanded = masses.unsqueeze(1)
+            x_nodes  = torch.cat([pos0, vel0, mass_expanded], dim=1)
+            
         visualize_symbolic_expressions(
             kan_model,
             x_nodes=x_nodes,
