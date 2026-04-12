@@ -1,5 +1,8 @@
 testing_gnn:
   name: "testing_gnn"
+  data_dir: "/content/drive/MyDrive/3body-project/tests/data"
+  checkpoint_dir: "/content/drive/MyDrive/3body-project/tests/checkpoints"
+  output_dir: "/content/drive/MyDrive/3body-project/tests/outputs"
   data_params:
     n_train: 10
     n_val: 1
@@ -27,6 +30,9 @@ testing_gnn:
     plot_splines: True
 testing_gkan:
   name: "testing_gkan"
+  data_dir: "/content/drive/MyDrive/3body-project/tests/data"
+  checkpoint_dir: "/content/drive/MyDrive/3body-project/tests/checkpoints"
+  output_dir: "/content/drive/MyDrive/3body-project/tests/outputs"
   data_params:
     n_train: 10
     n_val: 1
@@ -54,6 +60,9 @@ testing_gkan:
     plot_splines: True
 testing_both:
   name: "testing_both"
+  data_dir: "/content/drive/MyDrive/3body-project/tests/data"
+  checkpoint_dir: "/content/drive/MyDrive/3body-project/tests/checkpoints"
+  output_dir: "/content/drive/MyDrive/3body-project/tests/outputs"
   data_params:
     n_train: 10
     n_val: 1
@@ -83,6 +92,9 @@ testing_both:
 # (Cranmer used sum()), so lr is not directly comparable to his 1e-3.
 baseline:
   name: "baseline"
+  data_dir: "/content/drive/MyDrive/3body-project/data"
+  checkpoint_dir: "/content/drive/MyDrive/3body-project/checkpoints"
+  output_dir: "/content/drive/MyDrive/3body-project/outputs"
   data_params:
     n_train: 1000
     n_val: 100
