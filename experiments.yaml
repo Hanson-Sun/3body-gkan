@@ -188,7 +188,7 @@ minimal_mult_merged_hybrid:
   train_params:
     train_baseline: True
     gnn_hp:
-      hidden: 35
+      hidden: 16
       msg_dim: 2
     gkan_hp:
       msg_width: [10, [3, 2], [6, 2], [3, 2], [4, 2], 2]
@@ -199,9 +199,9 @@ minimal_mult_merged_hybrid:
       sparse_init: False
       adam_warmup_epochs: 200
       max_grid_updates: 0
-      gradient_clip: 5.0
+      gradient_clip: 0
     training_hp:
-      epochs: 1
+      epochs: 200
       batch_size: 64
       kan_adam_batch_size: 64
       kan_lbfgs_batch_size: 131072

@@ -29,6 +29,7 @@ class SymbolicGraphKANMixin:
         lib: list[str] | None = None,
         max_batches: int = 10,
         threshold: float = 0.8,
+        fit_affine_after_select: bool = False,
     ) -> dict:
         """
         Suggest symbolic functions per edge using pykan's native API.
@@ -81,28 +82,31 @@ class SymbolicGraphKANMixin:
                             r2_value = float(best_r2)
                             passes_threshold = r2_value >= threshold
 
+                            # Optional extra affine refit for expression readability.
+                            # This is expensive and not required for selecting best_fn/r2.
                             a_x, b_x, c, d = 1.0, 0.0, 1.0, 0.0
-                            try:
-                                subnet.fix_symbolic(
-                                    layer_idx,
-                                    in_i,
-                                    out_i,
-                                    best_fn,
-                                    fit_params_bool=True,
-                                    verbose=False,
-                                    log_history=False,
-                                )
-                                # Affine is [a_x, b_x, c, d] in c * f(a_x * x + b_x) + d.
-                                a_x, b_x, c, d = subnet.symbolic_fun[layer_idx].affine[
-                                    out_i, in_i
-                                ].detach().tolist()
-                            except Exception:
-                                pass
-                            finally:
+                            if fit_affine_after_select:
                                 try:
-                                    subnet.unfix_symbolic(layer_idx, in_i, out_i, log_history=False)
+                                    subnet.fix_symbolic(
+                                        layer_idx,
+                                        in_i,
+                                        out_i,
+                                        best_fn,
+                                        fit_params_bool=True,
+                                        verbose=False,
+                                        log_history=False,
+                                    )
+                                    # Affine is [a_x, b_x, c, d] in c * f(a_x * x + b_x) + d.
+                                    a_x, b_x, c, d = subnet.symbolic_fun[layer_idx].affine[
+                                        out_i, in_i
+                                    ].detach().tolist()
                                 except Exception:
                                     pass
+                                finally:
+                                    try:
+                                        subnet.unfix_symbolic(layer_idx, in_i, out_i, log_history=False)
+                                    except Exception:
+                                        pass
 
                             layer_suggestions[(in_i, out_i)] = {
                                 'fn': str(best_fn),

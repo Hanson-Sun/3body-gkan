@@ -545,6 +545,7 @@ def visualize_symbolic_expressions(
         device=next(kan_model.parameters()).device,
         lib=lib,
         threshold=threshold,
+        fit_affine_after_select=False,
     )
 
     kan_model.print_symbolic_suggestions(
