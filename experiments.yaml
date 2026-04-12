@@ -21,7 +21,7 @@ testing_gnn:
     training_hp:
       epochs: 2
       batch_size: 256
-      lr: 1e-3
+      lr: 5e-4
       lamb: 0.00
       augment: True
       augmentation_scale: 3.0
@@ -51,7 +51,7 @@ testing_gkan:
     training_hp:
       epochs: 2
       batch_size: 256
-      lr: 1e-3
+      lr: 5e-4
       lamb: 0.00
       augment: True
       augmentation_scale: 3.0
@@ -80,7 +80,7 @@ testing_both:
     training_hp:
       epochs: 2
       batch_size: 256
-      lr: 1e-3
+      lr: 5e-4
       lamb: 0.00
       augment: True
       augmentation_scale: 3.0
@@ -96,8 +96,8 @@ baseline:
   checkpoint_dir: "/content/drive/MyDrive/3body-project/checkpoints"
   output_dir: "/content/drive/MyDrive/3body-project/outputs"
   data_params:
-    n_train: 1000
-    n_val: 100
+    n_train: 200
+    n_val: 20
     force_fn: "gravity"
     min_separation: 0.4
     max_retries: 50
@@ -113,7 +113,7 @@ baseline:
     training_hp:
       epochs: 50
       batch_size: 256
-      lr: 1e-3
+      lr: 5e-4
       lamb: 0.00
       augment: True
       augmentation_scale: 3.0
@@ -128,8 +128,8 @@ regularization_control:
   checkpoint_dir: "/content/drive/MyDrive/3body-project/checkpoints"
   output_dir: "/content/drive/MyDrive/3body-project/outputs"
   data_params:
-    n_train: 1000
-    n_val: 100
+    n_train: 200
+    n_val: 20
     force_fn: "gravity"
     min_separation: 0.4
     max_retries: 50
@@ -148,7 +148,7 @@ regularization_control:
       epochs: 50
       batch_size: 256
       kan_adam_batch_size: 256
-      lr: 5e-3
+      lr: 5e-4
       lamb: 0.00
       augment: True
       augmentation_scale: 3.0
@@ -165,8 +165,8 @@ regularization_l1_1e-3:
   checkpoint_dir: "/content/drive/MyDrive/3body-project/checkpoints"
   output_dir: "/content/drive/MyDrive/3body-project/outputs"
   data_params:
-    n_train: 1000
-    n_val: 100
+    n_train: 200
+    n_val: 20
     force_fn: "gravity"
     min_separation: 0.4
     max_retries: 50
@@ -185,7 +185,7 @@ regularization_l1_1e-3:
       epochs: 50
       batch_size: 256
       kan_adam_batch_size: 256
-      lr: 5e-3
+      lr: 5e-4
       lamb: 0.00
       augment: True
       augmentation_scale: 3.0
@@ -198,8 +198,8 @@ regularization_l1_1e-4:
   checkpoint_dir: "/content/drive/MyDrive/3body-project/checkpoints"
   output_dir: "/content/drive/MyDrive/3body-project/outputs"
   data_params:
-    n_train: 1000
-    n_val: 100
+    n_train: 200
+    n_val: 20
     force_fn: "gravity"
     min_separation: 0.4
     max_retries: 50
@@ -218,7 +218,7 @@ regularization_l1_1e-4:
       epochs: 50
       batch_size: 256
       kan_adam_batch_size: 256
-      lr: 5e-3
+      lr: 5e-4
       lamb: 0.00
       augment: True
       augmentation_scale: 3.0
@@ -231,8 +231,8 @@ regularization_l1_1e-5:
   checkpoint_dir: "/content/drive/MyDrive/3body-project/checkpoints"
   output_dir: "/content/drive/MyDrive/3body-project/outputs"
   data_params:
-    n_train: 1000
-    n_val: 100
+    n_train: 200
+    n_val: 20
     force_fn: "gravity"
     min_separation: 0.4
     max_retries: 50
@@ -253,7 +253,7 @@ regularization_l1_1e-5:
       epochs: 50
       batch_size: 256
       kan_batch_size: 256
-      lr: 5e-3
+      lr: 5e-4
       lamb: 0.00
       augment: True
       augmentation_scale: 3.0
@@ -268,8 +268,8 @@ regularization_sparse-init:
   checkpoint_dir: "/content/drive/MyDrive/3body-project/checkpoints"
   output_dir: "/content/drive/MyDrive/3body-project/outputs"
   data_params:
-    n_train: 1000
-    n_val: 100
+    n_train: 200
+    n_val: 20
     force_fn: "gravity"
     min_separation: 0.4
     max_retries: 50
@@ -290,7 +290,7 @@ regularization_sparse-init:
       epochs: 50
       batch_size: 256
       kan_batch_size: 256
-      lr: 5e-3
+      lr: 5e-4
       lamb: 0.00
       augment: True
       augmentation_scale: 3.0
@@ -307,8 +307,8 @@ regularization_entropy_1e-3:
   checkpoint_dir: "/content/drive/MyDrive/3body-project/checkpoints"
   output_dir: "/content/drive/MyDrive/3body-project/outputs"
   data_params:
-    n_train: 1000
-    n_val: 100
+    n_train: 200
+    n_val: 20
     force_fn: "gravity"
     min_separation: 0.4
     max_retries: 50
@@ -327,7 +327,7 @@ regularization_entropy_1e-3:
       epochs: 50
       batch_size: 256
       kan_batch_size: 256
-      lr: 5e-3
+      lr: 5e-4
       lamb: 0.00
       augment: True
       augmentation_scale: 3.0
@@ -342,8 +342,8 @@ regularization_entropy_1e-4:
   checkpoint_dir: "/content/drive/MyDrive/3body-project/checkpoints"
   output_dir: "/content/drive/MyDrive/3body-project/outputs"
   data_params:
-    n_train: 1000
-    n_val: 100
+    n_train: 200
+    n_val: 20
     force_fn: "gravity"
     min_separation: 0.4
     max_retries: 50
@@ -362,7 +362,7 @@ regularization_entropy_1e-4:
       epochs: 50
       batch_size: 256
       kan_adam_batch_size: 256
-      lr: 5e-3
+      lr: 5e-4
       lamb: 0.00
       augment: True
       augmentation_scale: 3.0
@@ -379,8 +379,8 @@ regularization_combined_1e-4:
   checkpoint_dir: "/content/drive/MyDrive/3body-project/checkpoints"
   output_dir: "/content/drive/MyDrive/3body-project/outputs"
   data_params:
-    n_train: 1000
-    n_val: 100
+    n_train: 200
+    n_val: 20
     force_fn: "gravity"
     min_separation: 0.4
     max_retries: 50
@@ -399,7 +399,7 @@ regularization_combined_1e-4:
       epochs: 50
       batch_size: 256
       kan_adam_batch_size: 256
-      lr: 5e-3
+      lr: 5e-4
       lamb: 0.00
       augment: True
       augmentation_scale: 3.0
