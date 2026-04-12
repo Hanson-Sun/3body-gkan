@@ -9,6 +9,7 @@ multiplication nodes are encoded inline via ``[linear, mult]`` entries.
 from typing import Optional, Sequence, Any
 import json
 import copy
+import warnings
 
 import torch
 import torch.nn as nn
@@ -104,9 +105,9 @@ class GraphKAN(SymbolicGraphKANMixin, MessagePassing, GraphMixin):
         self.msg_dim = msg_dim
         self.ndim = ndim
         self._grid_updates_disabled = False
+        msg_input_dim = 2 * n_f
 
         # Message function: [x_i, x_j] (2*n_f) → msg_dim
-        msg_input_dim = 2 * n_f
         self.msg_width = self._normalize_width_spec(
             width=msg_width,
             in_dim=msg_input_dim,
@@ -255,6 +256,84 @@ class GraphKAN(SymbolicGraphKANMixin, MessagePassing, GraphMixin):
         return copy.deepcopy(normalized)
 
     @staticmethod
+    def _call_prune_method(
+        subnet: nn.Module,
+        method_name: str,
+        threshold: Optional[float],
+        log_history: bool = True,
+    ) -> nn.Module:
+        if threshold is None:
+            return subnet
+        method = getattr(subnet, method_name, None)
+        if method is None:
+            return subnet
+        result = method(threshold=float(threshold), log_history=log_history)
+        return subnet if result is None else result
+
+    def _refresh_subnet_metadata(self):
+        self.msg_layers = self.msg_kan.act_fun
+        self.node_layers = self.node_kan.act_fun
+        self.msg_width = copy.deepcopy(getattr(self.msg_kan, "width", self.msg_width))
+        self.node_width = copy.deepcopy(getattr(self.node_kan, "width", self.node_width))
+        self.msg_mult_nodes = self._max_mult_nodes_in_width(self.msg_width)
+        self.node_mult_nodes = self._max_mult_nodes_in_width(self.node_width)
+
+    def prune_subnets(
+        self,
+        edge_threshold: Optional[float] = 3e-2,
+        node_threshold: Optional[float] = None,
+        log_history: bool = True,
+    ) -> dict[str, Any]:
+        """
+        Prune GraphKAN message and node subnets using pykan pruning APIs.
+
+        Parameters
+        ----------
+        edge_threshold : float or None
+            Threshold for ``prune_edge`` on both subnets. Set None to skip.
+        node_threshold : float or None
+            Threshold for ``prune_node`` on both subnets. Set None to skip.
+        log_history : bool
+            Forwarded to pykan pruning methods.
+
+        Returns
+        -------
+        dict
+            Summary of updated subnet widths.
+        """
+        self.msg_kan = self._call_prune_method(
+            self.msg_kan,
+            "prune_edge",
+            edge_threshold,
+            log_history=log_history,
+        )
+        self.node_kan = self._call_prune_method(
+            self.node_kan,
+            "prune_edge",
+            edge_threshold,
+            log_history=log_history,
+        )
+
+        self.msg_kan = self._call_prune_method(
+            self.msg_kan,
+            "prune_node",
+            node_threshold,
+            log_history=log_history,
+        )
+        self.node_kan = self._call_prune_method(
+            self.node_kan,
+            "prune_node",
+            node_threshold,
+            log_history=log_history,
+        )
+
+        self._refresh_subnet_metadata()
+        return {
+            "msg_width": copy.deepcopy(self.msg_width),
+            "node_width": copy.deepcopy(self.node_width),
+        }
+
+    @staticmethod
     def _max_mult_nodes_in_width(width: Sequence) -> int:
         max_mult = 0
         for entry in width:
@@ -284,12 +363,25 @@ class GraphKAN(SymbolicGraphKANMixin, MessagePassing, GraphMixin):
     def _normalize_mult_arity_layer(entry: Any, mult_nodes: int, label: str) -> list[int]:
         if mult_nodes <= 0:
             return []
+
+        def _canonicalize_arity(raw_value: Any, arity_label: str) -> int:
+            val = GraphKAN._validate_positive_int(raw_value, arity_label)
+            # pykan MultKAN forward assumes multiplicative arity >= 2.
+            # Arity=1 can trigger an UnboundLocalError in upstream code.
+            if val == 1:
+                warnings.warn(
+                    f"{arity_label}=1 is unsupported by pykan multiplication nodes; "
+                    "promoting to 2."
+                )
+                return 2
+            return val
+
         if isinstance(entry, bool):
             raise ValueError(f"{label} must be an int or list of ints; got boolean {entry!r}.")
         if isinstance(entry, (int, float)) and not isinstance(entry, bool):
             if isinstance(entry, (float, complex)) and not float(entry).is_integer():
                 raise ValueError(f"{label} must be an int or list of ints; got {entry!r}.")
-            val = GraphKAN._validate_positive_int(int(entry), label)
+            val = _canonicalize_arity(int(entry), label)
             return [val] * mult_nodes
         if isinstance(entry, str):
             try:
@@ -301,7 +393,7 @@ class GraphKAN(SymbolicGraphKANMixin, MessagePassing, GraphMixin):
             raise ValueError(f"{label} must be an int or list (len {mult_nodes}); got {type(entry).__name__}.")
 
         layer_arities = [
-            GraphKAN._validate_positive_int(val, f"{label}[{idx}]")
+            _canonicalize_arity(val, f"{label}[{idx}]")
             for idx, val in enumerate(entry)
         ]
         if len(layer_arities) != mult_nodes:
@@ -312,6 +404,9 @@ class GraphKAN(SymbolicGraphKANMixin, MessagePassing, GraphMixin):
 
     @staticmethod
     def _normalize_mult_arity(mult_arity: Any, width: Sequence, label: str) -> int | list[list[int]]:
+        layer_counts = GraphKAN._layer_mult_counts(width)
+        has_mult_nodes = any(count > 0 for count in layer_counts)
+
         if mult_arity is None:
             raise ValueError(f"{label} is required; got None.")
         if isinstance(mult_arity, bool):
@@ -319,7 +414,13 @@ class GraphKAN(SymbolicGraphKANMixin, MessagePassing, GraphMixin):
         if isinstance(mult_arity, (int, float)) and not isinstance(mult_arity, bool):
             if isinstance(mult_arity, (float, complex)) and not float(mult_arity).is_integer():
                 raise ValueError(f"{label} must be an int or list-of-lists; got {mult_arity!r}.")
-            return GraphKAN._validate_positive_int(int(mult_arity), label)
+            arity = GraphKAN._validate_positive_int(int(mult_arity), label)
+            if has_mult_nodes and arity == 1:
+                warnings.warn(
+                    f"{label}=1 is unsupported by pykan multiplication nodes; promoting to 2."
+                )
+                arity = 2
+            return arity
         if isinstance(mult_arity, str):
             try:
                 parsed = json.loads(mult_arity)
@@ -331,7 +432,6 @@ class GraphKAN(SymbolicGraphKANMixin, MessagePassing, GraphMixin):
         if not (isinstance(mult_arity, Sequence) and not isinstance(mult_arity, (str, bytes))):
             raise ValueError(f"{label} must be an int or list-of-lists; got {type(mult_arity).__name__}.")
 
-        layer_counts = GraphKAN._layer_mult_counts(width)
         if len(mult_arity) != len(layer_counts):
             raise ValueError(
                 f"{label} length ({len(mult_arity)}) must match width length ({len(layer_counts)})."
