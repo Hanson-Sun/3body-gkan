@@ -29,9 +29,9 @@ def main(overwrite: bool = True, selected: list[str] | None = None) -> None:
 
     for _key, exp in tqdm(items, desc="Experiments"):
         name = exp["name"]
-        checkpoint_dir = Path(exp["checkpoint_dir"]) if "checkpoint_dir" in exp else Path("checkpoints") / name
+        checkpoint_dir = Path(exp["checkpoint_dir"]) / name if "checkpoint_dir" in exp else Path("checkpoints") / name
         data_dir       = Path(exp["data_dir"]) if "data_dir" in exp else Path("data") / name
-        output_dir     = Path(exp["output_dir"]) if "output_dir" in exp else Path("outputs") / name
+        output_dir     = Path(exp["output_dir"]) / name if "output_dir" in exp else Path("outputs") / name
 
         for d in (checkpoint_dir, data_dir, output_dir):
             d.mkdir(parents=True, exist_ok=True)

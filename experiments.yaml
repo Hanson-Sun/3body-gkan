@@ -84,8 +84,8 @@ testing_both:
 baseline:
   name: "baseline"
   data_params:
-    n_train: 200
-    n_val: 20
+    n_train: 1000
+    n_val: 100
     force_fn: "gravity"
     min_separation: 0.4
     max_retries: 50
@@ -108,17 +108,22 @@ baseline:
   visualization_params:
     save_video: True
     plot_splines: True
+
+# CONTROL
 regularization_control:
   name: "regularization_control"
+  data_dir: "/content/drive/MyDrive/3body-project/data"
+  checkpoint_dir: "/content/drive/MyDrive/3body-project/checkpoints"
+  output_dir: "/content/drive/MyDrive/3body-project/outputs"
   data_params:
-    n_train: 200
-    n_val: 20
+    n_train: 1000
+    n_val: 100
     force_fn: "gravity"
     min_separation: 0.4
     max_retries: 50
-    gnn_hp:
-      hidden: 128
-      msg_dim: 128
+  train_params:
+    num_workers: 2
+    train_baseline: False
     gkan_hp:
       msg_width: [10, 16, 16, 16]
       node_width: [21, 16, 16, 2]
@@ -140,11 +145,18 @@ regularization_control:
   visualization_params:
     save_video: True
     plot_splines: True
-regularization_l1-3:
-  name: "regularization_l1-3"
+
+# -----------------------
+# L1 Regularization Sweep
+# -----------------------
+regularization_l1_1e-3:
+  name: "regularization_l1_1e-3"
+  data_dir: "/content/drive/MyDrive/3body-project/data"
+  checkpoint_dir: "/content/drive/MyDrive/3body-project/checkpoints"
+  output_dir: "/content/drive/MyDrive/3body-project/outputs"
   data_params:
-    n_train: 200
-    n_val: 20
+    n_train: 1000
+    n_val: 100
     force_fn: "gravity"
     min_separation: 0.4
     max_retries: 50
@@ -154,7 +166,7 @@ regularization_l1-3:
     gkan_hp:
       msg_width: [10, 16, 16, 16]
       node_width: [21, 16, 16, 2]
-      lamb_l1: 3.0
+      lamb_l1: 1e-3
       lamb_entropy: 0.0
       lbfgs_max_iter: 30
       lbfgs_impl: pykan
@@ -172,11 +184,86 @@ regularization_l1-3:
   visualization_params:
     save_video: True
     plot_splines: True
-regularization_sparseinit:
-  name: "regularization_sparseinit"
+regularization_l1_1e-4:
+  name: "regularization_l1_1e-4"
+  data_dir: "/content/drive/MyDrive/3body-project/data"
+  checkpoint_dir: "/content/drive/MyDrive/3body-project/checkpoints"
+  output_dir: "/content/drive/MyDrive/3body-project/outputs"
   data_params:
-    n_train: 200
-    n_val: 20
+    n_train: 1000
+    n_val: 100
+    force_fn: "gravity"
+    min_separation: 0.4
+    max_retries: 50
+  train_params:
+    num_workers: 2
+    train_baseline: False
+    gkan_hp:
+      msg_width: [10, 16, 16, 16]
+      node_width: [21, 16, 16, 2]
+      lamb_l1: 1e-4
+      lamb_entropy: 0.0
+      lbfgs_max_iter: 30
+      lbfgs_impl: pykan
+      lbfgs_tolerance_ys: 1e-32
+      max_grid_updates: 0
+      sparse_init: False
+    training_hp:
+      epochs: 50
+      batch_size: 32
+      kan_batch_size: 32
+      lr: 5e-3
+      lamb: 0.00
+      augment: True
+      augmentation_scale: 3.0
+  visualization_params:
+    save_video: True
+    plot_splines: True
+regularization_l1_1e-5:
+  name: "regularization_l1_1e-5"
+  data_dir: "/content/drive/MyDrive/3body-project/data"
+  checkpoint_dir: "/content/drive/MyDrive/3body-project/checkpoints"
+  output_dir: "/content/drive/MyDrive/3body-project/outputs"
+  data_params:
+    n_train: 1000
+    n_val: 100
+    force_fn: "gravity"
+    min_separation: 0.4
+    max_retries: 50
+  train_params:
+    num_workers: 2
+    train_baseline: False
+    gkan_hp:
+      msg_width: [10, 16, 16, 16]
+      node_width: [21, 16, 16, 2]
+      lamb_l1: 1e-5
+      lamb_entropy: 0.0
+      lbfgs_max_iter: 30
+      lbfgs_impl: pykan
+      lbfgs_tolerance_ys: 1e-32
+      max_grid_updates: 0
+      sparse_init: False
+    training_hp:
+      epochs: 50
+      batch_size: 32
+      kan_batch_size: 32
+      lr: 5e-3
+      lamb: 0.00
+      augment: True
+      augmentation_scale: 3.0
+  visualization_params:
+    save_video: True
+    plot_splines: True
+
+# SPARSE INIT TEST
+regularization_sparse-init:
+  name: "regularization_sparse-init"
+  data_dir: "/content/drive/MyDrive/3body-project/data"
+  checkpoint_dir: "/content/drive/MyDrive/3body-project/checkpoints"
+  output_dir: "/content/drive/MyDrive/3body-project/outputs"
+  data_params:
+    n_train: 1000
+    n_val: 100
     force_fn: "gravity"
     min_separation: 0.4
     max_retries: 50
@@ -191,16 +278,127 @@ regularization_sparseinit:
       lbfgs_max_iter: 30
       lbfgs_impl: pykan
       lbfgs_tolerance_ys: 1e-32
-      adam_warmup_epochs: 20
-      grid_update_freq: 15
-      grid_update_warmup: 5
       max_grid_updates: 0
-      gradient_clip: 1.0
       sparse_init: True
     training_hp:
       epochs: 50
       batch_size: 32
       kan_batch_size: 32
+      lr: 5e-3
+      lamb: 0.00
+      augment: True
+      augmentation_scale: 3.0
+  visualization_params:
+    save_video: True
+    plot_splines: True
+
+# ----------------------
+# Entropy Regularization
+# ----------------------
+regularization_entropy_1e-3:
+  name: "regularization_entropy_1e-3"
+  data_dir: "/content/drive/MyDrive/3body-project/data"
+  checkpoint_dir: "/content/drive/MyDrive/3body-project/checkpoints"
+  output_dir: "/content/drive/MyDrive/3body-project/outputs"
+  data_params:
+    n_train: 1000
+    n_val: 100
+    force_fn: "gravity"
+    min_separation: 0.4
+    max_retries: 50
+  train_params:
+    num_workers: 2
+    train_baseline: False
+    gkan_hp:
+      msg_width: [10, 16, 16, 16]
+      node_width: [21, 16, 16, 2]
+      lamb_l1: 0
+      lamb_entropy: 1e-3
+      lbfgs_max_iter: 30
+      lbfgs_impl: pykan
+      lbfgs_tolerance_ys: 1e-32
+      max_grid_updates: 0
+      sparse_init: False
+    training_hp:
+      epochs: 50
+      batch_size: 32
+      kan_batch_size: 32
+      lr: 5e-3
+      lamb: 0.00
+      augment: True
+      augmentation_scale: 3.0
+  visualization_params:
+    save_video: True
+    plot_splines: True
+
+
+regularization_entropy_1e-4:
+  name: "regularization_entropy_1e-4"
+  data_dir: "/content/drive/MyDrive/3body-project/data"
+  checkpoint_dir: "/content/drive/MyDrive/3body-project/checkpoints"
+  output_dir: "/content/drive/MyDrive/3body-project/outputs"
+  data_params:
+    n_train: 1000
+    n_val: 100
+    force_fn: "gravity"
+    min_separation: 0.4
+    max_retries: 50
+  train_params:
+    num_workers: 2
+    train_baseline: False
+    gkan_hp:
+      msg_width: [10, 16, 16, 16]
+      node_width: [21, 16, 16, 2]
+      lamb_l1: 0
+      lamb_entropy: 1e-4
+      lbfgs_max_iter: 30
+      lbfgs_impl: pykan
+      lbfgs_tolerance_ys: 1e-32
+      max_grid_updates: 0
+      sparse_init: False
+    training_hp:
+      epochs: 50
+      batch_size: 32
+      kan_batch_size: 32
+      lr: 5e-3
+      lamb: 0.00
+      augment: True
+      augmentation_scale: 3.0
+  visualization_params:
+    save_video: True
+    plot_splines: True
+
+# -----------------------
+# Combined Entropy and L1
+# -----------------------
+regularization_combined_1e-4:
+  name: "regularization_combined_1e-4"
+  data_dir: "/content/drive/MyDrive/3body-project/data"
+  checkpoint_dir: "/content/drive/MyDrive/3body-project/checkpoints"
+  output_dir: "/content/drive/MyDrive/3body-project/outputs"
+  data_params:
+    n_train: 1000
+    n_val: 100
+    force_fn: "gravity"
+    min_separation: 0.4
+    max_retries: 50
+  train_params:
+    num_workers: 2
+    train_baseline: False
+    gkan_hp:
+      msg_width: [10, 16, 16, 16]
+      node_width: [21, 16, 16, 2]
+      lamb_l1: 1e-4
+      lamb_entropy: 1e-4
+      lbfgs_max_iter: 30
+      lbfgs_impl: pykan
+      lbfgs_tolerance_ys: 1e-32
+      max_grid_updates: 0
+      sparse_init: False
+    training_hp:
+      epochs: 50
+      batch_size: 64
+      kan_batch_size: 64
       lr: 5e-3
       lamb: 0.00
       augment: True
