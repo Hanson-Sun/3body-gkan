@@ -3,7 +3,7 @@ from typing import Optional
 import json
 import torch
 from torch_geometric.loader import DataLoader
-from torch.optim.lr_scheduler import OneCycleLR
+from torch.optim.lr_scheduler import OneCycleLR, ReduceLROnPlateau
 from pathlib import Path
 import matplotlib
 matplotlib.use('Agg')
@@ -56,6 +56,14 @@ class Trainer:
     def _on_epoch_start(self, epoch: int):
         """Hook called at the start of each epoch. Override for custom logic."""
         pass
+
+    def _on_epoch_end(self, epoch: int, train_loss: float, val_loss: float):
+        """Hook called at the end of each epoch after losses are computed."""
+        pass
+
+    def _should_step_scheduler(self) -> bool:
+        """Whether the epoch scheduler should step this epoch."""
+        return True
 
     def _set_step_metrics(self, **metrics):
         self._step_metrics = metrics
@@ -149,10 +157,19 @@ class Trainer:
             )
             val_loss   = self.validate()
 
-            if self.scheduler is not None and not isinstance(
-                self.scheduler, OneCycleLR
+            if (
+                self.scheduler is not None
+                and not isinstance(self.scheduler, OneCycleLR)
+                and self._should_step_scheduler()
             ):
-                self.scheduler.step()
+                if isinstance(self.scheduler, ReduceLROnPlateau):
+                    metric_loss = val_loss if self.val_loader is not None else train_loss
+                    self.scheduler.step(metric_loss)
+                else:
+                    self.scheduler.step()
+
+            # Allow subclasses to react to epoch-level metrics before checkpointing.
+            self._on_epoch_end(epoch, train_loss, val_loss)
 
             current_lr = self.optimizer.param_groups[0]["lr"]
             self.history["train"].append(train_loss)
