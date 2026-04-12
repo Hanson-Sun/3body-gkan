@@ -567,8 +567,8 @@ def visualize_symbolic_expressions(
     # --- NATIVE SYMPY EXTRACTION ---
     print("\nExtracting mathematical formulas via SymPy...")
     
-    msg_dim = kan_model.msg_width[0]
-    node_dim = kan_model.node_width[0]
+    msg_dim = int(kan_model.msg_width[0][0] if isinstance(kan_model.msg_width[0], (list, tuple)) else kan_model.msg_width[0])
+    node_dim = int(kan_model.node_width[0][0] if isinstance(kan_model.node_width[0], (list, tuple)) else kan_model.node_width[0])
     
     txt_path = output_dir / 'extracted_equations.txt'
     
