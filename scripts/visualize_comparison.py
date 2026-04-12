@@ -21,6 +21,64 @@ from nbody_gkan.models import OrdinaryGraphKAN, OGN
 from nbody_gkan.nbody import NBodySimulator
 from nbody_gkan.models.model_loader import ModelLoader
 
+import json
+import sympy as sp
+
+def _extract_equations_from_dict(data: dict, msg_in_dim: int, node_in_dim: int, save_path: Path = None):
+    def process_network(layers_dict, input_symbols):
+        current_inputs = input_symbols
+        layer_keys = sorted(layers_dict.keys(), key=int)
+
+        for layer_key in layer_keys:
+            layer = layers_dict[layer_key]
+            out_dim = 0
+            for edge in layer.keys():
+                _, j = map(int, edge.split('->'))
+                out_dim = max(out_dim, j + 1)
+
+            next_inputs = [0] * out_dim
+
+            for edge, details in layer.items():
+                if details.get("passes_threshold", False):
+                    i, j = map(int, edge.split('->'))
+                    expr_str = details["expression"]
+                    local_x = sp.Symbol(f"x_{i}")
+                    expr = sp.sympify(expr_str)
+                    expr = expr.subs(local_x, current_inputs[i])
+                    next_inputs[j] += expr
+
+            current_inputs = next_inputs
+        return current_inputs
+
+    output_lines = []
+
+    if "msg_layers" in data and data["msg_layers"]:
+        output_lines.append("=== MESSAGE NETWORK EQUATIONS ===")
+        msg_inputs = [sp.Symbol(f"msg_in_{i}") for i in range(msg_in_dim)]
+        msg_outputs = process_network(data["msg_layers"], msg_inputs)
+        
+        for i, out_expr in enumerate(msg_outputs):
+            if out_expr != 0:
+                eq = sp.simplify(out_expr)
+                output_lines.append(f"Message Node {i}:\n{eq}\n")
+
+    if "node_layers" in data and data["node_layers"]:
+        output_lines.append("\n=== NODE NETWORK EQUATIONS ===")
+        node_inputs = [sp.Symbol(f"node_in_{i}") for i in range(node_in_dim)]
+        node_outputs = process_network(data["node_layers"], node_inputs)
+        
+        for i, out_expr in enumerate(node_outputs):
+            if out_expr != 0:
+                eq = sp.simplify(out_expr)
+                output_lines.append(f"Update Node {i}:\n{eq}\n")
+
+    full_output = "\n".join(output_lines)
+    print(full_output)
+
+    if save_path:
+        with open(save_path, 'w') as f:
+            f.write(full_output)
+        print(f"  Saved equations to: {save_path}")
 
 def _extract_graphkan_subnet_info(model: 'OrdinaryGraphKAN', network: str) -> dict[str, Any]:
     """Extract GraphKAN subnet metadata with backward-compatible fallbacks."""
@@ -507,6 +565,21 @@ def visualize_symbolic_expressions(
         json.dump(serializable, f, indent=2)
     print(f"  Saved: {save_path}")
 
+    # --- NATIVE SYMPY EXTRACTION ---
+    print("\nExtracting mathematical formulas via SymPy...")
+    
+    msg_dim = kan_model.msg_width[0]
+    node_dim = kan_model.node_width[0]
+    
+    txt_path = output_dir / 'extracted_equations.txt'
+    
+    _extract_equations_from_dict(
+        data=serializable, 
+        msg_in_dim=msg_dim, 
+        node_in_dim=node_dim, 
+        save_path=txt_path
+    )
+
     return suggestions
 
 
@@ -679,7 +752,7 @@ def main(
         with torch.no_grad():
             mass_expanded = masses.unsqueeze(1)
             x_nodes  = torch.cat([pos0, vel0, mass_expanded], dim=1)
-            
+
         visualize_symbolic_expressions(
             kan_model,
             x_nodes=x_nodes,
