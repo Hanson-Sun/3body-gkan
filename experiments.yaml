@@ -141,15 +141,13 @@ regularization_control:
       node_width: [21, 16, 16, 2]
       lamb_l1: 0.0
       lamb_entropy: 0.0
-      lbfgs_max_iter: 30
-      lbfgs_impl: pykan
-      lbfgs_tolerance_ys: 1e-32
+      adam_warmup_epochs: 50
       max_grid_updates: 0
       sparse_init: False
     training_hp:
       epochs: 50
       batch_size: 256
-      kan_batch_size: 256
+      kan_adam_batch_size: 256
       lr: 5e-3
       lamb: 0.00
       augment: True
@@ -180,15 +178,13 @@ regularization_l1_1e-3:
       node_width: [21, 16, 16, 2]
       lamb_l1: 1e-3
       lamb_entropy: 0.0
-      lbfgs_max_iter: 30
-      lbfgs_impl: pykan
-      lbfgs_tolerance_ys: 1e-32
+      adam_warmup_epochs: 50
       max_grid_updates: 0
       sparse_init: False
     training_hp:
       epochs: 50
       batch_size: 256
-      kan_batch_size: 256
+      kan_adam_batch_size: 256
       lr: 5e-3
       lamb: 0.00
       augment: True
@@ -215,15 +211,13 @@ regularization_l1_1e-4:
       node_width: [21, 16, 16, 2]
       lamb_l1: 1e-4
       lamb_entropy: 0.0
-      lbfgs_max_iter: 30
-      lbfgs_impl: pykan
-      lbfgs_tolerance_ys: 1e-32
+      adam_warmup_epochs: 50
       max_grid_updates: 0
       sparse_init: False
     training_hp:
       epochs: 50
       batch_size: 256
-      kan_batch_size: 256
+      kan_adam_batch_size: 256
       lr: 5e-3
       lamb: 0.00
       augment: True
@@ -326,9 +320,7 @@ regularization_entropy_1e-3:
       node_width: [21, 16, 16, 2]
       lamb_l1: 0
       lamb_entropy: 1e-3
-      lbfgs_max_iter: 30
-      lbfgs_impl: pykan
-      lbfgs_tolerance_ys: 1e-32
+      adam_warmup_epochs: 50
       max_grid_updates: 0
       sparse_init: False
     training_hp:
@@ -363,15 +355,13 @@ regularization_entropy_1e-4:
       node_width: [21, 16, 16, 2]
       lamb_l1: 0
       lamb_entropy: 1e-4
-      lbfgs_max_iter: 30
-      lbfgs_impl: pykan
-      lbfgs_tolerance_ys: 1e-32
+      adam_warmup_epochs: 50
       max_grid_updates: 0
       sparse_init: False
     training_hp:
       epochs: 50
       batch_size: 256
-      kan_batch_size: 256
+      kan_adam_batch_size: 256
       lr: 5e-3
       lamb: 0.00
       augment: True
@@ -402,15 +392,13 @@ regularization_combined_1e-4:
       node_width: [21, 16, 16, 2]
       lamb_l1: 1e-4
       lamb_entropy: 1e-4
-      lbfgs_max_iter: 30
-      lbfgs_impl: pykan
-      lbfgs_tolerance_ys: 1e-32
+      adam_warmup_epochs: 50
       max_grid_updates: 0
       sparse_init: False
     training_hp:
       epochs: 50
       batch_size: 256
-      kan_batch_size: 256
+      kan_adam_batch_size: 256
       lr: 5e-3
       lamb: 0.00
       augment: True
