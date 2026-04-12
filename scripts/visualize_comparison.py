@@ -22,6 +22,9 @@ from nbody_gkan.nbody import NBodySimulator
 from nbody_gkan.models.model_loader import ModelLoader
 
 
+DEFAULT_WARMUP_GRAPHS = 1000
+
+
 def _extract_graphkan_subnet_info(model: 'OrdinaryGraphKAN', network: str) -> dict[str, Any]:
     """Extract GraphKAN subnet metadata with backward-compatible fallbacks."""
     if network not in {'msg', 'node'}:
@@ -65,6 +68,7 @@ def parse_args(args=None):
     parser.add_argument("--prune_kan",         action=argparse.BooleanOptionalAction, default=False)
     parser.add_argument("--prune_edge_threshold", type=float, default=3e-2)
     parser.add_argument("--prune_node_threshold", type=float, default=None)
+    parser.add_argument("--warmup_graphs", type=int, default=DEFAULT_WARMUP_GRAPHS)
     return parser.parse_args(args)
 
 
@@ -114,6 +118,84 @@ def _load_force_config(data) -> tuple[str, Any, dict]:
         raise ValueError(f"Unknown force function {force_name!r} in {data}; available: {valid}")
 
     return force_name, force_fn, force_kwargs
+
+
+def _sample_indices(total: int, max_items: int) -> np.ndarray:
+    if total <= 0:
+        raise ValueError("total must be > 0")
+    if max_items <= 0:
+        raise ValueError("max_items must be > 0")
+    if total <= max_items:
+        return np.arange(total, dtype=np.int64)
+    return np.linspace(0, total - 1, num=max_items, dtype=np.int64)
+
+
+def _flatten_frames(positions: np.ndarray, velocities: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
+    if positions.shape != velocities.shape:
+        raise ValueError(
+            f"positions and velocities must have matching shapes; got {positions.shape} and {velocities.shape}."
+        )
+
+    if positions.ndim == 4:
+        n_traj, n_steps, n_nodes, dim = positions.shape
+        return (
+            positions.reshape(n_traj * n_steps, n_nodes, dim),
+            velocities.reshape(n_traj * n_steps, n_nodes, dim),
+        )
+
+    if positions.ndim == 3:
+        return positions, velocities
+
+    raise ValueError(f"Unsupported positions shape {positions.shape}; expected 4D or 3D arrays.")
+
+
+def _tile_edge_index(edge_index: torch.Tensor, n_nodes: int, n_graphs: int) -> torch.Tensor:
+    edge_index = edge_index.to(dtype=torch.long)
+    if n_graphs == 1:
+        return edge_index
+
+    n_edges = edge_index.shape[1]
+    offsets = (torch.arange(n_graphs, dtype=torch.long) * n_nodes).repeat_interleave(n_edges)
+    return edge_index.repeat(1, n_graphs) + offsets.unsqueeze(0)
+
+
+def _build_representative_samples(
+    positions: np.ndarray,
+    velocities: np.ndarray,
+    masses: torch.Tensor,
+    edge_index: torch.Tensor,
+    max_graphs: int = DEFAULT_WARMUP_GRAPHS,
+) -> dict[str, Any]:
+    flat_pos, flat_vel = _flatten_frames(positions, velocities)
+    total_graphs = int(flat_pos.shape[0])
+    graph_idx = _sample_indices(total_graphs, max_graphs)
+
+    pos_sel = torch.from_numpy(flat_pos[graph_idx]).float()
+    vel_sel = torch.from_numpy(flat_vel[graph_idx]).float()
+
+    n_graphs = int(pos_sel.shape[0])
+    n_nodes = int(pos_sel.shape[1])
+    if masses.numel() != n_nodes:
+        raise ValueError(
+            f"Mass vector length ({masses.numel()}) must match node count ({n_nodes})."
+        )
+
+    mass_expanded = masses.float().view(1, n_nodes, 1).expand(n_graphs, -1, -1)
+    x_graphs = torch.cat([pos_sel, vel_sel, mass_expanded], dim=2)
+    x_nodes = x_graphs.reshape(n_graphs * n_nodes, x_graphs.shape[-1])
+
+    batched_edge_index = _tile_edge_index(edge_index=edge_index, n_nodes=n_nodes, n_graphs=n_graphs)
+    src, dst = batched_edge_index
+    msg_inputs = torch.cat([x_nodes[src], x_nodes[dst]], dim=1)
+
+    return {
+        "x_nodes": x_nodes,
+        "edge_index": batched_edge_index,
+        "msg_inputs": msg_inputs,
+        "n_graphs": n_graphs,
+        "n_node_samples": int(x_nodes.shape[0]),
+        "n_message_samples": int(msg_inputs.shape[0]),
+    }
 
 
 def rollout(model, pos0, vel0, masses, dt, n_steps, edge_index):
@@ -230,55 +312,37 @@ def animate_rollout(positions_dict, dt, video_name='rollout_comparison.mp4'):
     plt.close()
 
 
-def visualize_kan_splines(model, save_dir=None):
+def visualize_kan_splines(
+    model,
+    save_dir=None,
+    msg_sample: Optional[torch.Tensor] = None,
+    node_sample: Optional[torch.Tensor] = None,
+):
     """Use pykan's native plot() to visualize learned activations."""
-    import tempfile
-    from kan import KAN
-
     save_dir = Path(save_dir).resolve() if save_dir else Path("visualizations/splines").resolve()
     save_dir.mkdir(parents=True, exist_ok=True)
 
-    # Build small representative samples to populate activations
-    n_f = model.n_f
-    msg_dim = model.msg_dim
-    msg_sample = torch.randn(64, 2 * n_f)
-    node_sample = torch.randn(64, n_f + msg_dim)
+    if msg_sample is None or node_sample is None:
+        raise ValueError(
+            "visualize_kan_splines requires representative msg_sample and node_sample tensors."
+        )
 
-    def _plot_subnet(subnet, width, sample, tag):
-        safe_mult_arity = subnet.mult_arity
+    msg_sample = msg_sample[:4000]
+    node_sample = node_sample[:4000]
+
+    def _plot_subnet(subnet, sample, tag):
         tag_dir = save_dir / tag
         tag_dir.mkdir(parents=True, exist_ok=True)
 
-        with tempfile.TemporaryDirectory() as tmpdir:
-            # Clone weights into a fresh KAN so plot() runs without side-effects
-            clone = KAN(width=width, grid=subnet.grid, k=subnet.k,
-                       mult_arity=safe_mult_arity,
-                       seed=0, auto_save=False, ckpt_path=tmpdir,
-                       symbolic_enabled=False, save_act=True)
-
-            # Copy parameters
-            for src_layer, dst_layer in zip(subnet.act_fun, clone.act_fun):
-                dst_layer.coef.data.copy_(src_layer.coef.data)
-                dst_layer.grid.data.copy_(src_layer.grid.data)
-                dst_layer.scale_sp.data.copy_(src_layer.scale_sp.data)
-                if hasattr(src_layer, 'scale_base') and hasattr(dst_layer, 'scale_base'):
-                    dst_layer.scale_base.data.copy_(src_layer.scale_base.data)
-                if hasattr(src_layer, 'mask') and hasattr(dst_layer, 'mask'):
-                    dst_layer.mask.data.copy_(src_layer.mask.data)
-
-            for l in range(len(clone.node_scale)):
-                clone.node_scale[l].data.copy_(subnet.node_scale[l].data)
-                clone.node_bias[l].data.copy_(subnet.node_bias[l].data)
-                clone.subnode_scale[l].data.copy_(subnet.subnode_scale[l].data)
-                clone.subnode_bias[l].data.copy_(subnet.subnode_bias[l].data)
-
-            # Populate activations, then plot
-            clone.eval()
+        was_training = subnet.training
+        subnet.eval()
+        try:
+            # Populate activations in the actual subnet used by GraphKAN.
             with torch.no_grad():
-                clone(sample)
+                subnet(sample)
 
             out_file = tag_dir / "kan_plot"
-            clone.plot(
+            subnet.plot(
                 folder=str(tag_dir),
                 metric="forward_n",  # avoid backward attribution path on mult_arity-heavy nets
                 title=f"Graph-KAN — {tag.title()} Network",
@@ -293,9 +357,11 @@ def visualize_kan_splines(model, save_dir=None):
                 fig_path.rename(out_file.with_suffix(".png"))
             elif alt_figs:
                 alt_figs[0].rename(out_file.with_suffix(".png"))
+        finally:
+            subnet.train(was_training)
 
-    _plot_subnet(model.msg_kan, model.msg_width, msg_sample, "message")
-    _plot_subnet(model.node_kan, model.node_width, node_sample, "node")
+    _plot_subnet(model.msg_kan, msg_sample, "message")
+    _plot_subnet(model.node_kan, node_sample, "node")
 
 
 def visualize_kan_network(model: 'OrdinaryGraphKAN',
@@ -307,7 +373,7 @@ def visualize_kan_network(model: 'OrdinaryGraphKAN',
 
     Args:
         model:       Loaded OrdinaryGraphKAN instance
-        data_sample: A representative input tensor — keep small (~50 samples).
+        data_sample: A representative input tensor.
                      For msg network:  shape (N, 2*n_f)
                      For node network: shape (N, n_f + msg_dim)
         network:     'msg' or 'node'
@@ -329,8 +395,11 @@ def visualize_kan_network(model: 'OrdinaryGraphKAN',
     ndim      = model.ndim
     msg_dim   = model.msg_dim
 
-    # Clamp sample size — pykan stores all activations, keep it small
-    data_sample = data_sample[:50]
+    # Clamp sample size; use evenly spaced rows to preserve representativeness.
+    max_plot_samples = 4000
+    if data_sample.shape[0] > max_plot_samples:
+        idx = torch.linspace(0, data_sample.shape[0] - 1, steps=max_plot_samples).long()
+        data_sample = data_sample[idx]
 
     print(f"\nPreparing trained '{network}' KAN for plotting (no cloning):")
     print(f"  width={width}, mult_nodes={mult_nodes}, mult_arity={mult_arity}, grid={grid_size}, k={k}, n_samples={len(data_sample)}")
@@ -424,12 +493,13 @@ def visualize_kan_network(model: 'OrdinaryGraphKAN',
     torch.cuda.empty_cache()
     
 def visualize_symbolic_expressions(
-        kan_model,
-        x_nodes: torch.Tensor,
-        output_dir: str | Path,
-        lib: list[str] | None = None,
-        threshold: float = 0.85,
-        max_batches: int = 10,
+    kan_model,
+    x_nodes: torch.Tensor,
+    output_dir: str | Path,
+    lib: list[str] | None = None,
+    threshold: float = 0.85,
+    max_batches: int = 10,
+    edge_index: Optional[torch.Tensor] = None,
 ) -> dict:
     """
     Run symbolic regression on a trained GraphKAN model, print results,
@@ -449,6 +519,9 @@ def visualize_symbolic_expressions(
         Minimum R² to report a match
     max_batches : int
         Number of batches to run forward pass over
+    edge_index : torch.Tensor, optional
+        Graph connectivity to pair with ``x_nodes``. Defaults to
+        ``kan_model.edge_index``.
 
     Returns
     -------
@@ -464,7 +537,7 @@ def visualize_symbolic_expressions(
         lib = ['x', 'x^2', 'x^3', '1/x', '1/x^2',
                'sqrt(x)', 'log(x)', 'abs(x)', 'sin(x)', 'cos(x)', 'exp(x)']
 
-    sym_graph  = Data(x=x_nodes, edge_index=kan_model.edge_index)
+    sym_graph  = Data(x=x_nodes, edge_index=edge_index if edge_index is not None else kan_model.edge_index)
     sym_loader = PyGLoader([sym_graph] * max_batches, batch_size=1)
 
     suggestions = kan_model.suggest_symbolic(
@@ -531,6 +604,7 @@ def main(
         args.prune_node_threshold = yaml_params.get(
             "prune_node_threshold", args.prune_node_threshold
         )
+        args.warmup_graphs = yaml_params.get("warmup_graphs", args.warmup_graphs)
 
     Path(args.output_dir).mkdir(parents=True, exist_ok=True)
 
@@ -549,19 +623,6 @@ def main(
         print(f"Baseline checkpoint not found at {gnn_ckpt_path}; skipping baseline visualization.")
     print(f"Graph-KAN msg_width={getattr(kan_model, 'msg_width', 'N/A')}, node_width={getattr(kan_model, 'node_width', 'N/A')}")
     print(f"Graph-KAN msg_mult_nodes={getattr(kan_model, 'msg_mult_nodes', 0)}, node_mult_nodes={getattr(kan_model, 'node_mult_nodes', 0)}")
-
-    if args.prune_kan:
-        print("Applying Graph-KAN pruning...")
-        prune_summary = kan_model.prune_subnets(
-            edge_threshold=_threshold_or_none(args.prune_edge_threshold),
-            node_threshold=_threshold_or_none(args.prune_node_threshold),
-        )
-        print(
-            "Graph-KAN pruned widths: "
-            f"msg={prune_summary['msg_width']}, node={prune_summary['node_width']}"
-        )
-
-    print("Models loaded successfully")
 
     # Load initial conditions
     print("\nLoading initial conditions...")
@@ -590,6 +651,37 @@ def main(
     edge_index = kan_model.edge_index
     force_name, force_fn, force_kwargs = _load_force_config(data)
     print(f"Using rollout force function from data: {force_name} with kwargs={force_kwargs}")
+
+    rep_samples = _build_representative_samples(
+        positions=positions,
+        velocities=velocities,
+        masses=masses,
+        edge_index=edge_index,
+        max_graphs=max(1, int(args.warmup_graphs)),
+    )
+    print(
+        "Warmup samples: "
+        f"graphs={rep_samples['n_graphs']}, "
+        f"nodes={rep_samples['n_node_samples']}, "
+        f"messages={rep_samples['n_message_samples']}"
+    )
+
+    # Single warmup forward: seeds pykan caches reused across prune/plots/symbolic steps.
+    with torch.no_grad():
+        _ = kan_model(rep_samples['x_nodes'], rep_samples['edge_index'])
+
+    if args.prune_kan:
+        print("Applying Graph-KAN pruning...")
+        prune_summary = kan_model.prune_subnets(
+            edge_threshold=_threshold_or_none(args.prune_edge_threshold),
+            node_threshold=_threshold_or_none(args.prune_node_threshold),
+        )
+        print(
+            "Graph-KAN pruned widths: "
+            f"msg={prune_summary['msg_width']}, node={prune_summary['node_width']}"
+        )
+
+    print("Models loaded successfully")
 
     # Ground truth rollout
     print("Generating ground truth...")
@@ -630,19 +722,17 @@ def main(
         print("\n" + "=" * 60)
         print("Graph-KAN Spline Analysis")
         print("=" * 60)
-        visualize_kan_splines(kan_model, save_dir=f"{args.output_dir}/splines")
+        msg_sample_batch = getattr(kan_model.msg_kan, 'cache_data', None)
+        node_sample_batch = getattr(kan_model.node_kan, 'cache_data', None)
+        if msg_sample_batch is None or node_sample_batch is None:
+            raise RuntimeError("Expected cached subnet inputs after warmup forward.")
 
-        # Build representative inputs for activation population
-        with torch.no_grad():
-            mass_expanded = masses.unsqueeze(1)
-            x_nodes  = torch.cat([pos0, vel0, mass_expanded], dim=1)
-            src, dst = kan_model.edge_index[0], kan_model.edge_index[1]
-            msg_sample = torch.cat([x_nodes[src], x_nodes[dst]], dim=1)
-
-            msg_sample_batch = (msg_sample.repeat(50, 1)
-                                + torch.randn(msg_sample.shape[0] * 50,
-                                                msg_sample.shape[1]) * 0.5)
-            node_sample_batch = torch.randn(200, kan_model.n_f + kan_model.msg_dim) * 0.5
+        visualize_kan_splines(
+            kan_model,
+            save_dir=f"{args.output_dir}/splines",
+            msg_sample=msg_sample_batch,
+            node_sample=node_sample_batch,
+        )
 
         print("\n" + "=" * 60)
         print("Graph-KAN Native Network Visualization")
@@ -660,9 +750,11 @@ def main(
         print("=" * 60)
         visualize_symbolic_expressions(
             kan_model,
-            x_nodes=x_nodes,
+            x_nodes=rep_samples['x_nodes'],
             output_dir=args.output_dir,
             threshold=0.85,
+            max_batches=1,
+            edge_index=rep_samples['edge_index'],
         )
 
     print("\n" + "=" * 60)

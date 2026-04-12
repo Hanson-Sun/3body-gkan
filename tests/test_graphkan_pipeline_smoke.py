@@ -172,18 +172,29 @@ def test_graphkan_train_and_visualize_smoke(tmp_path, capsys):
     out_dir.mkdir(parents=True, exist_ok=True)
     splines_dir = out_dir / "splines"
     _live_print(capsys, f"[smoke] Visualization output dir: {out_dir}")
-    visualize_comparison.visualize_kan_splines(model, save_dir=splines_dir)
+    from torch_scatter import scatter_add
+    src, dst = model.edge_index
+    msg_sample = torch.cat([x_nodes[src], x_nodes[dst]], dim=1)
+    with torch.no_grad():
+        msg_out = model.msg_kan(msg_sample)
+        aggr_msg = scatter_add(msg_out, src, dim=0, dim_size=x_nodes.size(0))
+        node_sample = torch.cat([x_nodes, aggr_msg], dim=1)
+
+    msg_sample_batch = msg_sample.repeat(2, 1)
+    node_sample_batch = node_sample.repeat(2, 1)
+
+    visualize_comparison.visualize_kan_splines(
+        model,
+        save_dir=splines_dir,
+        msg_sample=msg_sample_batch,
+        node_sample=node_sample_batch,
+    )
     spline_pngs = list(splines_dir.glob("*.png"))
     assert spline_pngs, "Expected at least one spline visualization image"
     preview_names = ", ".join(sorted(p.name for p in spline_pngs)[:3])
     if len(spline_pngs) > 3:
         preview_names += ", ..."
     _live_print(capsys, f"[smoke] Spline images: {len(spline_pngs)} ({preview_names})")
-
-    src, dst = model.edge_index
-    msg_sample = torch.cat([x_nodes[src], x_nodes[dst]], dim=1)
-    msg_sample_batch = msg_sample.repeat(2, 1)
-    node_sample_batch = torch.randn(16, model.n_f + model.msg_dim)
 
     msg_plot = out_dir / "kan_msg_network.png"
     node_plot = out_dir / "kan_node_network.png"

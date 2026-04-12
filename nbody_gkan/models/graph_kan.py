@@ -270,6 +270,31 @@ class GraphKAN(SymbolicGraphKANMixin, MessagePassing, GraphMixin):
         result = method(threshold=float(threshold), log_history=log_history)
         return subnet if result is None else result
 
+    def _prime_pruning_cache(
+        self,
+        calibration_x: torch.Tensor,
+        edge_index: Optional[torch.Tensor] = None,
+    ) -> None:
+        if edge_index is None:
+            edge_index = getattr(self, "edge_index", None)
+        if edge_index is None:
+            raise ValueError(
+                "edge_index is required to prime GraphKAN pruning cache. "
+                "Pass edge_index explicitly or use OrdinaryGraphKAN with stored edge_index."
+            )
+
+        device = next(self.parameters()).device
+        x = calibration_x.to(device)
+        edges = edge_index.to(device=device, dtype=torch.long)
+
+        was_training = self.training
+        self.eval()
+        try:
+            with torch.no_grad():
+                _ = self(x, edges)
+        finally:
+            self.train(was_training)
+
     def _refresh_subnet_metadata(self):
         self.msg_layers = self.msg_kan.act_fun
         self.node_layers = self.node_kan.act_fun
@@ -285,6 +310,8 @@ class GraphKAN(SymbolicGraphKANMixin, MessagePassing, GraphMixin):
         edge_threshold: Optional[float] = 3e-2,
         node_threshold: Optional[float] = None,
         log_history: bool = True,
+        calibration_x: Optional[torch.Tensor] = None,
+        edge_index: Optional[torch.Tensor] = None,
     ) -> dict[str, Any]:
         """
         Prune GraphKAN message and node subnets using pykan pruning APIs.
@@ -297,12 +324,27 @@ class GraphKAN(SymbolicGraphKANMixin, MessagePassing, GraphMixin):
             Threshold for ``prune_node`` on both subnets. Set None to skip.
         log_history : bool
             Forwarded to pykan pruning methods.
+        calibration_x : torch.Tensor or None
+            Optional representative node features used to prime pykan cache data
+            before pruning. Shape: ``(n_nodes, n_f)``.
+        edge_index : torch.Tensor or None
+            Optional edge index used when ``calibration_x`` is provided.
 
         Returns
         -------
         dict
             Summary of updated subnet widths.
         """
+        if edge_threshold is not None or node_threshold is not None:
+            if calibration_x is not None:
+                self._prime_pruning_cache(calibration_x=calibration_x, edge_index=edge_index)
+            if getattr(self.msg_kan, "cache_data", None) is None or getattr(self.node_kan, "cache_data", None) is None:
+                raise RuntimeError("prune_subnets requires calibration_x or a prior forward pass.")
+
+        if edge_threshold is not None:
+            self.msg_kan.attribute(plot=False)
+            self.node_kan.attribute(plot=False)
+
         self.msg_kan = self._call_prune_method(
             self.msg_kan,
             "prune_edge",

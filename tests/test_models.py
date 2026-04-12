@@ -164,6 +164,55 @@ def test_graph_kan_width_validation_errors():
         GraphKAN(n_f=3, msg_width=[6, 4], node_width=[7, 3])
 
 
+def test_graph_kan_prune_requires_cached_data():
+    """Pruning should fail with a clear message when pykan has no cached inputs."""
+    n_nodes = 4
+    n_features = 5
+    msg_dim = 8
+    ndim = 2
+    edge_index = get_edge_index(n_nodes)
+
+    model = GraphKAN(
+        n_f=n_features,
+        msg_width=[2 * n_features, 12, msg_dim],
+        node_width=[n_features + msg_dim, 10, ndim],
+        grid_size=3,
+        spline_order=2,
+    )
+
+    with pytest.raises(RuntimeError, match="calibration_x or a prior forward pass"):
+        model.prune_subnets(edge_threshold=1e-2)
+
+
+def test_graph_kan_prune_with_calibration_x():
+    """Pruning should succeed when representative inputs are provided."""
+    n_nodes = 4
+    n_features = 5
+    msg_dim = 8
+    ndim = 2
+    edge_index = get_edge_index(n_nodes)
+
+    model = GraphKAN(
+        n_f=n_features,
+        msg_width=[2 * n_features, 12, msg_dim],
+        node_width=[n_features + msg_dim, 10, ndim],
+        grid_size=3,
+        spline_order=2,
+    )
+
+    x = torch.randn(n_nodes, n_features)
+    summary = model.prune_subnets(
+        edge_threshold=1e-2,
+        node_threshold=None,
+        calibration_x=x,
+        edge_index=edge_index,
+    )
+
+    assert set(summary.keys()) == {"msg_width", "node_width"}
+    assert model.msg_kan.cache_data is not None
+    assert model.node_kan.cache_data is not None
+
+
 def test_baseline_gnn_forward():
     """Test baseline GNN forward pass."""
     print("\n" + "=" * 60)

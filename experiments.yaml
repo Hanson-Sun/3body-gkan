@@ -188,7 +188,7 @@ minimal_mult_merged_hybrid:
   train_params:
     train_baseline: True
     gnn_hp:
-      hidden: 50
+      hidden: 35
       msg_dim: 2
     gkan_hp:
       msg_width: [10, [3, 2], [6, 2], [3, 2], [4, 2], 2]
