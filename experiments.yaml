@@ -155,7 +155,7 @@ regularization_control:
       augmentation_scale: 3.0
   visualization_params:
     save_video: True
-    plot_splines: True
+    plot_splines: False
 
 # -----------------------
 # L1 Regularization Sweep
@@ -193,7 +193,7 @@ regularization_l1_1e-3:
       augmentation_scale: 3.0
   visualization_params:
     save_video: True
-    plot_splines: True
+    plot_splines: False
 regularization_l1_1e-4:
   name: "regularization_l1_1e-4"
   data_dir: "/content/drive/MyDrive/3body-project/data"
@@ -227,7 +227,7 @@ regularization_l1_1e-4:
       augmentation_scale: 3.0
   visualization_params:
     save_video: True
-    plot_splines: True
+    plot_splines: False
 regularization_l1_1e-5:
   name: "regularization_l1_1e-5"
   data_dir: "/content/drive/MyDrive/3body-project/data"
@@ -266,7 +266,7 @@ regularization_l1_1e-5:
       augmentation_scale: 3.0
   visualization_params:
     save_video: True
-    plot_splines: True
+    plot_splines: False
 
 # SPARSE INIT TEST
 regularization_sparse-init:
@@ -307,7 +307,7 @@ regularization_sparse-init:
       augmentation_scale: 3.0
   visualization_params:
     save_video: True
-    plot_splines: True
+    plot_splines: False
 
 # ----------------------
 # Entropy Regularization
@@ -351,7 +351,7 @@ regularization_entropy_1e-3:
       augmentation_scale: 3.0
   visualization_params:
     save_video: True
-    plot_splines: True
+    plot_splines: False
 
 
 regularization_entropy_1e-4:
@@ -393,7 +393,7 @@ regularization_entropy_1e-4:
       augmentation_scale: 3.0
   visualization_params:
     save_video: True
-    plot_splines: True
+    plot_splines: False
 
 # -----------------------
 # Combined Entropy and L1
@@ -437,4 +437,46 @@ regularization_combined_1e-4:
       augmentation_scale: 3.0
   visualization_params:
     save_video: True
-    plot_splines: True
+    plot_splines: False
+
+# also with overall L1
+regularization_combined_1e-3:
+  name: "regularization_combined_1e-3"
+  data_dir: "/content/drive/MyDrive/3body-project/data"
+  checkpoint_dir: "/content/drive/MyDrive/3body-project/checkpoints"
+  output_dir: "/content/drive/MyDrive/3body-project/outputs"
+  data_params:
+    n_train: 200
+    n_val: 20
+    force_fn: "gravity"
+    min_separation: 0.4
+    max_retries: 50
+  train_params:
+    num_workers: 0
+    train_baseline: False
+    gkan_hp:
+      msg_width: [10, 16, 16, 16]
+      node_width: [21, 16, 16, 2]
+      lamb_l1: 1e-3
+      lamb_entropy: 1e-3
+      lbfgs_max_iter: 30
+      lbfgs_impl: torch
+      sparse_init: False
+      optimizer_mode: alternating
+      adam_warmup_epochs: 45
+      max_grid_updates: 0
+      gradient_clip: 5.0
+      max_grid_updates: 0
+      sparse_init: False
+    training_hp:
+      epochs: 50
+      batch_size: 256
+      kan_adam_batch_size: 256
+      kan_lbfgs_batch_size: 131072
+      lr: 1e-3
+      lamb: 1e-3
+      augment: True
+      augmentation_scale: 3.0
+  visualization_params:
+    save_video: True
+    plot_splines: False
