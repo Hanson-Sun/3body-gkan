@@ -10,7 +10,7 @@ testing_gnn:
     min_separation: 0.4
     max_retries: 50
   train_params:
-    num_workers: 2
+    num_workers: 0
     train_gkan: False
     gnn_hp:
       hidden: 300
@@ -40,7 +40,7 @@ testing_gkan:
     min_separation: 0.4
     max_retries: 50
   train_params:
-    num_workers: 2
+    num_workers: 0
     train_baseline: False
     gnn_hp:
       hidden: 300
@@ -70,7 +70,7 @@ testing_both:
     min_separation: 0.4
     max_retries: 50
   train_params:
-    num_workers: 2
+    num_workers: 0
     gnn_hp:
       hidden: 300
       msg_dim: 100
@@ -102,7 +102,7 @@ baseline:
     min_separation: 0.4
     max_retries: 50
   train_params:
-    num_workers: 2
+    num_workers: 0
     train_gkan: False
     gnn_hp:
       hidden: 300
@@ -134,7 +134,7 @@ regularization_control:
     min_separation: 0.4
     max_retries: 50
   train_params:
-    num_workers: 2
+    num_workers: 0
     train_baseline: False
     gkan_hp:
       msg_width: [10, 16, 16, 16]
@@ -173,7 +173,7 @@ regularization_l1_1e-3:
     min_separation: 0.4
     max_retries: 50
   train_params:
-    num_workers: 2
+    num_workers: 0
     train_baseline: False
     gkan_hp:
       msg_width: [10, 16, 16, 16]
@@ -208,7 +208,7 @@ regularization_l1_1e-4:
     min_separation: 0.4
     max_retries: 50
   train_params:
-    num_workers: 2
+    num_workers: 0
     train_baseline: False
     gkan_hp:
       msg_width: [10, 16, 16, 16]
@@ -243,7 +243,7 @@ regularization_l1_1e-5:
     min_separation: 0.4
     max_retries: 50
   train_params:
-    num_workers: 2
+    num_workers: 0
     train_baseline: False
     gkan_hp:
       msg_width: [10, 16, 16, 16]
@@ -280,7 +280,7 @@ regularization_sparse-init:
     min_separation: 0.4
     max_retries: 50
   train_params:
-    num_workers: 2
+    num_workers: 0
     train_baseline: False
     gkan_hp:
       msg_width: [10, 16, 16, 16]
@@ -319,7 +319,7 @@ regularization_entropy_1e-3:
     min_separation: 0.4
     max_retries: 50
   train_params:
-    num_workers: 2
+    num_workers: 0
     train_baseline: False
     gkan_hp:
       msg_width: [10, 16, 16, 16]
@@ -356,7 +356,7 @@ regularization_entropy_1e-4:
     min_separation: 0.4
     max_retries: 50
   train_params:
-    num_workers: 2
+    num_workers: 0
     train_baseline: False
     gkan_hp:
       msg_width: [10, 16, 16, 16]
@@ -395,7 +395,7 @@ regularization_combined_1e-4:
     min_separation: 0.4
     max_retries: 50
   train_params:
-    num_workers: 2
+    num_workers: 0
     train_baseline: False
     gkan_hp:
       msg_width: [10, 16, 16, 16]

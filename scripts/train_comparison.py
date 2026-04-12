@@ -391,15 +391,16 @@ def main(yaml_params: Optional[dict] = None, checkpoint_dir: Optional[str] = Non
     train_dataset = NBodyDataset(args.train_data)
     val_dataset = NBodyDataset(args.val_data)
 
-    train_loader = DataLoader(train_dataset, batch_size=args.batch_size, shuffle=True, num_workers=args.num_workers, pin_memory=True, persistent_workers=True)
-    val_loader = DataLoader(val_dataset, batch_size=args.batch_size, shuffle=True, num_workers=args.num_workers, pin_memory=True, persistent_workers=True)
+    persist_workers = args.num_workers > 0
+    train_loader = DataLoader(train_dataset, batch_size=args.batch_size, shuffle=True, num_workers=args.num_workers, pin_memory=True, persistent_workers=persist_workers)
+    val_loader = DataLoader(val_dataset, batch_size=args.batch_size, shuffle=True, num_workers=args.num_workers, pin_memory=True, persistent_workers=persist_workers)
 
-    kan_adam_train_loader = DataLoader(train_dataset, batch_size=args.kan_adam_batch_size, shuffle=True, num_workers=args.num_workers, pin_memory=True, persistent_workers=True)
+    kan_adam_train_loader = DataLoader(train_dataset, batch_size=args.kan_adam_batch_size, shuffle=True, num_workers=args.num_workers, pin_memory=True, persistent_workers=persist_workers)
     if args.kan_lbfgs_batch_size == args.kan_adam_batch_size:
         kan_lbfgs_train_loader = kan_adam_train_loader
     else:
-        kan_lbfgs_train_loader = DataLoader(train_dataset, batch_size=args.kan_lbfgs_batch_size, shuffle=True, num_workers=args.num_workers, pin_memory=True, persistent_workers=True)
-    kan_val_loader = DataLoader(val_dataset, batch_size=args.kan_lbfgs_batch_size, shuffle=True, num_workers=args.num_workers, pin_memory=True, persistent_workers=True)
+        kan_lbfgs_train_loader = DataLoader(train_dataset, batch_size=args.kan_lbfgs_batch_size, shuffle=True, num_workers=args.num_workers, pin_memory=True, persistent_workers=persist_workers)
+    kan_val_loader = DataLoader(val_dataset, batch_size=args.kan_lbfgs_batch_size, shuffle=True, num_workers=args.num_workers, pin_memory=True, persistent_workers=persist_workers)
 
     print(
         "Loader steps/epoch: "
