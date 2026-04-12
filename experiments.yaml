@@ -188,32 +188,33 @@ minimal_mult_merged_hybrid:
   train_params:
     train_baseline: True
     gnn_hp:
-      hidden: 300
-      msg_dim: 100
+      hidden: 50
+      msg_dim: 2
     gkan_hp:
-      msg_width: [10, [3, 1], [5, 1], [3, 1], [4, 1], 2]
-      msg_mult_arity: [[], [2], [2], [2], [2], []]
+      msg_width: [10, [3, 2], [6, 2], [3, 2], [4, 2], 2]
+      msg_mult_arity: [[], [2, 2], [2, 2], [2, 2], [2, 2], []]
       node_width: [7, 2]
       lbfgs_max_iter: 30
       lbfgs_impl: torch
       sparse_init: False
-      optimizer_mode: alternating
-      adam_warmup_epochs: 45
+      adam_warmup_epochs: 200
       max_grid_updates: 0
       gradient_clip: 5.0
     training_hp:
-      epochs: 200
+      epochs: 1
       batch_size: 64
       kan_adam_batch_size: 64
       kan_lbfgs_batch_size: 131072
       lr: 1e-3
       kan_square_loss: False
+      kan_lamb_schedule: [1e-4, 1e-3, 5e-3, 1e-2]
       augment: True
       augmentation_scale: 3.0
-      lamb: 0.05
+      lamb: 0.01
   visualization_params:
     save_video: True
     plot_splines: True
+    prune_kan: True
 
 minimal_merged_hybrid:
   name: "minimal_merged_hybrid"

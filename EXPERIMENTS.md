@@ -27,6 +27,7 @@ Use these keys either via CLI flags in `scripts/train_comparison.py` or via `exp
 - `kan_grid_update_freq`, `kan_grid_update_warmup`, `kan_max_grid_updates`: Grid-update scheduling (frequency, start offset, max count).
 - `kan_gradient_clip`: Clip value during Adam warmup (`<=0` disables).
 - `kan_square_loss`: Loss for KAN training (`false`→L1, `true`→MSE).
+- `kan_lamb_schedule`: Optional staged values for `lamb` (overall regularization weight), e.g. `[1e-4, 1e-3, 5e-3, 1e-2]`. Applied as a uniform epoch ramp.
 
 ## Training loop (shared)
 - `epochs`: Total training epochs.

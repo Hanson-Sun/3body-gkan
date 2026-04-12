@@ -61,25 +61,6 @@ def parse_args(args=None):
     parser.add_argument("--kan_lamb_l1", type=float, default=1.0)
     parser.add_argument("--kan_lamb_entropy", type=float, default=2.0)
     parser.add_argument(
-        "--kan_optimizer_mode",
-        type=str,
-        default="two_phase",
-        choices=["two_phase", "alternating"],
-        help="KAN optimizer schedule: Adam->LBFGS warmup ('two_phase') or alternating Adam/LBFGS.",
-    )
-    parser.add_argument(
-        "--kan_alternating_adam_epochs",
-        type=int,
-        default=10,
-        help="Adam exploration epochs per cycle in alternating mode.",
-    )
-    parser.add_argument(
-        "--kan_lbfgs_rise_tol",
-        type=float,
-        default=0.0,
-        help="Switch LBFGS->Adam when current LBFGS epoch loss rises above previous by this tolerance.",
-    )
-    parser.add_argument(
         "--kan_sparse_init",
         type=lambda x: str(x).strip().lower() in {"1", "true", "yes", "y", "on"},
         default=True,
@@ -92,6 +73,16 @@ def parse_args(args=None):
     parser.add_argument("--kan_max_grid_updates", type=int, default=4)
     parser.add_argument("--kan_gradient_clip", type=float, default=1.0,
                         help="Gradient clipping value applied during Adam warmup; set to 0 or negative to disable.")
+    parser.add_argument(
+        "--kan_lamb_schedule",
+        type=str,
+        default=None,
+        help=(
+            "Optional JSON list for staged lamb values, "
+            "e.g. '[1e-4, 1e-3, 5e-3, 1e-2]'. "
+            "Applied in equal epoch segments for Graph-KAN training."
+        ),
+    )
     parser.add_argument("--kan_square_loss", action="store_true", default=False,
                         help="Use MSE (square=True) instead of L1 for KAN training.")
     # Training hyperparameters
@@ -170,6 +161,38 @@ def _coerce_mult_arity_arg(value, label: str):
     raise ValueError(f"{label} must be int or list-of-lists, got {type(value).__name__}.")
 
 
+def _coerce_float_schedule_arg(value, label: str) -> list[float] | None:
+    """Convert CLI/YAML schedule input into a list[float]."""
+    if value is None:
+        return None
+
+    if isinstance(value, str):
+        stripped = value.strip()
+        if stripped == "":
+            return None
+        try:
+            value = json.loads(stripped)
+        except json.JSONDecodeError as exc:
+            raise ValueError(
+                f"{label} must be a JSON list, e.g. '[1e-4, 1e-3, 5e-3, 1e-2]'."
+            ) from exc
+
+    if not isinstance(value, Sequence) or isinstance(value, (str, bytes)):
+        raise ValueError(f"{label} must be a sequence of numeric values.")
+
+    schedule: list[float] = []
+    for i, item in enumerate(value):
+        try:
+            level = float(item)
+        except Exception as exc:
+            raise ValueError(f"{label}[{i}] must be numeric, got {item!r}.") from exc
+        if level < 0.0:
+            raise ValueError(f"{label}[{i}] must be >= 0, got {level}.")
+        schedule.append(level)
+
+    return schedule or None
+
+
 def _extract_width_output_dim(width, label: str) -> int:
     """Extract output linear dimension from pykan width spec."""
     if width is None:
@@ -231,14 +254,12 @@ def train_gnn(model, train_loader, val_loader, n_epochs, lr, device, lamb,
 
 
 def train_kan(model, train_loader, val_loader, n_epochs, device, lamb,
-              optimizer_mode: str = "two_phase",
               adam_warmup_epochs: int = 0,
-              alternating_adam_epochs: int = 4,
-              lbfgs_rise_tol: float = 0.0,
               adam_lr: float = 1e-3,
               grid_update_freq: int = 10,
               grid_update_warmup: int = 5,
               max_grid_updates: int = 4,
+              lamb_schedule: list[float] | None = None,
               gradient_clip: float | None = 1.0,
               lbfgs_lr: float = 1.0,
               lbfgs_max_iter: int = 10,
@@ -253,7 +274,6 @@ def train_kan(model, train_loader, val_loader, n_epochs, device, lamb,
     trainer = KANTrainer(
         model, train_loader, val_loader,
         lbfgs_train_loader=lbfgs_train_loader,
-        optimizer_mode=optimizer_mode,
         lbfgs_lr=lbfgs_lr,
         lbfgs_max_iter=lbfgs_max_iter,
         lbfgs_max_eval=lbfgs_max_eval,
@@ -262,13 +282,12 @@ def train_kan(model, train_loader, val_loader, n_epochs, device, lamb,
         lbfgs_tolerance_ys=lbfgs_tolerance_ys,
         adam_lr=adam_lr,
         adam_warmup_epochs=adam_warmup_epochs,
-        alternating_adam_epochs=alternating_adam_epochs,
-        lbfgs_rise_tol=lbfgs_rise_tol,
         device=device,
         checkpoint_dir=None,
         grid_update_freq=grid_update_freq,
         grid_update_warmup=grid_update_warmup,
         max_grid_updates=max_grid_updates,
+        lamb_schedule=lamb_schedule,
     )
     trainer.lamb = lamb
     clip_value = None if (gradient_clip is None or gradient_clip <= 0) else gradient_clip
@@ -344,9 +363,6 @@ def main(yaml_params: Optional[dict] = None, checkpoint_dir: Optional[str] = Non
         args.kan_lbfgs_tolerance_ys    = yaml_params.get("gkan_hp", {}).get("lbfgs_tolerance_ys",  args.kan_lbfgs_tolerance_ys)
         args.kan_lamb_l1               = yaml_params.get("gkan_hp", {}).get("lamb_l1",              args.kan_lamb_l1)
         args.kan_lamb_entropy          = yaml_params.get("gkan_hp", {}).get("lamb_entropy",         args.kan_lamb_entropy)
-        args.kan_optimizer_mode        = yaml_params.get("gkan_hp", {}).get("optimizer_mode",       args.kan_optimizer_mode)
-        args.kan_alternating_adam_epochs = yaml_params.get("gkan_hp", {}).get("alternating_adam_epochs", args.kan_alternating_adam_epochs)
-        args.kan_lbfgs_rise_tol        = yaml_params.get("gkan_hp", {}).get("lbfgs_rise_tol",       args.kan_lbfgs_rise_tol)
         args.kan_sparse_init           = yaml_params.get("gkan_hp", {}).get("sparse_init",          args.kan_sparse_init)
         args.kan_adam_warmup_epochs    = yaml_params.get("gkan_hp", {}).get("adam_warmup_epochs",   args.kan_adam_warmup_epochs)
         args.kan_grid_update_freq      = yaml_params.get("gkan_hp", {}).get("grid_update_freq",     args.kan_grid_update_freq)
@@ -354,6 +370,7 @@ def main(yaml_params: Optional[dict] = None, checkpoint_dir: Optional[str] = Non
         args.kan_max_grid_updates      = yaml_params.get("gkan_hp", {}).get("max_grid_updates",     args.kan_max_grid_updates)
         args.kan_gradient_clip         = yaml_params.get("gkan_hp", {}).get("gradient_clip",        args.kan_gradient_clip)
         args.kan_square_loss           = yaml_params.get("training_hp", {}).get("kan_square_loss",  args.kan_square_loss)
+        args.kan_lamb_schedule         = yaml_params.get("training_hp", {}).get("kan_lamb_schedule", args.kan_lamb_schedule)
         args.epochs = yaml_params.get("training_hp", {}).get("epochs", args.epochs)
         args.batch_size = yaml_params.get("training_hp", {}).get("batch_size", args.batch_size)
         args.kan_batch_size = yaml_params.get("training_hp", {}).get("kan_batch_size", args.kan_batch_size)
@@ -373,11 +390,10 @@ def main(yaml_params: Optional[dict] = None, checkpoint_dir: Optional[str] = Non
     args.kan_node_width = _coerce_width_arg(args.kan_node_width)
     args.kan_msg_mult_arity = _coerce_mult_arity_arg(args.kan_msg_mult_arity, "kan_msg_mult_arity")
     args.kan_node_mult_arity = _coerce_mult_arity_arg(args.kan_node_mult_arity, "kan_node_mult_arity")
-    args.kan_optimizer_mode = str(args.kan_optimizer_mode).strip().lower()
-    if args.kan_optimizer_mode not in {"two_phase", "alternating"}:
-        raise ValueError(
-            f"kan_optimizer_mode must be 'two_phase' or 'alternating' (got {args.kan_optimizer_mode!r})."
-        )
+    args.kan_lamb_schedule = _coerce_float_schedule_arg(
+        args.kan_lamb_schedule,
+        "kan_lamb_schedule",
+    )
 
     if args.kan_adam_batch_size is None:
         args.kan_adam_batch_size = args.kan_batch_size
@@ -403,14 +419,14 @@ def main(yaml_params: Optional[dict] = None, checkpoint_dir: Optional[str] = Non
     val_dataset = NBodyDataset(args.val_data)
 
     train_loader = DataLoader(train_dataset, batch_size=args.batch_size, shuffle=True, num_workers=0, pin_memory=True, persistent_workers=False)
-    val_loader = DataLoader(val_dataset, batch_size=args.batch_size, shuffle=True, num_workers=0, pin_memory=True, persistent_workers=False)
+    val_loader = DataLoader(val_dataset, batch_size=args.batch_size, shuffle=False, num_workers=0, pin_memory=True, persistent_workers=False)
 
     kan_adam_train_loader = DataLoader(train_dataset, batch_size=args.kan_adam_batch_size, shuffle=True, num_workers=0, pin_memory=False, persistent_workers=False)
     if args.kan_lbfgs_batch_size == args.kan_adam_batch_size:
         kan_lbfgs_train_loader = kan_adam_train_loader
     else:
         kan_lbfgs_train_loader = DataLoader(train_dataset, batch_size=args.kan_lbfgs_batch_size, shuffle=True, num_workers=0, pin_memory=True, persistent_workers=False)
-    kan_val_loader = DataLoader(val_dataset, batch_size=args.kan_lbfgs_batch_size, shuffle=True, num_workers=0, pin_memory=True, persistent_workers=False)
+    kan_val_loader = DataLoader(val_dataset, batch_size=args.kan_lbfgs_batch_size, shuffle=False, num_workers=0, pin_memory=True, persistent_workers=False)
 
     print(
         "Loader steps/epoch: "
@@ -418,6 +434,11 @@ def main(yaml_params: Optional[dict] = None, checkpoint_dir: Optional[str] = Non
         f"Graph-KAN Adam={len(kan_adam_train_loader)} (batch={args.kan_adam_batch_size}), "
         f"LBFGS={len(kan_lbfgs_train_loader)} (batch={args.kan_lbfgs_batch_size})"
     )
+    if args.kan_lamb_schedule:
+        print(
+            "Graph-KAN lamb schedule (uniform ramp): "
+            + ", ".join(f"{v:.2e}" for v in args.kan_lamb_schedule)
+        )
     if len(kan_lbfgs_train_loader) <= 1:
         print(
             "Warning: Graph-KAN LBFGS phase is effectively full-batch (<=1 step/epoch). "
@@ -472,14 +493,12 @@ def main(yaml_params: Optional[dict] = None, checkpoint_dir: Optional[str] = Non
         n_epochs=args.epochs,
         device=device,
         lamb=args.lamb,
-        optimizer_mode=args.kan_optimizer_mode,
         adam_warmup_epochs=args.kan_adam_warmup_epochs,
-        alternating_adam_epochs=args.kan_alternating_adam_epochs,
-        lbfgs_rise_tol=args.kan_lbfgs_rise_tol,
         adam_lr=args.lr,
         grid_update_freq=args.kan_grid_update_freq,
         grid_update_warmup=args.kan_grid_update_warmup,
         max_grid_updates=args.kan_max_grid_updates,
+        lamb_schedule=args.kan_lamb_schedule,
         gradient_clip=args.kan_gradient_clip,
         lbfgs_lr=args.kan_lbfgs_lr,
         lbfgs_max_iter=args.kan_lbfgs_max_iter,

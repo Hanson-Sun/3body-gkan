@@ -1,3 +1,4 @@
+import pytest
 import torch
 
 from nbody_gkan.training.kan_trainer import KANTrainer
@@ -13,88 +14,59 @@ class _ToyModel(torch.nn.Module):
         return (self.weight - 1.0).pow(2)
 
 
-def _make_trainer() -> KANTrainer:
+def _make_trainer(
+    *,
+    adam_warmup_epochs: int = 0,
+    lamb_schedule: list[float] | None = None,
+    checkpoint_dir,
+) -> KANTrainer:
     return KANTrainer(
         model=_ToyModel(),
         train_loader=[torch.tensor(0.0)],
         val_loader=None,
-        optimizer_mode="alternating",
-        alternating_adam_epochs=3,
-        lbfgs_rise_tol=0.0,
+        adam_warmup_epochs=adam_warmup_epochs,
         adam_lr=1e-3,
         lbfgs_impl="torch",
         lbfgs_max_iter=2,
         grid_update_freq=0,
         max_grid_updates=0,
+        lamb_schedule=lamb_schedule,
         device=torch.device("cpu"),
-        checkpoint_dir=None,
+        checkpoint_dir=checkpoint_dir,
     )
 
 
-def _run_initial_adam_window(trainer: KANTrainer):
-    trainer._on_epoch_end(0, train_loss=1.0, val_loss=0.0)
-    trainer._on_epoch_end(1, train_loss=0.9, val_loss=0.0)
-    trainer._on_epoch_end(2, train_loss=0.8, val_loss=0.0)
-
-
-def test_alternating_switches_to_adam_when_lbfgs_loss_rises():
-    trainer = _make_trainer()
+def test_two_phase_switches_to_lbfgs_after_warmup(tmp_path):
+    trainer = _make_trainer(adam_warmup_epochs=3, checkpoint_dir=tmp_path)
     assert trainer.current_phase == "Adam"
 
-    _run_initial_adam_window(trainer)
-    assert trainer.current_phase == "LBFGS"
+    for epoch in range(3):
+        trainer._on_epoch_start(epoch)
+        assert trainer.current_phase == "Adam"
 
-    trainer._on_epoch_end(3, train_loss=0.50, val_loss=0.0)
-    assert trainer.current_phase == "LBFGS"
-
-    trainer._on_epoch_end(4, train_loss=0.52, val_loss=0.0)
-    assert trainer.current_phase == "Adam"
-
-
-def test_alternating_returns_to_lbfgs_after_adam_window():
-    trainer = _make_trainer()
-    _run_initial_adam_window(trainer)
-
-    trainer._on_epoch_end(3, train_loss=0.50, val_loss=0.0)
-    trainer._on_epoch_end(4, train_loss=0.52, val_loss=0.0)
-    assert trainer.current_phase == "Adam"
-
-    trainer._on_epoch_end(5, train_loss=0.45, val_loss=0.0)
-    trainer._on_epoch_end(6, train_loss=0.44, val_loss=0.0)
-    assert trainer.current_phase == "Adam"
-
-    trainer._on_epoch_end(7, train_loss=0.43, val_loss=0.0)
+    trainer._on_epoch_start(3)
     assert trainer.current_phase == "LBFGS"
 
 
-def test_alternating_scheduler_steps_only_in_adam_phase():
-    trainer = _make_trainer()
-    assert trainer._should_step_scheduler() is True
+def test_lamb_schedule_applies_uniform_epoch_ramp(tmp_path):
+    trainer = _make_trainer(
+        adam_warmup_epochs=0,
+        lamb_schedule=[1e-4, 1e-3, 5e-3, 1e-2],
+        checkpoint_dir=tmp_path,
+    )
+    trainer._scheduled_total_epochs = 8
 
-    _run_initial_adam_window(trainer)
-    assert trainer.current_phase == "LBFGS"
-    assert trainer._should_step_scheduler() is False
-
-    trainer._on_epoch_end(3, train_loss=0.50, val_loss=0.0)
-    trainer._on_epoch_end(4, train_loss=0.52, val_loss=0.0)
-    assert trainer.current_phase == "Adam"
-    assert trainer._should_step_scheduler() is True
+    expected = [1e-4, 1e-4, 1e-3, 1e-3, 5e-3, 5e-3, 1e-2, 1e-2]
+    for epoch, lamb in enumerate(expected):
+        trainer._apply_lamb_schedule(epoch)
+        assert trainer.lamb == pytest.approx(lamb)
 
 
-def test_alternating_clears_adam_state_on_lbfgs_reentry():
-    trainer = _make_trainer()
-    param = next(trainer.model.parameters())
-    trainer._adam_optimizer.state[param] = {
-        "step": torch.tensor(3),
-        "exp_avg": torch.zeros_like(param),
-        "exp_avg_sq": torch.zeros_like(param),
-    }
-    assert len(trainer._adam_optimizer.state) > 0
-
-    _run_initial_adam_window(trainer)
-    assert trainer.current_phase == "LBFGS"
-
-    trainer._on_epoch_end(3, train_loss=0.50, val_loss=0.0)
-    trainer._on_epoch_end(4, train_loss=0.52, val_loss=0.0)
-    assert trainer.current_phase == "Adam"
-    assert len(trainer._adam_optimizer.state) == 0
+@pytest.mark.parametrize("bad_schedule", ["[1e-4, 1e-3]", [1e-4, -1e-3], [1e-4, "bad"]])
+def test_lamb_schedule_rejects_invalid_values(tmp_path, bad_schedule):
+    with pytest.raises(ValueError):
+        _make_trainer(
+            adam_warmup_epochs=0,
+            lamb_schedule=bad_schedule,
+            checkpoint_dir=tmp_path,
+        )

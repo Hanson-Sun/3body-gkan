@@ -275,6 +275,8 @@ class GraphKAN(SymbolicGraphKANMixin, MessagePassing, GraphMixin):
         self.node_layers = self.node_kan.act_fun
         self.msg_width = copy.deepcopy(getattr(self.msg_kan, "width", self.msg_width))
         self.node_width = copy.deepcopy(getattr(self.node_kan, "width", self.node_width))
+        self.msg_mult_arity = copy.deepcopy(getattr(self.msg_kan, "mult_arity", self.msg_mult_arity))
+        self.node_mult_arity = copy.deepcopy(getattr(self.node_kan, "mult_arity", self.node_mult_arity))
         self.msg_mult_nodes = self._max_mult_nodes_in_width(self.msg_width)
         self.node_mult_nodes = self._max_mult_nodes_in_width(self.node_width)
 
@@ -371,7 +373,8 @@ class GraphKAN(SymbolicGraphKANMixin, MessagePassing, GraphMixin):
             if val == 1:
                 warnings.warn(
                     f"{arity_label}=1 is unsupported by pykan multiplication nodes; "
-                    "promoting to 2."
+                    "promoting to 2.",
+                    stacklevel=2,
                 )
                 return 2
             return val
@@ -417,7 +420,8 @@ class GraphKAN(SymbolicGraphKANMixin, MessagePassing, GraphMixin):
             arity = GraphKAN._validate_positive_int(int(mult_arity), label)
             if has_mult_nodes and arity == 1:
                 warnings.warn(
-                    f"{label}=1 is unsupported by pykan multiplication nodes; promoting to 2."
+                    f"{label}=1 is unsupported by pykan multiplication nodes; promoting to 2.",
+                    stacklevel=2,
                 )
                 arity = 2
             return arity

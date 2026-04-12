@@ -1,5 +1,6 @@
 import torch
 import warnings
+from collections.abc import Sequence
 from torch.optim.lr_scheduler import ReduceLROnPlateau
 from tqdm import tqdm
 from .trainer import Trainer
@@ -12,24 +13,15 @@ except Exception:
 
 class KANTrainer(Trainer):
     """
-    Trainer for GKAN with configurable hybrid optimizer strategies:
-      - "two_phase":   Adam warmup -> LBFGS
-      - "alternating": Adam exploration <-> LBFGS convergence
+    Trainer for GKAN with a two-phase optimizer strategy:
+      Phase 1 (warmup): AdamW for stable initialization
+      Phase 2:          LBFGS for fine-grained convergence
 
     Extra parameters
     ----------------
-    optimizer_mode : str
-        Hybrid schedule mode: "two_phase" or "alternating".
     adam_warmup_epochs : int
         Number of epochs to train with Adam before switching to LBFGS.
         Set to 0 to skip warmup and use LBFGS from the start.
-        Used only when optimizer_mode="two_phase".
-    alternating_adam_epochs : int
-        Number of Adam epochs to run per exploration window when
-        optimizer_mode="alternating".
-    lbfgs_rise_tol : float
-        Absolute tolerance for rise detection in alternating mode. Switch from
-        LBFGS to Adam when current epoch loss > previous LBFGS epoch loss + tol.
     lbfgs_lr : float
         Learning rate for LBFGS (should almost always be 1.0)
     lbfgs_impl : str
@@ -49,7 +41,6 @@ class KANTrainer(Trainer):
 
     def __init__(self, model, train_loader, val_loader=None,
                  lbfgs_train_loader=None,
-                 optimizer_mode: str = 'two_phase',
                  lbfgs_lr: float = 1.0,
                  lbfgs_max_iter: int = 10,
                  lbfgs_max_eval: int | None = None,
@@ -58,11 +49,10 @@ class KANTrainer(Trainer):
                  lbfgs_tolerance_ys: float = 1e-32,
                  adam_lr: float = 1e-3,
                  adam_warmup_epochs: int = 0,
-                 alternating_adam_epochs: int = 4,
-                 lbfgs_rise_tol: float = 0.0,
                  grid_update_freq: int = 10,
                  grid_update_warmup: int = 5,
                  max_grid_updates: int = 4,
+                 lamb_schedule: list[float] | None = None,
                  scheduler=None,
                  **kwargs):
         super().__init__(model, train_loader, val_loader, **kwargs)
@@ -77,27 +67,6 @@ class KANTrainer(Trainer):
         if self.adam_warmup_epochs < 0:
             raise ValueError(
                 f"adam_warmup_epochs must be >= 0 (got {self.adam_warmup_epochs})."
-            )
-
-        optimizer_mode = str(optimizer_mode).strip().lower()
-        if optimizer_mode not in ('two_phase', 'alternating'):
-            raise ValueError(
-                f"optimizer_mode must be 'two_phase' or 'alternating' "
-                f"(got {optimizer_mode!r})."
-            )
-        self.optimizer_mode = optimizer_mode
-
-        self.alternating_adam_epochs = int(alternating_adam_epochs)
-        if self.alternating_adam_epochs <= 0:
-            raise ValueError(
-                f"alternating_adam_epochs must be > 0 "
-                f"(got {self.alternating_adam_epochs})."
-            )
-
-        self.lbfgs_rise_tol = float(lbfgs_rise_tol)
-        if self.lbfgs_rise_tol < 0:
-            raise ValueError(
-                f"lbfgs_rise_tol must be >= 0 (got {self.lbfgs_rise_tol})."
             )
 
         if isinstance(lbfgs_line_search_fn, str):
@@ -151,35 +120,13 @@ class KANTrainer(Trainer):
                 line_search_fn=lbfgs_line_search_fn,
             )
 
-        if self.optimizer_mode == 'alternating':
-            self.optimizer = self._adam_optimizer
-            self._using_lbfgs = False
-            self._adam_epochs_remaining = self.alternating_adam_epochs
-        else:
-            # Start with Adam if warmup is requested, otherwise LBFGS immediately.
-            self.optimizer = (
-                self._adam_optimizer if self.adam_warmup_epochs > 0 else self._lbfgs_optimizer
-            )
-            self._using_lbfgs = self.adam_warmup_epochs == 0
-            self._adam_epochs_remaining = self.adam_warmup_epochs
+        # Start with Adam if warmup is requested, otherwise LBFGS immediately.
+        self.optimizer = (
+            self._adam_optimizer if self.adam_warmup_epochs > 0 else self._lbfgs_optimizer
+        )
+        self._using_lbfgs = self.adam_warmup_epochs == 0
 
-        self._last_lbfgs_epoch_loss: float | None = None
-
-        if self.optimizer_mode == 'alternating':
-            if scheduler is None:
-                # Keep Adam decay active across alternating cycles.
-                self.scheduler = ReduceLROnPlateau(
-                    self._adam_optimizer,
-                    mode="min",
-                    factor=0.5,
-                    patience=5,
-                    threshold=1e-4,
-                    min_lr=1e-5,
-                    cooldown=1,
-                )
-            else:
-                self.scheduler = scheduler
-        elif scheduler is None and self.adam_warmup_epochs > 0:
+        if scheduler is None and self.adam_warmup_epochs > 0:
             # Use a simple default scheduler during the Adam warmup phase.
             self.scheduler = ReduceLROnPlateau(
                 self._adam_optimizer,
@@ -198,6 +145,86 @@ class KANTrainer(Trainer):
         self.max_grid_updates  = max_grid_updates
         self._n_grid_updates   = 0
         self._current_gradient_clip: float | None = None
+        self._lamb_schedule = self._coerce_lamb_schedule(lamb_schedule)
+        self._scheduled_total_epochs: int | None = None
+        self._sparsity_stage_idx: int | None = None
+
+    @staticmethod
+    def _coerce_lamb_schedule(
+        lamb_schedule: list[float] | Sequence[float] | None,
+    ) -> tuple[float, ...] | None:
+        if lamb_schedule is None:
+            return None
+        if isinstance(lamb_schedule, (str, bytes)):
+            raise ValueError(
+                "lamb_schedule must be a sequence of floats, not a string."
+            )
+        if not isinstance(lamb_schedule, Sequence):
+            raise ValueError("lamb_schedule must be a sequence of floats.")
+
+        parsed: list[float] = []
+        for i, value in enumerate(lamb_schedule):
+            try:
+                weight = float(value)
+            except Exception as exc:
+                raise ValueError(
+                    f"lamb_schedule[{i}] must be numeric, got {value!r}."
+                ) from exc
+            if weight < 0.0:
+                raise ValueError(
+                    f"lamb_schedule[{i}] must be >= 0, got {weight}."
+                )
+            parsed.append(weight)
+
+        if not parsed:
+            return None
+        return tuple(parsed)
+
+    def _apply_lamb_schedule(self, epoch: int):
+        if not self._lamb_schedule:
+            return
+        if self._scheduled_total_epochs is None or self._scheduled_total_epochs <= 0:
+            return
+
+        n_levels = len(self._lamb_schedule)
+        stage_idx = min(
+            (epoch * n_levels) // self._scheduled_total_epochs,
+            n_levels - 1,
+        )
+        self.lamb = float(self._lamb_schedule[stage_idx])
+
+        if self._sparsity_stage_idx != stage_idx:
+            self._sparsity_stage_idx = stage_idx
+            tqdm.write(
+                f"  Epoch {epoch}: lamb schedule -> {self.lamb:.2e} "
+                f"({stage_idx + 1}/{n_levels})"
+            )
+
+    def train(
+        self,
+        n_epochs: int,
+        augment: bool = False,
+        augmentation_scale: float = 3.0,
+        gradient_clip: float | None = None,
+        square_loss: bool = False,
+        save_every: int = 10,
+        log_every: int = 1,
+    ):
+        self._scheduled_total_epochs = int(n_epochs)
+        self._sparsity_stage_idx = None
+        try:
+            return super().train(
+                n_epochs=n_epochs,
+                augment=augment,
+                augmentation_scale=augmentation_scale,
+                gradient_clip=gradient_clip,
+                square_loss=square_loss,
+                save_every=save_every,
+                log_every=log_every,
+            )
+        finally:
+            self._scheduled_total_epochs = None
+            self._sparsity_stage_idx = None
 
     @staticmethod
     def _grad_l2_norm(parameters) -> float:
@@ -226,43 +253,15 @@ class KANTrainer(Trainer):
         tqdm.write(f"  Epoch {epoch}: switching Adam -> LBFGS ({reason})")
         self.optimizer = self._lbfgs_optimizer
         self._using_lbfgs = True
-        # In alternating mode, keep Adam scheduler state for future return phases.
-        if self.optimizer_mode != 'alternating':
-            self.scheduler = None
-        self._last_lbfgs_epoch_loss = None
-
-    def _switch_to_adam(self, epoch: int, reason: str, n_epochs: int):
-        if not self._using_lbfgs:
-            self._adam_epochs_remaining = n_epochs
-            return
-        plural = "s" if n_epochs != 1 else ""
-        tqdm.write(
-            f"  Epoch {epoch}: switching LBFGS -> Adam "
-            f"({reason}; explore for {n_epochs} epoch{plural})"
-        )
-        # Reset AdamW moments on re-entry so stale momentum from previous
-        # Adam windows cannot pull parameters away from the new LBFGS basin.
-        if hasattr(self._adam_optimizer, "state"):
-            self._adam_optimizer.state.clear()
-        self.optimizer = self._adam_optimizer
-        self._using_lbfgs = False
-        self._adam_epochs_remaining = n_epochs
-        self._last_lbfgs_epoch_loss = None
+        self.scheduler = None
 
     def _maybe_switch_to_lbfgs(self, epoch: int):
         """Switch from Adam to LBFGS once warmup is complete."""
-        if self.optimizer_mode != 'two_phase':
-            return
         if not self._using_lbfgs and epoch >= self.adam_warmup_epochs:
             self._switch_to_lbfgs(
                 epoch,
                 reason=f"warmup complete after {self.adam_warmup_epochs} epochs",
             )
-
-    def _should_step_scheduler(self) -> bool:
-        if self.optimizer_mode == 'alternating':
-            return not self._using_lbfgs
-        return True
 
     @property
     def current_phase(self) -> str:
@@ -272,13 +271,12 @@ class KANTrainer(Trainer):
         return self.lbfgs_train_loader if self._using_lbfgs else self.adam_train_loader
 
     def _on_epoch_start(self, epoch: int):
+        self._apply_lamb_schedule(epoch)
+
         # Phase switch check comes first
         self._maybe_switch_to_lbfgs(epoch)
         # Also gate on Adam warmup so first grid update is not on switch epoch.
-        if self.optimizer_mode == 'alternating':
-            grid_warmup_epoch = self.grid_update_warmup
-        else:
-            grid_warmup_epoch = max(self.grid_update_warmup, self.adam_warmup_epochs)
+        grid_warmup_epoch = max(self.grid_update_warmup, self.adam_warmup_epochs)
 
         # Grid updates only during LBFGS phase — noisy Adam gradients
         # make grid updates unreliable during warmup
@@ -294,40 +292,6 @@ class KANTrainer(Trainer):
             if hasattr(self.optimizer, 'state'):
                 self.optimizer.state.clear()
             self._n_grid_updates += 1
-
-    def _on_epoch_end(self, epoch: int, train_loss: float, val_loss: float):
-        del val_loss
-        if self.optimizer_mode != 'alternating':
-            return
-
-        if self._using_lbfgs:
-            if self._last_lbfgs_epoch_loss is not None:
-                previous_loss = self._last_lbfgs_epoch_loss
-                current_loss = float(train_loss)
-                if current_loss > previous_loss + self.lbfgs_rise_tol:
-                    self._switch_to_adam(
-                        epoch,
-                        reason=(
-                            "LBFGS loss increased "
-                            f"({previous_loss:.3e} -> {current_loss:.3e}, "
-                            f"tol={self.lbfgs_rise_tol:.1e})"
-                        ),
-                        n_epochs=self.alternating_adam_epochs,
-                    )
-                    return
-
-            self._last_lbfgs_epoch_loss = float(train_loss)
-            return
-
-        self._adam_epochs_remaining -= 1
-        if self._adam_epochs_remaining <= 0:
-            self._switch_to_lbfgs(
-                epoch,
-                reason=(
-                    "Adam exploration window complete "
-                    f"({self.alternating_adam_epochs} epochs)"
-                ),
-            )
 
     def _train_step(self, batch, augment: bool = False,
                     augmentation_scale: float = 3.0,
