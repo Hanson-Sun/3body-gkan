@@ -21,7 +21,6 @@ from nbody_gkan.models import OrdinaryGraphKAN, OGN
 from nbody_gkan.nbody import NBodySimulator
 from nbody_gkan.models.model_loader import ModelLoader
 
-import json
 import sympy as sp
 
 def _extract_equations_from_dict(data: dict, msg_in_dim: int, node_in_dim: int, save_path: Path = None):
