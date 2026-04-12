@@ -9,6 +9,7 @@ import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 from tqdm.auto import tqdm
+import copy
 
 class Trainer:
     def __init__(
@@ -18,6 +19,7 @@ class Trainer:
             val_loader: DataLoader | None = None,
             device: torch.device | None = None,
             checkpoint_dir: Path | str | None = None,
+            patience: int = 10,
     ):
         self.model        = model
         self.train_loader = train_loader
@@ -34,6 +36,8 @@ class Trainer:
         self.history = {"train": [], "val": [], "lr": []}
         self.epoch         = 0
         self.best_val_loss = float("inf")
+        self.patience_counter = 0
+        self.best_model = None
         self._step_metrics: dict[str, float | int | str] = {}
 
         # subclasses must set these
@@ -178,7 +182,15 @@ class Trainer:
 
             if val_loss < self.best_val_loss:
                 self.best_val_loss = val_loss
-                self.save_checkpoint("best.pt")
+                best_model_state = copy.deepcopy(self.model.state_dict())
+                patience_counter = 0
+            else:
+                patience_counter += 1
+            
+            # Evaluate cutoff threshold
+            if patience_counter >= self.patience:
+                tqdm.write(f"\nEarly stopping triggered at Epoch {epoch}. Restoring best weights.")
+                break
 
             if epoch % save_every == 0 or epoch == n_epochs - 1:
                 self.save_checkpoint(f"epoch_{epoch:03d}.pt")
@@ -190,7 +202,8 @@ class Trainer:
                     f"Val={val_loss:.4e} | "
                     f"LR={current_lr:.2e}"
                 )
-
+        if best_model_state is not None:
+            self.model.load_state_dict(best_model_state)
         print(f"Done. Best val loss: {self.best_val_loss:.6f}")
 
     def save_checkpoint(self, filename: str):
