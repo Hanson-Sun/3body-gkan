@@ -24,6 +24,22 @@ from nbody_gkan.models.model_loader import ModelLoader
 import sympy as sp
 
 def _extract_equations_from_dict(data: dict, msg_in_dim: int, node_in_dim: int, save_path: Path = None):
+    def apply_fn(fn_name, inner_expr):
+        """Maps pykan function strings to exact SymPy operations."""
+        if fn_name == 'x': return inner_expr
+        elif fn_name == 'x^2': return inner_expr**2
+        elif fn_name == 'x^3': return inner_expr**3
+        elif fn_name == '1/x': return 1 / inner_expr
+        elif fn_name == '1/x^2': return 1 / (inner_expr**2)
+        elif fn_name in ['sqrt(x)', 'sqrt']: return sp.sqrt(inner_expr)
+        elif fn_name in ['log(x)', 'log']: return sp.log(inner_expr)
+        elif fn_name in ['abs(x)', 'abs']: return sp.Abs(inner_expr)
+        elif fn_name in ['sin(x)', 'sin']: return sp.sin(inner_expr)
+        elif fn_name in ['cos(x)', 'cos']: return sp.cos(inner_expr)
+        elif fn_name in ['exp(x)', 'exp']: return sp.exp(inner_expr)
+        else:
+            return sp.Function(fn_name.replace('(x)', ''))(inner_expr)
+
     def process_network(layers_dict, input_symbols):
         current_inputs = input_symbols
         layer_keys = sorted(layers_dict.keys(), key=int)
@@ -40,10 +56,19 @@ def _extract_equations_from_dict(data: dict, msg_in_dim: int, node_in_dim: int, 
             for edge, details in layer.items():
                 if details.get("passes_threshold", False):
                     i, j = map(int, edge.split('->'))
-                    expr_str = details["expression"]
-                    local_x = sp.Symbol(f"x_{i}")
-                    expr = sp.sympify(expr_str)
-                    expr = expr.subs(local_x, current_inputs[i])
+                    
+                    fn_name = details["fn"]
+                    a = details["a"]
+                    b = details["b"]
+                    ax = details["ax"]
+                    bx = details["bx"]
+                    
+                    # Construct the native SymPy formula: y = a * fn(ax * x + bx) + b
+                    local_x = current_inputs[i]
+                    inner = ax * local_x + bx
+                    fn_applied = apply_fn(fn_name, inner)
+                    expr = a * fn_applied + b
+                    
                     next_inputs[j] += expr
 
             current_inputs = next_inputs

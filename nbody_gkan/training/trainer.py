@@ -36,6 +36,7 @@ class Trainer:
         self.history = {"train": [], "val": [], "lr": []}
         self.epoch         = 0
         self.best_val_loss = float("inf")
+        self.patience = patience
         self.patience_counter = 0
         self.best_model = None
         self._step_metrics: dict[str, float | int | str] = {}
