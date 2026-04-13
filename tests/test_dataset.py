@@ -40,6 +40,29 @@ def test_dataset_shapes(test_data_path):
     assert data.edge_index.shape == (2, 6)
 
 
+def test_dataset_shapes_without_velocity(test_data_path):
+    """Test that disabling velocity changes node feature width."""
+    dataset = NBodyDataset(test_data_path, include_velocity=False)
+    data = dataset[0]
+
+    # x: [pos, mass] = [2+1] = 3 features per node
+    assert data.x.shape == (3, 3)
+    assert dataset.n_node_features == 3
+    assert dataset.include_velocity is False
+
+
+def test_dataset_feature_spec_augmentation_is_rejected(test_data_path):
+    """Feature augmentations are intentionally unsupported."""
+    with pytest.raises(ValueError, match="feature_spec\.augment is not supported"):
+        NBodyDataset(
+            test_data_path,
+            feature_spec={
+                "include": ["pos", "mass"],
+                "augment": ["speed"],
+            },
+        )
+
+
 def test_edge_index_fully_connected():
     """Test that edge index creates fully connected graph."""
     edge_index = get_edge_index(3)
@@ -96,6 +119,24 @@ def test_node_features_structure(test_data_path):
     mass = x[:, 4:5]
     assert mass.shape == (3, 1)
     assert torch.allclose(mass, torch.ones_like(mass))  # All masses = 1
+
+
+def test_node_features_structure_without_velocity(test_data_path):
+    """Test node feature layout when velocity inputs are disabled."""
+    dataset = NBodyDataset(test_data_path, include_velocity=False)
+    data = dataset[0]
+
+    # Features: [pos_x, pos_y, mass]
+    x = data.x
+
+    # Check positions (first 2 columns)
+    pos = x[:, :2]
+    assert pos.shape == (3, 2)
+
+    # Check masses (last column)
+    mass = x[:, 2:3]
+    assert mass.shape == (3, 1)
+    assert torch.allclose(mass, torch.ones_like(mass))
 
 
 def test_dataset_dtype(test_data_path):

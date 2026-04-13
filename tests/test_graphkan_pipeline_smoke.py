@@ -151,6 +151,7 @@ def test_graphkan_train_and_visualize_smoke(tmp_path, capsys):
         dt=0.01,
         n_steps=2,
         edge_index=model.edge_index,
+        feature_spec=dataset.feature_spec,
     )
 
     assert pos_hist.shape == (3, dataset.n, dataset.dim)

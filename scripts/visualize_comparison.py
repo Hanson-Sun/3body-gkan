@@ -16,13 +16,18 @@ from matplotlib.animation import FuncAnimation, FFMpegWriter
 from torch_geometric.data import Data
 from torch_geometric.loader import DataLoader as PyGLoader
 
-from nbody_gkan.data.dataset import FORCE_FN_MAP as DATASET_FORCE_FN_MAP
+from nbody_gkan.data.dataset import (
+    FORCE_FN_MAP as DATASET_FORCE_FN_MAP,
+    build_node_features_torch,
+    node_feature_dim,
+    normalize_feature_spec,
+)
 from nbody_gkan.models import OrdinaryGraphKAN, OGN
 from nbody_gkan.nbody import NBodySimulator
 from nbody_gkan.models.model_loader import ModelLoader
 
 
-DEFAULT_WARMUP_GRAPHS = 1000
+DEFAULT_WARMUP_GRAPHS = 256
 
 
 def _extract_graphkan_subnet_info(model: 'OrdinaryGraphKAN', network: str) -> dict[str, Any]:
@@ -60,6 +65,24 @@ def parse_args(args=None):
     parser.add_argument("--output_dir",        type=str,   default="visualizations")
     parser.add_argument("--checkpoint_dir",    type=str,   default="checkpoints/comparison")
     parser.add_argument("--data_file",         type=str,   default="data/train.npz")
+    parser.add_argument(
+        "--include_velocity",
+        action=argparse.BooleanOptionalAction,
+        default=None,
+        help=(
+            "Legacy alias for toggling velocity in node features. "
+            "Ignored when --input_features is provided or checkpoint has feature spec."
+        ),
+    )
+    parser.add_argument(
+        "--input_features",
+        type=str,
+        default=None,
+        help=(
+            "Optional JSON feature spec override, e.g. "
+            "'{\"include\": [\"pos\", \"mass\"]}'."
+        ),
+    )
     parser.add_argument("--rollout_time",      type=float, default=5.0)
     parser.add_argument("--dt",                type=float, default=0.01)
     parser.add_argument("--save_video",        action=argparse.BooleanOptionalAction, default=True)
@@ -69,6 +92,12 @@ def parse_args(args=None):
     parser.add_argument("--prune_edge_threshold", type=float, default=3e-2)
     parser.add_argument("--prune_node_threshold", type=float, default=None)
     parser.add_argument("--warmup_graphs", type=int, default=DEFAULT_WARMUP_GRAPHS)
+    parser.add_argument(
+        "--symbolic",
+        action=argparse.BooleanOptionalAction,
+        default=True,
+        help="Run symbolic regression stage (enable/disable)",
+    )
     return parser.parse_args(args)
 
 
@@ -149,6 +178,41 @@ def _flatten_frames(positions: np.ndarray, velocities: np.ndarray) -> tuple[np.n
     raise ValueError(f"Unsupported positions shape {positions.shape}; expected 4D or 3D arrays.")
 
 
+def _coerce_feature_spec_arg(value):
+    if value is None:
+        return None
+    if isinstance(value, (dict, list, tuple)):
+        return value
+    if isinstance(value, str):
+        stripped = value.strip()
+        if stripped == "":
+            return None
+        try:
+            return json.loads(stripped)
+        except json.JSONDecodeError as exc:
+            raise ValueError(
+                "input_features must be JSON dict/list, e.g. "
+                "'{\"include\":[\"pos\",\"mass\"]}'"
+            ) from exc
+    raise ValueError(f"input_features must be dict/list/JSON-string, got {type(value).__name__}.")
+
+
+def _infer_legacy_feature_spec_from_n_f(n_f: int, dim: int) -> dict[str, list[str]]:
+    with_velocity = 2 * dim + 1
+    without_velocity = dim + 1
+
+    if n_f == with_velocity:
+        return {"include": ["pos", "vel", "mass"], "augment": []}
+    if n_f == without_velocity:
+        return {"include": ["pos", "mass"], "augment": []}
+
+    raise ValueError(
+        f"Cannot infer feature spec from checkpoint: n_f={n_f}, dim={dim}. "
+        f"Expected n_f={with_velocity} ([pos, vel, mass]) or n_f={without_velocity} ([pos, mass]). "
+        "For newer checkpoints, store input_feature_spec during training or pass --input_features."
+    )
+
+
 def _tile_edge_index(edge_index: torch.Tensor, n_nodes: int, n_graphs: int) -> torch.Tensor:
     edge_index = edge_index.to(dtype=torch.long)
     if n_graphs == 1:
@@ -164,6 +228,7 @@ def _build_representative_samples(
     velocities: np.ndarray,
     masses: torch.Tensor,
     edge_index: torch.Tensor,
+    feature_spec: dict[str, list[str]],
     max_graphs: int = DEFAULT_WARMUP_GRAPHS,
 ) -> dict[str, Any]:
     flat_pos, flat_vel = _flatten_frames(positions, velocities)
@@ -180,8 +245,13 @@ def _build_representative_samples(
             f"Mass vector length ({masses.numel()}) must match node count ({n_nodes})."
         )
 
-    mass_expanded = masses.float().view(1, n_nodes, 1).expand(n_graphs, -1, -1)
-    x_graphs = torch.cat([pos_sel, vel_sel, mass_expanded], dim=2)
+    masses_graph = masses.float().view(1, n_nodes).expand(n_graphs, -1)
+    x_graphs = build_node_features_torch(
+        pos=pos_sel,
+        vel=vel_sel,
+        masses=masses_graph,
+        feature_spec=feature_spec,
+    )
     x_nodes = x_graphs.reshape(n_graphs * n_nodes, x_graphs.shape[-1])
 
     batched_edge_index = _tile_edge_index(edge_index=edge_index, n_nodes=n_nodes, n_graphs=n_graphs)
@@ -198,7 +268,7 @@ def _build_representative_samples(
     }
 
 
-def rollout(model, pos0, vel0, masses, dt, n_steps, edge_index):
+def rollout(model, pos0, vel0, masses, dt, n_steps, edge_index, feature_spec: dict[str, list[str]]):
     """Rollout dynamics using leapfrog integration."""
     positions = [pos0.cpu().numpy()]
     velocities = [vel0.cpu().numpy()]
@@ -208,8 +278,7 @@ def rollout(model, pos0, vel0, masses, dt, n_steps, edge_index):
 
     with torch.no_grad():
         for _ in range(n_steps):
-            mass_expanded = masses.unsqueeze(1)
-            x = torch.cat([pos, vel, mass_expanded], dim=1)
+            x = build_node_features_torch(pos=pos, vel=vel, masses=masses, feature_spec=feature_spec)
             graph = Data(x=x, edge_index=edge_index)
 
             # Leapfrog step
@@ -218,7 +287,12 @@ def rollout(model, pos0, vel0, masses, dt, n_steps, edge_index):
             pos = pos + dt * vel_half
 
             # Recompute acceleration at new position
-            x = torch.cat([pos, vel_half, mass_expanded], dim=1)
+            x = build_node_features_torch(
+                pos=pos,
+                vel=vel_half,
+                masses=masses,
+                feature_spec=feature_spec,
+            )
             graph = Data(x=x, edge_index=edge_index)
             acc_new = model.just_derivative(graph, augment=False)
             vel = vel_half + 0.5 * dt * acc_new
@@ -318,17 +392,9 @@ def visualize_kan_splines(
     msg_sample: Optional[torch.Tensor] = None,
     node_sample: Optional[torch.Tensor] = None,
 ):
-    """Use pykan's native plot() to visualize learned activations."""
+    """Render smooth per-edge activation curves for message and node subnets."""
     save_dir = Path(save_dir).resolve() if save_dir else Path("visualizations/splines").resolve()
     save_dir.mkdir(parents=True, exist_ok=True)
-
-    if msg_sample is None or node_sample is None:
-        raise ValueError(
-            "visualize_kan_splines requires representative msg_sample and node_sample tensors."
-        )
-
-    msg_sample = msg_sample[:4000]
-    node_sample = node_sample[:4000]
 
     def _plot_subnet(subnet, sample, tag):
         tag_dir = save_dir / tag
@@ -337,26 +403,47 @@ def visualize_kan_splines(
         was_training = subnet.training
         subnet.eval()
         try:
-            # Populate activations in the actual subnet used by GraphKAN.
-            with torch.no_grad():
-                subnet(sample)
+            # Optional: seed subnet state from representative data.
+            if sample is not None:
+                with torch.no_grad():
+                    subnet(sample[:4000])
 
-            out_file = tag_dir / "kan_plot"
-            subnet.plot(
-                folder=str(tag_dir),
-                metric="forward_n",  # avoid backward attribution path on mult_arity-heavy nets
-                title=f"Graph-KAN — {tag.title()} Network",
-                in_vars=None,
-                out_vars=None,
-            )
+            for layer_idx, layer in enumerate(subnet.act_fun):
+                in_dim = int(layer.in_dim)
+                out_dim = int(layer.out_dim)
+                k = int(layer.k)
+                device = layer.grid.device
 
-            # pykan.plot saves figures into the provided folder; rename the default file if present
-            fig_path = tag_dir / "figures.png"
-            alt_figs = sorted(tag_dir.glob("figures*.png"))
-            if fig_path.exists():
-                fig_path.rename(out_file.with_suffix(".png"))
-            elif alt_figs:
-                alt_figs[0].rename(out_file.with_suffix(".png"))
+                for in_idx in range(in_dim):
+                    x_min = float(layer.grid[in_idx, k].item())
+                    x_max = float(layer.grid[in_idx, -k - 1].item())
+                    if not np.isfinite(x_min) or not np.isfinite(x_max) or x_max <= x_min:
+                        continue
+
+                    x_eval = torch.linspace(x_min, x_max, steps=800, device=device)
+                    x_full = torch.zeros(x_eval.shape[0], in_dim, device=device)
+                    x_full[:, in_idx] = x_eval
+
+                    with torch.no_grad():
+                        _, _, spline_postacts, _ = layer(x_full)
+
+                    x_np = x_eval.detach().cpu().numpy()
+                    for out_idx in range(out_dim):
+                        y_np = spline_postacts[:, out_idx, in_idx].detach().cpu().numpy()
+                        fig, ax = plt.subplots(figsize=(2.0, 2.0))
+                        ax.plot(x_np, y_np, color="black", linewidth=2.5)
+                        ax.set_xticks([])
+                        ax.set_yticks([])
+                        for spine in ax.spines.values():
+                            spine.set_linewidth(2.0)
+                            spine.set_color("black")
+                        fig.tight_layout(pad=0.05)
+                        fig.savefig(
+                            tag_dir / f"sp_{layer_idx}_{in_idx}_{out_idx}.png",
+                            bbox_inches="tight",
+                            dpi=400,
+                        )
+                        plt.close(fig)
         finally:
             subnet.train(was_training)
 
@@ -409,6 +496,41 @@ def visualize_kan_network(model: 'OrdinaryGraphKAN',
     with torch.no_grad():
         src_kan(data_sample)
 
+    def _dense_plot_cache(subnet, points: int = 800) -> tuple[list[torch.Tensor], list[torch.Tensor]]:
+        """Build dense x/y traces for each spline edge used by pykan.plot()."""
+        dense_acts: list[torch.Tensor] = []
+        dense_spline_postacts: list[torch.Tensor] = []
+
+        for layer in subnet.act_fun:
+            in_dim = int(layer.in_dim)
+            out_dim = int(layer.out_dim)
+            spline_k = int(layer.k)
+            device = layer.grid.device
+
+            acts_layer = torch.zeros(points, in_dim, device=device)
+            spline_layer = torch.zeros(points, out_dim, in_dim, device=device)
+
+            for in_idx in range(in_dim):
+                x_min = float(layer.grid[in_idx, spline_k].item())
+                x_max = float(layer.grid[in_idx, -spline_k - 1].item())
+                if not np.isfinite(x_min) or not np.isfinite(x_max) or x_max <= x_min:
+                    x_min, x_max = -1.0, 1.0
+
+                x_eval = torch.linspace(x_min, x_max, steps=points, device=device)
+                x_full = torch.zeros(points, in_dim, device=device)
+                x_full[:, in_idx] = x_eval
+
+                with torch.no_grad():
+                    _, _, spline_postacts, _ = layer(x_full)
+
+                acts_layer[:, in_idx] = x_eval
+                spline_layer[:, :, in_idx] = spline_postacts[:, :, in_idx]
+
+            dense_acts.append(acts_layer)
+            dense_spline_postacts.append(spline_layer)
+
+        return dense_acts, dense_spline_postacts
+
     # ── Variable names ─────────────────────────────────────────
     base_vars = ['x', 'y', 'vx', 'vy', 'm'][:n_f]
     if network == 'msg':
@@ -434,17 +556,36 @@ def visualize_kan_network(model: 'OrdinaryGraphKAN',
         asset_dir.mkdir(parents=True, exist_ok=True)
         folder = str(asset_dir)
 
-    # src_kan = src_kan.prune()
-    src_kan.plot(
-        in_vars=in_vars,
-        out_vars=out_vars,
-        title=title,
-        beta=120,            # match pykan doc recommendation for network overview
-        scale=2,
-        varscale=0.2,
-        metric="forward_n",  # use forward scales to skip attribute() for high-arity mult
-        folder=folder,
-    )
+    original_acts = getattr(src_kan, "acts", None)
+    original_spline_postacts = getattr(src_kan, "spline_postacts", None)
+    try:
+        dense_acts, dense_spline_postacts = _dense_plot_cache(src_kan, points=800)
+        if isinstance(original_acts, list) and len(original_acts) >= len(dense_acts) + 1:
+            plot_acts = list(original_acts)
+            for layer_idx in range(len(dense_acts)):
+                plot_acts[layer_idx] = dense_acts[layer_idx]
+        else:
+            # Fallback to expected depth+1 shape if pykan cache layout differs.
+            plot_acts = list(dense_acts)
+            plot_acts.append(dense_acts[-1][:, :int(width[-1][0] if isinstance(width[-1], list) else width[-1])])
+
+        src_kan.acts = plot_acts
+        src_kan.spline_postacts = dense_spline_postacts
+
+        src_kan.plot(
+            in_vars=in_vars,
+            out_vars=out_vars,
+            title=title,
+            beta=120,            # match pykan doc recommendation for network overview
+            scale=2,
+            varscale=0.2,
+            metric="forward_n",  # use forward scales to skip attribute() for high-arity mult
+            folder=folder,
+        )
+    finally:
+        src_kan.acts = original_acts
+        if original_spline_postacts is not None:
+            src_kan.spline_postacts = original_spline_postacts
 
     # Optional inset-style scaling: enlarge the smallest-width panels (e.g., the activations grid)
     fig = plt.gcf()
@@ -534,18 +675,52 @@ def visualize_symbolic_expressions(
     output_dir.mkdir(parents=True, exist_ok=True)
 
     if lib is None:
-        lib = ['x', 'x^2', 'x^3', '1/x', '1/x^2',
-               'sqrt(x)', 'log(x)', 'abs(x)', 'sin(x)', 'cos(x)', 'exp(x)']
+        lib = list(getattr(kan_model, 'DEFAULT_SYMBOLIC_LIBRARY', (
+            'x', 'x^2', 'x^3', '1/x', '1/x^2', '1/x^3', 'sqrt', 'log', 'abs', 'exp'
+        )))
 
-    sym_graph  = Data(x=x_nodes, edge_index=edge_index if edge_index is not None else kan_model.edge_index)
-    sym_loader = PyGLoader([sym_graph] * max_batches, batch_size=1)
+    base_edge_index = edge_index if edge_index is not None else kan_model.edge_index
+    base_edge_index = base_edge_index.to(dtype=torch.long)
+
+    n_nodes_single = int(base_edge_index.max().item()) + 1
+    requested_batches = max(1, int(max_batches))
+    symbolic_batches = 1
+
+    # x_nodes typically contains many tiled graphs from warmup; keep symbolic
+    # fitting bounded by selecting up to max_batches individual graphs.
+    if n_nodes_single > 0 and int(x_nodes.shape[0]) % n_nodes_single == 0:
+        total_graphs = int(x_nodes.shape[0]) // n_nodes_single
+        graph_count = max(1, min(total_graphs, requested_batches))
+        graph_indices = _sample_indices(total_graphs, graph_count)
+
+        sym_graphs = []
+        for g_idx in graph_indices:
+            start = int(g_idx) * n_nodes_single
+            stop = start + n_nodes_single
+            sym_graphs.append(Data(x=x_nodes[start:stop], edge_index=base_edge_index))
+
+        sym_loader = PyGLoader(sym_graphs, batch_size=1, shuffle=False)
+        symbolic_batches = graph_count
+        print(
+            "  Symbolic sample set: "
+            f"graphs={graph_count}/{total_graphs}, "
+            f"nodes={graph_count * n_nodes_single}"
+        )
+    else:
+        sym_graph = Data(x=x_nodes, edge_index=base_edge_index)
+        sym_loader = PyGLoader([sym_graph], batch_size=1, shuffle=False)
+        print(
+            "  Symbolic sample set: using fallback single graph with "
+            f"{int(x_nodes.shape[0])} nodes"
+        )
 
     suggestions = kan_model.suggest_symbolic(
         sym_loader,
         device=next(kan_model.parameters()).device,
         lib=lib,
+        max_batches=symbolic_batches,
         threshold=threshold,
-        fit_affine_after_select=False,
+        fit_affine_after_select=True,
     )
 
     kan_model.print_symbolic_suggestions(
@@ -595,6 +770,8 @@ def main(
         args.output_dir        = output_dir     or args.output_dir
         args.checkpoint_dir    = checkpoint_dir or args.checkpoint_dir
         args.data_file         = data_file      or args.data_file
+        args.input_features    = yaml_params.get("input_features",    args.input_features)
+        args.include_velocity  = yaml_params.get("include_velocity", args.include_velocity)
         args.save_video        = yaml_params.get("save_video",        args.save_video)
         args.plot_trajectories = yaml_params.get("plot_trajectories", args.plot_trajectories)
         args.plot_splines      = yaml_params.get("plot_splines",      args.plot_splines)
@@ -606,6 +783,9 @@ def main(
             "prune_node_threshold", args.prune_node_threshold
         )
         args.warmup_graphs = yaml_params.get("warmup_graphs", args.warmup_graphs)
+        args.symbolic = yaml_params.get("symbolic", args.symbolic)
+
+    args.input_features = _coerce_feature_spec_arg(args.input_features)
 
     Path(args.output_dir).mkdir(parents=True, exist_ok=True)
 
@@ -653,11 +833,47 @@ def main(
     force_name, force_fn, force_kwargs = _load_force_config(data)
     print(f"Using rollout force function from data: {force_name} with kwargs={force_kwargs}")
 
+    ckpt_feature_spec = getattr(kan_model, "input_feature_spec", None)
+    if args.input_features is not None:
+        raw_feature_spec = args.input_features
+    elif ckpt_feature_spec is not None:
+        raw_feature_spec = ckpt_feature_spec
+    else:
+        raw_feature_spec = _infer_legacy_feature_spec_from_n_f(
+            n_f=int(getattr(kan_model, "n_f", -1)),
+            dim=int(pos0.shape[1]),
+        )
+
+    feature_spec = normalize_feature_spec(raw_feature_spec)
+
+    if args.include_velocity is not None:
+        expected_include_velocity = bool(args.include_velocity)
+        spec_include_velocity = "vel" in feature_spec["include"]
+        if expected_include_velocity != spec_include_velocity:
+            raise ValueError(
+                "include_velocity override conflicts with resolved feature spec: "
+                f"override={expected_include_velocity}, spec_include={feature_spec['include']}"
+            )
+
+    expected_n_f = node_feature_dim(int(pos0.shape[1]), feature_spec)
+    if int(getattr(kan_model, "n_f", -1)) != expected_n_f:
+        raise ValueError(
+            "Resolved feature spec does not match checkpoint input width: "
+            f"spec_n_f={expected_n_f}, checkpoint_n_f={kan_model.n_f}, "
+            f"include={feature_spec['include']}, augment={feature_spec['augment']}"
+        )
+
+    print(
+        "Node input layout: "
+        f"include={feature_spec['include']}, augment={feature_spec['augment']}"
+    )
+
     rep_samples = _build_representative_samples(
         positions=positions,
         velocities=velocities,
         masses=masses,
         edge_index=edge_index,
+        feature_spec=feature_spec,
         max_graphs=max(1, int(args.warmup_graphs)),
     )
     print(
@@ -693,12 +909,30 @@ def main(
     # Model rollouts
     n_steps = int(args.rollout_time / args.dt)
     print(f"Rolling out Graph-KAN ({n_steps} steps)...")
-    kan_pos, _ = rollout(kan_model, pos0, vel0, masses, args.dt, n_steps, edge_index)
+    kan_pos, _ = rollout(
+        kan_model,
+        pos0,
+        vel0,
+        masses,
+        args.dt,
+        n_steps,
+        edge_index,
+        feature_spec=feature_spec,
+    )
 
     gnn_pos = None
     if gnn_model is not None:
         print(f"Rolling out Baseline GNN ({n_steps} steps)...")
-        gnn_pos, _ = rollout(gnn_model, pos0, vel0, masses, args.dt, n_steps, edge_index)
+        gnn_pos, _ = rollout(
+            gnn_model,
+            pos0,
+            vel0,
+            masses,
+            args.dt,
+            n_steps,
+            edge_index,
+            feature_spec=feature_spec,
+        )
 
     # Animate (sampled to match ground truth cadence)
     if (args.save_video):
@@ -746,17 +980,20 @@ def main(
                                 save_path=f'{args.output_dir}/kan_node_network.png')
 
         # ── Symbolic regression — only once, after network viz ────
-        print("\n" + "=" * 60)
-        print("Symbolic Regression Analysis")
-        print("=" * 60)
-        visualize_symbolic_expressions(
-            kan_model,
-            x_nodes=rep_samples['x_nodes'],
-            output_dir=args.output_dir,
-            threshold=0.85,
-            max_batches=1,
-            edge_index=rep_samples['edge_index'],
-        )
+        if args.symbolic:
+            print("\n" + "=" * 60)
+            print("Symbolic Regression Analysis")
+            print("=" * 60)
+            visualize_symbolic_expressions(
+                kan_model,
+                x_nodes=rep_samples['x_nodes'],
+                output_dir=args.output_dir,
+                threshold=0.85,
+                max_batches=1,
+                edge_index=edge_index,
+            )
+        else:
+            print("Skipping symbolic regression (disabled by --no-symbolic).")
 
     print("\n" + "=" * 60)
     print("Done! Generated files:")
@@ -766,7 +1003,8 @@ def main(
         print("  - splines/*.png")
         print("  - kan_msg_network.png")
         print("  - kan_node_network.png")
-        print("  - symbolic_regression.json")
+        if args.symbolic:
+            print("  - symbolic_regression.json")
     print("=" * 60)
 
 

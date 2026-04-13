@@ -126,6 +126,68 @@ def test_graph_kan_custom_width_spec():
     assert out.shape == (n_nodes, ndim)
 
 
+def test_graph_kan_allows_pure_multiplicative_intermediate_layer():
+    """GraphKAN should allow intermediate [0, mult] width entries."""
+    n_nodes = 3
+    n_features = 5
+    msg_dim = 2
+    ndim = 2
+    edge_index = get_edge_index(n_nodes)
+
+    msg_width = [2 * n_features, [3, 1], [0, 2], msg_dim]
+    msg_mult_arity = [[], [2], [3, 3], []]
+    node_width = [n_features + msg_dim, ndim]
+
+    model = GraphKAN(
+        n_f=n_features,
+        msg_width=msg_width,
+        node_width=node_width,
+        msg_mult_arity=msg_mult_arity,
+        node_mult_arity=[[], []],
+        grid_size=3,
+        spline_order=2,
+        sparse_init=False,
+    )
+
+    x = torch.randn(n_nodes, n_features)
+    out = model(x, edge_index)
+
+    assert model.msg_kan.width[-2] == [0, 2]
+    assert model.msg_mult_nodes == 2
+    assert out.shape == (n_nodes, ndim)
+
+
+def test_graph_kan_allows_pure_multiplicative_output_layer():
+    """GraphKAN should allow [0, mult] as the final message layer."""
+    n_nodes = 3
+    n_features = 5
+    msg_dim = 2
+    ndim = 2
+    edge_index = get_edge_index(n_nodes)
+
+    msg_width = [2 * n_features, [3, 1], [0, msg_dim]]
+    msg_mult_arity = [[], [2], [3, 3]]
+    node_width = [n_features + msg_dim, ndim]
+
+    model = GraphKAN(
+        n_f=n_features,
+        msg_width=msg_width,
+        node_width=node_width,
+        msg_mult_arity=msg_mult_arity,
+        node_mult_arity=[[], []],
+        grid_size=3,
+        spline_order=2,
+        sparse_init=False,
+    )
+
+    x = torch.randn(n_nodes, n_features)
+    out = model(x, edge_index)
+
+    assert model.msg_dim == msg_dim
+    assert model.msg_kan.width[-1] == [0, msg_dim]
+    assert out.shape == (n_nodes, ndim)
+
+
 def test_graph_kan_promotes_arity_one_for_pykan_compat():
     """Arity=1 is promoted to 2 to avoid upstream pykan forward crashes."""
     n_nodes = 3
@@ -211,6 +273,37 @@ def test_graph_kan_prune_with_calibration_x():
     assert set(summary.keys()) == {"msg_width", "node_width"}
     assert model.msg_kan.cache_data is not None
     assert model.node_kan.cache_data is not None
+
+
+def test_graph_kan_prune_skips_known_pykan_mult_arity_incompatibility():
+    """Pruning should not crash when pykan attribution is incompatible with mult arity."""
+    n_nodes = 4
+    n_features = 5
+    edge_index = get_edge_index(n_nodes)
+
+    model = GraphKAN(
+        n_f=n_features,
+        msg_width=[2 * n_features, [3, 1], [0, 2]],
+        node_width=[n_features + 2, 2],
+        msg_mult_arity=[[], [2], [3, 3]],
+        node_mult_arity=[[], []],
+        grid_size=3,
+        spline_order=2,
+        sparse_init=False,
+    )
+
+    x = torch.randn(n_nodes, n_features)
+    with pytest.warns(UserWarning, match="Skipping pykan"):
+        summary = model.prune_subnets(
+            edge_threshold=1e-2,
+            node_threshold=1e-2,
+            calibration_x=x,
+            edge_index=edge_index,
+        )
+
+    assert set(summary.keys()) == {"msg_width", "node_width"}
+    out = model(x, edge_index)
+    assert out.shape == (n_nodes, 2)
 
 
 def test_baseline_gnn_forward():

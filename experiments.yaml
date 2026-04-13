@@ -60,6 +60,8 @@ minimal:
     force_fn: "gravity"
   train_params:
     train_baseline: False
+    input_features:
+      include: [pos, vel, mass]
     gkan_hp:
       msg_width: [10, 3, 5, 3, 4, 2]
       node_width: [7, 2]
@@ -177,8 +179,85 @@ minimal_merged_adam:
     save_video: True
     plot_splines: True
 
-minimal_mult_merged_hybrid:
-  name: "minimal_mult_merged_hybrid"
+# minimal_mult_merged_hybrid:
+#   name: "minimal_mult_merged_hybrid"
+#   data_params:
+#     n_train: 200
+#     n_val: 20
+#     force_fn: "gravity"
+#     min_separation: 0.4
+#     max_retries: 50
+#   train_params:
+#     train_baseline: True
+#     gnn_hp:
+#       hidden: 16
+#       msg_dim: 2
+#     gkan_hp:
+#       msg_width: [10, [3, 2], [5, 2], [3, 2], [4, 2], 2]
+#       msg_mult_arity: [[], [2, 2], [2, 2], [2, 2], [2, 2], []]
+#       node_width: [7, 2]
+#       lbfgs_max_iter: 30
+#       lbfgs_impl: torch
+#       sparse_init: False
+#       adam_warmup_epochs: 200
+#       max_grid_updates: 0
+#       gradient_clip: 0
+#     training_hp:
+#       epochs: 100
+#       batch_size: 64
+#       kan_adam_batch_size: 64
+#       kan_lbfgs_batch_size: 131072
+#       lr: 1e-3
+#       kan_square_loss: False
+#       kan_lamb_schedule: [1e-4, 1e-3, 5e-3, 1e-2]
+#       augment: True
+#       augmentation_scale: 3.0
+#       lamb: 0.01
+#   visualization_params:
+#     save_video: True
+#     plot_splines: True
+#     prune_kan: True
+
+# Minimal Graph KAN specification for learning Newtonian gravity with multiplication nodes.
+#
+# The gravity force vector between two bodies is:
+#   F_x = G * m_i * m_j * Δx / r^3
+#   F_y = G * m_i * m_j * Δy / r^3
+# where Δx = x_j - x_i, Δy = y_j - y_i, r = sqrt(Δx^2 + Δy^2)
+# (G is absorbed as a learnable scalar)
+#
+# Fixed inputs (10 total) for message passing between nodes i and j:
+#   [x_i, y_i, x_j, y_j, vx_i, vy_i, vx_j, vy_j, m_i, m_j]
+#
+# The computation requires two hidden layers because r^2 = Δx^2 + Δy^2
+# is a function of Δx and Δy, which must themselves be computed first.
+# This creates an unavoidable sequential dependency: Δx/Δy must exist
+# before r^2 can be computed, so they cannot share the same layer.
+#
+# Layer 1: [3 linear nodes, 1 mult node (arity 2)]
+#   - Linear node 1: KAN edges learn to compute Δx = x_j - x_i
+#   - Linear node 2: KAN edges learn to compute Δy = y_j - y_i
+#   - Linear node 3: KAN edges learn x^2 for Δx and Δy, summed to give r^2
+#     (note: velocities are unused in the message — gravity is position/mass only)
+#   - Mult node (arity 2): computes m_i * m_j directly from inputs (this is technically
+#     constant, so we dont need this at all)
+#
+# Layer 2: [0 linear nodes, 2 mult nodes (arity 3 each)]
+#   - Mult node 1 (arity 3): computes F_x = (m_i * m_j) * Δx * f(r^2)
+#       where the KAN edge on r^2 learns x -> x^(-3/2), giving 1/r^3
+#   - Mult node 2 (arity 3): computes F_y = (m_i * m_j) * Δy * f(r^2)
+#       same r^2 edge reused, Δy substituted
+#
+# The only non-trivial function the KAN edges must learn is r^2 -> r^(-3/2).
+# All multiplications are handled structurally by mult nodes.
+# Δx and Δy edges are near-identity (just differencing), and
+# m_i * m_j is exact via the arity-2 mult node.
+#
+# msg_width:      [10, [3, 1], [0, 2], 2]
+# msg_mult_arity: [[], [2],   [3, 3], []]
+# node_width:     [1, 1]
+min_mult_gravity:
+  name: "min_mult_gravity"
   data_params:
     n_train: 200
     n_val: 20
@@ -187,27 +266,101 @@ minimal_mult_merged_hybrid:
     max_retries: 50
   train_params:
     train_baseline: True
+    input_features:
+      include: [pos, mass]  # Example subset: [pos, mass]
     gnn_hp:
       hidden: 16
       msg_dim: 2
     gkan_hp:
-      msg_width: [10, [3, 2], [6, 2], [3, 2], [4, 2], 2]
-      msg_mult_arity: [[], [2, 2], [2, 2], [2, 2], [2, 2], []]
-      node_width: [7, 2]
-      lbfgs_max_iter: 30
-      lbfgs_impl: torch
+      msg_width: [6, 3, [0, 2], 2]
+      msg_mult_arity: [[], [], [3, 3], []]
+      node_width: [5, 2]
       sparse_init: False
       adam_warmup_epochs: 200
       max_grid_updates: 0
       gradient_clip: 0
     training_hp:
-      epochs: 200
+      epochs: 67
       batch_size: 64
       kan_adam_batch_size: 64
       kan_lbfgs_batch_size: 131072
       lr: 1e-3
       kan_square_loss: False
-      kan_lamb_schedule: [1e-4, 1e-3, 5e-3, 1e-2]
+      kan_lamb_schedule: [1e-4, 1e-3, 2e-3, 4e-2]
+      augment: True
+      augmentation_scale: 3.0
+      lamb: 0.01
+  visualization_params:
+    save_video: True
+    plot_splines: True
+    prune_kan: True
+
+min_mult_linear_gravity:
+  name: "min_mult_linear_gravity"
+  data_params:
+    n_train: 200
+    n_val: 20
+    force_fn: "linear_gravity"
+    min_separation: 0.2
+    max_retries: 50
+  train_params:
+    train_baseline: True
+    gnn_hp:
+      hidden: 20
+      msg_dim: 2
+    gkan_hp:
+      msg_width: [10, 3, [0, 2], 2]
+      msg_mult_arity: [[], [], [3, 3], []]
+      node_width: [7, 2]
+      sparse_init: False
+      adam_warmup_epochs: 200
+      max_grid_updates: 0
+      gradient_clip: 0
+    training_hp:
+      epochs: 67
+      batch_size: 64
+      kan_adam_batch_size: 64
+      kan_lbfgs_batch_size: 131072
+      lr: 1e-3
+      kan_square_loss: False
+      kan_lamb_schedule: [1e-4, 1e-3, 2e-3, 4e-2]
+      augment: True
+      augmentation_scale: 3.0
+      lamb: 0.01
+  visualization_params:
+    save_video: True
+    plot_splines: True
+    prune_kan: True
+
+min_mult_nice_gravity:
+  name: "min_mult_nice_gravity"
+  data_params:
+    n_train: 200
+    n_val: 20
+    force_fn: "nice_function"
+    min_separation: 0.0
+    max_retries: 50
+  train_params:
+    train_baseline: True
+    gnn_hp:
+      hidden: 20
+      msg_dim: 2
+    gkan_hp:
+      msg_width: [10, 3, [0, 2], 2]
+      msg_mult_arity: [[], [], [3, 3], []]
+      node_width: [7, 2]
+      sparse_init: False
+      adam_warmup_epochs: 200
+      max_grid_updates: 0
+      gradient_clip: 0
+    training_hp:
+      epochs: 67
+      batch_size: 64
+      kan_adam_batch_size: 64
+      kan_lbfgs_batch_size: 131072
+      lr: 1e-3
+      kan_square_loss: False
+      kan_lamb_schedule: [1e-4, 1e-3, 2e-3, 4e-2]
       augment: True
       augmentation_scale: 3.0
       lamb: 0.01

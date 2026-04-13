@@ -40,7 +40,13 @@ class GN(MessagePassing, GraphMixin):
     """
 
     def __init__(
-            self, n_f: int, msg_dim: int, ndim: int, hidden: int = 300, aggr: str = "add"
+            self,
+            n_f: int,
+            msg_dim: int,
+            ndim: int,
+            hidden: int = 300,
+            aggr: str = "add",
+            input_feature_spec: Optional[dict] = None,
     ):
         super().__init__(aggr=aggr)
         
@@ -48,6 +54,7 @@ class GN(MessagePassing, GraphMixin):
         self.msg_dim = msg_dim
         self.ndim = ndim
         self.hidden = hidden
+        self.input_feature_spec = input_feature_spec
 
         # Message function: [x_i, x_j] (2*n_f) → msg_dim
         # 4 layers, configurable hidden dimension (default 300) - matches original
@@ -172,8 +179,16 @@ class OGN(OrdinaryMixin, GN):
             edge_index: torch.Tensor,
             hidden: int = 300,
             aggr: str = "add",
+            input_feature_spec: Optional[dict] = None,
     ):
-        super().__init__(n_f, msg_dim, ndim, hidden, aggr=aggr)
+        super().__init__(
+            n_f,
+            msg_dim,
+            ndim,
+            hidden,
+            aggr=aggr,
+            input_feature_spec=input_feature_spec,
+        )
         self.ndim = ndim
         self.register_buffer("edge_index", edge_index)
 

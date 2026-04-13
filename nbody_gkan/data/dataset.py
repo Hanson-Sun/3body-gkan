@@ -2,14 +2,14 @@
 PyTorch Geometric dataset for N-body dynamics.
 
 Generates graph data with:
-- Node features: [pos_x, pos_y, vel_x, vel_y, mass] for 2D
+- Node features: [pos, vel, mass] (default) or [pos, mass] when velocity is disabled
 - Edge index: fully connected graph
 - Targets: accelerations from a configured force law
 """
 
 import json
 from pathlib import Path
-from typing import Optional
+from typing import Any, Optional
 
 import numpy as np
 import torch
@@ -27,6 +27,106 @@ FORCE_FN_MAP = {
     "hooke_pairwise": nbody_force_fns.hooke_pairwise,
     "nice_function": nbody_force_fns.nice_function,
 }
+
+DEFAULT_FEATURE_SPEC = {
+    "include": ["pos", "vel", "mass"],
+    "augment": [],
+}
+
+_VALID_BASE_FEATURES = {"pos", "vel", "mass"}
+
+
+def normalize_feature_spec(
+    feature_spec: Any = None,
+    include_velocity: Optional[bool] = None,
+) -> dict[str, list[str]]:
+    """
+    Normalize feature selection config.
+
+    Parameters
+    ----------
+    feature_spec : dict | list[str] | None
+        Supported forms:
+        - None: defaults to include=[pos, vel, mass], augment=[]
+        - list[str]: interpreted as include list
+        - dict: {"include": [...]} (optional "augment" must be empty if present)
+    include_velocity : bool, optional
+        Backward-compatible alias used only when feature_spec is None.
+
+    Returns
+    -------
+    dict[str, list[str]]
+        Normalized spec with keys: include, augment.
+    """
+    if feature_spec is None:
+        include = ["pos", "vel", "mass"] if include_velocity is None or include_velocity else ["pos", "mass"]
+        augment = []
+    elif isinstance(feature_spec, (list, tuple)):
+        include = list(feature_spec)
+        augment = []
+    elif isinstance(feature_spec, dict):
+        include = feature_spec.get("include", DEFAULT_FEATURE_SPEC["include"])
+        augment = feature_spec.get("augment", feature_spec.get("augmentations", []))
+    else:
+        raise ValueError("feature_spec must be None, a list, or a dict with 'include'.")
+
+    include = [str(v).strip() for v in include]
+    if not include:
+        raise ValueError("feature_spec.include must not be empty.")
+    if augment:
+        raise ValueError("feature_spec.augment is not supported.")
+
+    unknown_include = set(include) - _VALID_BASE_FEATURES
+    if unknown_include:
+        raise ValueError(f"Unknown base feature(s): {sorted(unknown_include)}")
+
+    return {
+        "include": include,
+        "augment": [],
+    }
+
+
+def node_feature_dim(dim: int, feature_spec: Any) -> int:
+    """Return resulting node feature width for a given spatial dimension and feature spec."""
+    if dim <= 0:
+        raise ValueError(f"dim must be > 0, got {dim}.")
+
+    spec = normalize_feature_spec(feature_spec)
+    return sum(dim if name in {"pos", "vel"} else 1 for name in spec["include"])
+
+
+def build_node_features_np(
+    pos: np.ndarray,
+    vel: np.ndarray,
+    masses: np.ndarray,
+    feature_spec: Any,
+) -> np.ndarray:
+    """Build node features from raw position/velocity/mass arrays using feature_spec."""
+    spec = normalize_feature_spec(feature_spec)
+
+    parts = {
+        "pos": pos,
+        "vel": vel,
+        "mass": np.asarray(masses)[..., np.newaxis],
+    }
+    return np.concatenate([parts[name] for name in spec["include"]], axis=-1)
+
+
+def build_node_features_torch(
+    pos: torch.Tensor,
+    vel: torch.Tensor,
+    masses: torch.Tensor,
+    feature_spec: Any,
+) -> torch.Tensor:
+    """Torch equivalent of build_node_features_np with matching feature ordering."""
+    spec = normalize_feature_spec(feature_spec)
+
+    parts = {
+        "pos": pos,
+        "vel": vel,
+        "mass": masses.to(dtype=pos.dtype, device=pos.device).unsqueeze(-1),
+    }
+    return torch.cat([parts[name] for name in spec["include"]], dim=-1)
 
 
 def _trajectory_min_pairwise_distance(positions: np.ndarray) -> float:
@@ -94,7 +194,7 @@ class NBodyDataset(Dataset):
     PyTorch Geometric dataset for N-body dynamics.
 
     Loads trajectory data and yields graph data samples where:
-    - Node features x: [pos, vel, mass] concatenated
+    - Node features x: configurable subset/augmentation of [pos, vel, mass]
     - Targets y: accelerations
     - edge_index: fully connected graph
 
@@ -113,6 +213,13 @@ class NBodyDataset(Dataset):
         available, else falls back to 'gravity'.
     force_kwargs : dict, optional
         Override kwargs passed to the selected force function.
+    include_velocity : bool, optional
+        Backward-compatible alias for toggling velocity features only.
+        Used only when feature_spec is not provided.
+    feature_spec : dict | list[str], optional
+        Input feature specification.
+                - list form: ["pos", "mass"] means include only those base features
+                - dict form: {"include": [...]} (augment must be empty if present)
     """
 
     def __init__(
@@ -122,8 +229,15 @@ class NBodyDataset(Dataset):
             softening: float = 1e-2,
             force_fn: Optional[str] = None,
             force_kwargs: Optional[dict] = None,
+            include_velocity: Optional[bool] = None,
+            feature_spec: Any = None,
     ):
         self.data_path = Path(data_path)
+        self.feature_spec = normalize_feature_spec(
+            feature_spec=feature_spec,
+            include_velocity=include_velocity,
+        )
+        self.include_velocity = "vel" in self.feature_spec["include"]
 
         # Load data
         data = np.load(self.data_path)
@@ -200,6 +314,7 @@ class NBodyDataset(Dataset):
             )
 
         self.n_samples = self.positions.shape[0]
+        self.n_node_features = node_feature_dim(self.dim, self.feature_spec)
 
         # Precompute edge index (same for all samples)
         self.edge_index = get_edge_index(self.n)
@@ -215,7 +330,7 @@ class NBodyDataset(Dataset):
         -------
         torch_geometric.data.Data
             Graph with:
-            - x: node features [pos, vel, mass] shape (n, 2*dim+1)
+            - x: configured node features based on feature_spec
             - y: accelerations shape (n, dim)
             - edge_index: shape (2, n_edges)
         """
@@ -225,10 +340,12 @@ class NBodyDataset(Dataset):
         # Compute force-consistent targets on-the-fly.
         acc = self.force_fn(pos, self.masses, **self.force_kwargs)
 
-        # Node features: [pos, vel, mass]
-        # Expand mass to (n, 1) and concatenate
-        masses_expanded = self.masses[:, np.newaxis]  # (n, 1)
-        x = np.concatenate([pos, vel, masses_expanded], axis=1)  # (n, 2*dim+1)
+        x = build_node_features_np(
+            pos=pos,
+            vel=vel,
+            masses=self.masses,
+            feature_spec=self.feature_spec,
+        )
 
         # Convert to tensors
         x = torch.from_numpy(x).float()

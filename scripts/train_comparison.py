@@ -13,7 +13,7 @@ matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 from tqdm import tqdm
 
-from nbody_gkan.data.dataset import NBodyDataset
+from nbody_gkan.data.dataset import NBodyDataset, normalize_feature_spec
 from nbody_gkan.models import OrdinaryGraphKAN, OGN
 from nbody_gkan.device import get_device
 from nbody_gkan.models.model_loader import ModelLoader
@@ -25,6 +25,21 @@ def parse_args(args=None):
     # Data
     parser.add_argument("--train_data", type=str, default="data/train.npz")
     parser.add_argument("--val_data", type=str, default="data/val.npz")
+    parser.add_argument(
+        "--include_velocity",
+        action=argparse.BooleanOptionalAction,
+        default=True,
+        help="Include velocity components in node features (default: true).",
+    )
+    parser.add_argument(
+        "--input_features",
+        type=str,
+        default=None,
+        help=(
+            "Optional JSON feature spec, e.g. "
+            "'{\"include\": [\"pos\", \"mass\"]}'."
+        ),
+    )
     parser.add_argument("--checkpoint_dir", type=str, default="checkpoints/comparison")
     # GNN hyperparameters
     parser.add_argument("--hidden", type=int, default=200)
@@ -194,7 +209,7 @@ def _coerce_float_schedule_arg(value, label: str) -> list[float] | None:
 
 
 def _extract_width_output_dim(width, label: str) -> int:
-    """Extract output linear dimension from pykan width spec."""
+    """Extract total output dimension from pykan width spec."""
     if width is None:
         raise ValueError(f"{label} is required and must be a sequence.")
     if not isinstance(width, Sequence) or isinstance(width, (str, bytes)):
@@ -216,15 +231,18 @@ def _extract_width_output_dim(width, label: str) -> int:
                 f"{label} last entry must be numeric [linear, mult]; got {last!r}."
             ) from exc
 
-        if linear_out <= 0:
+        if linear_out < 0:
             raise ValueError(
-                f"{label} output linear width must be > 0; got {last!r}. "
-                "If you want multiplication near the output, put mult nodes in the "
-                "previous layer and keep the final layer as [out_dim, 0]."
+                f"{label} output linear width must be >= 0; got {last!r}."
             )
         if mult_out < 0:
             raise ValueError(f"{label} output mult node count must be >= 0; got {last!r}.")
-        return linear_out
+        total_out = linear_out + mult_out
+        if total_out <= 0:
+            raise ValueError(
+                f"{label} output width must include at least one node; got {last!r}."
+            )
+        return total_out
 
     try:
         out_dim = int(last)
@@ -233,6 +251,51 @@ def _extract_width_output_dim(width, label: str) -> int:
     if out_dim <= 0:
         raise ValueError(f"{label} output dimension must be > 0; got {out_dim}.")
     return out_dim
+
+
+def _coerce_feature_spec_arg(value):
+    """Convert CLI/YAML feature spec input into dict/list form."""
+    if value is None:
+        return None
+    if isinstance(value, (dict, list, tuple)):
+        return value
+    if isinstance(value, str):
+        stripped = value.strip()
+        if stripped == "":
+            return None
+        try:
+            return json.loads(stripped)
+        except json.JSONDecodeError as exc:
+            raise ValueError(
+                "input_features must be JSON dict/list, e.g. "
+                "'{\"include\":[\"pos\",\"mass\"]}'"
+            ) from exc
+    raise ValueError(f"input_features must be dict/list/JSON-string, got {type(value).__name__}.")
+
+
+def _align_width_input_dim(width, input_dim: int, label: str):
+    """Ensure pykan width starts with expected input_dim; auto-fix for convenience."""
+    if not isinstance(width, Sequence) or isinstance(width, (str, bytes)):
+        raise ValueError(f"{label} must be a sequence, got {type(width).__name__}.")
+    if len(width) < 2:
+        raise ValueError(f"{label} must include at least input and output dimensions.")
+
+    first = width[0]
+    if isinstance(first, Sequence) and not isinstance(first, (str, bytes)):
+        raise ValueError(f"{label} first entry must be scalar input dimension, got {first!r}.")
+
+    try:
+        current = int(first)
+    except Exception as exc:
+        raise ValueError(f"{label} first entry must be numeric, got {first!r}.") from exc
+
+    if current == int(input_dim):
+        return width
+
+    adjusted = list(width)
+    adjusted[0] = int(input_dim)
+    print(f"Adjusted {label}[0]: {current} -> {input_dim} to match selected node features.")
+    return adjusted
 
 
 
@@ -342,6 +405,8 @@ def main(yaml_params: Optional[dict] = None, checkpoint_dir: Optional[str] = Non
     if yaml_params is not None:
         args.train_data = str(Path(data_dir) / "train.npz")
         args.val_data = str(Path(data_dir) / "val.npz")
+        args.include_velocity = yaml_params.get("include_velocity", args.include_velocity)
+        args.input_features = yaml_params.get("input_features", args.input_features)
         args.checkpoint_dir = checkpoint_dir if checkpoint_dir is not None else args.checkpoint_dir
         args.hidden = yaml_params.get("gnn_hp", {}).get("hidden", args.hidden)
         args.msg_dim = yaml_params.get("gnn_hp", {}).get("msg_dim", args.msg_dim)
@@ -388,6 +453,7 @@ def main(yaml_params: Optional[dict] = None, checkpoint_dir: Optional[str] = Non
 
     args.kan_msg_width = _coerce_width_arg(args.kan_msg_width)
     args.kan_node_width = _coerce_width_arg(args.kan_node_width)
+    args.input_features = _coerce_feature_spec_arg(args.input_features)
     args.kan_msg_mult_arity = _coerce_mult_arity_arg(args.kan_msg_mult_arity, "kan_msg_mult_arity")
     args.kan_node_mult_arity = _coerce_mult_arity_arg(args.kan_node_mult_arity, "kan_node_mult_arity")
     args.kan_lamb_schedule = _coerce_float_schedule_arg(
@@ -410,23 +476,28 @@ def main(yaml_params: Optional[dict] = None, checkpoint_dir: Optional[str] = Non
     elif args.kan_msg_dim != msg_out:
         raise ValueError(f"kan_msg_dim ({args.kan_msg_dim}) must match kan_msg_width output ({msg_out}).")
 
+    feature_spec = normalize_feature_spec(
+        feature_spec=args.input_features,
+        include_velocity=(args.include_velocity if args.input_features is None else None),
+    )
+
     device = get_device()
     print(f"Using device: {device}\n")
 
     # Load data
     print("Loading datasets...")
-    train_dataset = NBodyDataset(args.train_data)
-    val_dataset = NBodyDataset(args.val_data)
+    train_dataset = NBodyDataset(args.train_data, feature_spec=feature_spec)
+    val_dataset = NBodyDataset(args.val_data, feature_spec=feature_spec)
 
-    train_loader = DataLoader(train_dataset, batch_size=args.batch_size, shuffle=True, num_workers=0, pin_memory=True, persistent_workers=False)
-    val_loader = DataLoader(val_dataset, batch_size=args.batch_size, shuffle=False, num_workers=0, pin_memory=True, persistent_workers=False)
+    train_loader = DataLoader(train_dataset, batch_size=args.batch_size, shuffle=True, num_workers=8, pin_memory=True, persistent_workers=True)
+    val_loader = DataLoader(val_dataset, batch_size=args.batch_size, shuffle=False, num_workers=8, pin_memory=True, persistent_workers=True)
 
-    kan_adam_train_loader = DataLoader(train_dataset, batch_size=args.kan_adam_batch_size, shuffle=True, num_workers=0, pin_memory=False, persistent_workers=False)
+    kan_adam_train_loader = DataLoader(train_dataset, batch_size=args.kan_adam_batch_size, shuffle=True, num_workers=8, pin_memory=False, persistent_workers=True)
     if args.kan_lbfgs_batch_size == args.kan_adam_batch_size:
         kan_lbfgs_train_loader = kan_adam_train_loader
     else:
-        kan_lbfgs_train_loader = DataLoader(train_dataset, batch_size=args.kan_lbfgs_batch_size, shuffle=True, num_workers=0, pin_memory=True, persistent_workers=False)
-    kan_val_loader = DataLoader(val_dataset, batch_size=args.kan_lbfgs_batch_size, shuffle=False, num_workers=0, pin_memory=True, persistent_workers=False)
+        kan_lbfgs_train_loader = DataLoader(train_dataset, batch_size=args.kan_lbfgs_batch_size, shuffle=True, num_workers=8, pin_memory=True, persistent_workers=True)
+    kan_val_loader = DataLoader(val_dataset, batch_size=args.kan_lbfgs_batch_size, shuffle=False, num_workers=8, pin_memory=True, persistent_workers=True)
 
     print(
         "Loader steps/epoch: "
@@ -445,7 +516,13 @@ def main(yaml_params: Optional[dict] = None, checkpoint_dir: Optional[str] = Non
             "If convergence per epoch is slow, reduce kan_lbfgs_batch_size."
         )
 
-    n_features = 2 * train_dataset.dim + 1
+    n_features = train_dataset.n_node_features
+    args.kan_msg_width = _align_width_input_dim(args.kan_msg_width, 2 * n_features, "kan_msg_width")
+    args.kan_node_width = _align_width_input_dim(
+        args.kan_node_width,
+        n_features + int(args.kan_msg_dim),
+        "kan_node_width",
+    )
     edge_index = train_dataset.edge_index
 
     if args.kan_node_width:
@@ -457,6 +534,11 @@ def main(yaml_params: Optional[dict] = None, checkpoint_dir: Optional[str] = Non
             )
 
     print(f"Dataset: {train_dataset.n} bodies, {train_dataset.dim}D")
+    print(
+        "Input feature spec: "
+        f"include={feature_spec['include']}, augment={feature_spec['augment']}"
+    )
+    print(f"Node features: {n_features}")
     print(f"Train: {len(train_dataset)} samples, Val: {len(val_dataset)} samples\n")
 
     # Create checkpoint directory
@@ -472,6 +554,7 @@ def main(yaml_params: Optional[dict] = None, checkpoint_dir: Optional[str] = Non
         msg_width=args.kan_msg_width,
         node_width=args.kan_node_width,
         edge_index=edge_index,
+        input_feature_spec=feature_spec,
         grid_size=args.kan_grid_size,
         spline_order=3,
         aggr="add",
@@ -526,7 +609,8 @@ def main(yaml_params: Optional[dict] = None, checkpoint_dir: Optional[str] = Non
         print("="*60)
         gnn_model = OGN(
             n_f=n_features, msg_dim=args.msg_dim, ndim=train_dataset.dim,
-            edge_index=edge_index, hidden=args.hidden, aggr="add"
+            edge_index=edge_index, hidden=args.hidden, aggr="add",
+            input_feature_spec=feature_spec,
         )
         gnn_model.summary()
         print(" ")

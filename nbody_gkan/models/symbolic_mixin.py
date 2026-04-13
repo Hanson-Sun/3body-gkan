@@ -18,8 +18,8 @@ class SymbolicGraphKANMixin:
     """Utility methods for running and reporting symbolic regression."""
 
     DEFAULT_SYMBOLIC_LIBRARY = (
-        'x', 'x^2', 'x^3', '1/x', '1/x^2',
-        'sqrt', 'log', 'abs', 'sin', 'cos', 'exp',
+        'x', 'x^2', 'x^3', '1/x', '1/x^2', '1/x^3',
+        'sqrt', 'log', 'abs', 'exp',
     )
 
     def suggest_symbolic(
@@ -29,7 +29,7 @@ class SymbolicGraphKANMixin:
         lib: list[str] | None = None,
         max_batches: int = 10,
         threshold: float = 0.8,
-        fit_affine_after_select: bool = False,
+        fit_affine_after_select: bool = True,
     ) -> dict:
         """
         Suggest symbolic functions per edge using pykan's native API.

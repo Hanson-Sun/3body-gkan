@@ -78,10 +78,12 @@ class GraphKAN(SymbolicGraphKANMixin, MessagePassing, GraphMixin):
             scale_base_sigma: Optional[float] = None,
             msg_dim: Optional[int] = None,
             ndim: Optional[int] = None,
+            input_feature_spec: Optional[dict] = None,
             **_: Any,
         ):
         super().__init__(aggr=aggr)
         self.n_f = n_f
+        self.input_feature_spec = input_feature_spec
         self.grid_size = self._validate_positive_int(grid_size, "grid_size")
         self.spline_order = self._validate_positive_int(spline_order, "spline_order")
         self.lamb_l1 = float(lamb_l1)
@@ -202,8 +204,15 @@ class GraphKAN(SymbolicGraphKANMixin, MessagePassing, GraphMixin):
                 raise ValueError(
                     f"{label} last entry must be a scalar or [linear, mult]; got {last!r}."
                 )
-            return int(last[0])
-        return int(last)
+            linear_out = GraphKAN._validate_nonnegative_int(last[0], f"{label}[-1][0]")
+            mult_out = GraphKAN._validate_nonnegative_int(last[1], f"{label}[-1][1]")
+            total_out = linear_out + mult_out
+            if total_out <= 0:
+                raise ValueError(
+                    f"{label} output width must include at least one node; got {last!r}."
+                )
+            return total_out
+        return GraphKAN._validate_positive_int(last, f"{label}[-1]")
 
     @staticmethod
     def _normalize_width_spec(
@@ -213,6 +222,9 @@ class GraphKAN(SymbolicGraphKANMixin, MessagePassing, GraphMixin):
         label: str,
     ) -> list:
         """Validate and normalize a pykan-style width specification."""
+        expected_in_dim = GraphKAN._validate_positive_int(in_dim, f"{label} input dimension")
+        expected_out_dim = GraphKAN._validate_positive_int(out_dim, f"{label} output dimension")
+
         if width is None:
             raise ValueError(f"{label} is required.")
         if isinstance(width, str):
@@ -235,22 +247,30 @@ class GraphKAN(SymbolicGraphKANMixin, MessagePassing, GraphMixin):
                         f"got {entry!r}."
                     )
                 linear, mult = entry
-                linear_v = GraphKAN._validate_positive_int(linear, f"{label}[{idx}][0]")
+                linear_v = GraphKAN._validate_nonnegative_int(linear, f"{label}[{idx}][0]")
                 mult_v = GraphKAN._validate_nonnegative_int(mult, f"{label}[{idx}][1]")
+                if linear_v == 0 and mult_v == 0:
+                    raise ValueError(
+                        f"{label}[{idx}] must include at least one node; got {entry!r}."
+                    )
                 normalized.append([linear_v, mult_v])
             else:
                 linear_v = GraphKAN._validate_positive_int(entry, f"{label}[{idx}]")
                 normalized.append(linear_v)
 
         first = normalized[0][0] if isinstance(normalized[0], Sequence) else normalized[0]
-        if first != in_dim:
+        if first != expected_in_dim:
             raise ValueError(
-                f"{label} must start with input dimension {in_dim} (got {normalized[0]})."
+                f"{label} must start with input dimension {expected_in_dim} (got {normalized[0]})."
             )
-        last = normalized[-1][0] if isinstance(normalized[-1], Sequence) else normalized[-1]
-        if last != out_dim:
+        if isinstance(normalized[-1], Sequence):
+            last_total = int(normalized[-1][0]) + int(normalized[-1][1])
+        else:
+            last_total = int(normalized[-1])
+        if last_total != expected_out_dim:
             raise ValueError(
-                f"{label} must end with output dimension {out_dim} (got {normalized[-1]})."
+                f"{label} must end with output dimension {expected_out_dim} (got {normalized[-1]}). "
+                "For [linear, mult] entries, output dimension is linear + mult."
             )
 
         return copy.deepcopy(normalized)
@@ -267,8 +287,26 @@ class GraphKAN(SymbolicGraphKANMixin, MessagePassing, GraphMixin):
         method = getattr(subnet, method_name, None)
         if method is None:
             return subnet
-        result = method(threshold=float(threshold), log_history=log_history)
+        try:
+            result = method(threshold=float(threshold), log_history=log_history)
+        except Exception as exc:
+            if GraphKAN._is_known_pykan_prune_incompatibility(exc):
+                warnings.warn(
+                    "Skipping pykan "
+                    f"{method_name} due to known mult-arity attribution incompatibility: {exc}",
+                    stacklevel=2,
+                )
+                return subnet
+            raise
         return subnet if result is None else result
+
+    @staticmethod
+    def _is_known_pykan_prune_incompatibility(exc: Exception) -> bool:
+        msg = str(exc)
+        return (
+            "expanded size of the tensor" in msg
+            or "NoneType" in msg and "subscriptable" in msg
+        )
 
     def _prime_pruning_cache(
         self,
@@ -341,33 +379,63 @@ class GraphKAN(SymbolicGraphKANMixin, MessagePassing, GraphMixin):
             if getattr(self.msg_kan, "cache_data", None) is None or getattr(self.node_kan, "cache_data", None) is None:
                 raise RuntimeError("prune_subnets requires calibration_x or a prior forward pass.")
 
+        msg_edge_threshold = edge_threshold
+        node_edge_threshold = edge_threshold
+        msg_node_threshold = node_threshold
+        node_node_threshold = node_threshold
+
         if edge_threshold is not None:
-            self.msg_kan.attribute(plot=False)
-            self.node_kan.attribute(plot=False)
+            try:
+                self.msg_kan.attribute(plot=False)
+            except Exception as exc:
+                if self._is_known_pykan_prune_incompatibility(exc):
+                    warnings.warn(
+                        "Skipping pykan pruning for message subnet due to known "
+                        f"mult-arity attribution incompatibility: {exc}",
+                        stacklevel=2,
+                    )
+                    msg_edge_threshold = None
+                    msg_node_threshold = None
+                else:
+                    raise
+
+            try:
+                self.node_kan.attribute(plot=False)
+            except Exception as exc:
+                if self._is_known_pykan_prune_incompatibility(exc):
+                    warnings.warn(
+                        "Skipping pykan pruning for node subnet due to known "
+                        f"mult-arity attribution incompatibility: {exc}",
+                        stacklevel=2,
+                    )
+                    node_edge_threshold = None
+                    node_node_threshold = None
+                else:
+                    raise
 
         self.msg_kan = self._call_prune_method(
             self.msg_kan,
             "prune_edge",
-            edge_threshold,
+            msg_edge_threshold,
             log_history=log_history,
         )
         self.node_kan = self._call_prune_method(
             self.node_kan,
             "prune_edge",
-            edge_threshold,
+            node_edge_threshold,
             log_history=log_history,
         )
 
         self.msg_kan = self._call_prune_method(
             self.msg_kan,
             "prune_node",
-            node_threshold,
+            msg_node_threshold,
             log_history=log_history,
         )
         self.node_kan = self._call_prune_method(
             self.node_kan,
             "prune_node",
-            node_threshold,
+            node_node_threshold,
             log_history=log_history,
         )
 
