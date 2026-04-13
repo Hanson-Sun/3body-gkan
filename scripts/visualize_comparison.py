@@ -150,7 +150,7 @@ def parse_args(args=None):
     parser.add_argument("--save_video",        action=argparse.BooleanOptionalAction, default=True)
     parser.add_argument("--plot_trajectories", action=argparse.BooleanOptionalAction, default=True)
     parser.add_argument("--plot_splines",      action=argparse.BooleanOptionalAction, default=True)
-    parser.add_argument("--symbolic_regression", action=argparse.BooleanOptionalAction, default=True)
+    parser.add_argument("--symbolic_regression", action=argparse.BooleanOptionalAction, default=False)
     parser.add_argument("--prune_kan",         action=argparse.BooleanOptionalAction, default=False)
     parser.add_argument("--prune_edge_threshold", type=float, default=3e-2)
     parser.add_argument("--prune_node_threshold", type=float, default=None)
