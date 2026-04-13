@@ -137,8 +137,8 @@ regularization_control:
     num_workers: 0
     train_baseline: False
     gkan_hp:
-      msg_width: [10, 16, 16, 16]
-      node_width: [21, 16, 16, 2]
+      msg_width: [10, 8, 4, 2]
+      node_width: [7, 4, 4, 2]
       lamb_l1: 0.0
       lamb_entropy: 0.0
       adam_warmup_epochs: 50
@@ -175,8 +175,8 @@ regularization_l1_1e-3:
     num_workers: 0
     train_baseline: False
     gkan_hp:
-      msg_width: [10, 16, 16, 16]
-      node_width: [21, 16, 16, 2]
+      msg_width: [10, 8, 4, 2]
+      node_width: [7, 4, 4, 2]
       lamb_l1: 1e-3
       lamb_entropy: 0.0
       adam_warmup_epochs: 50
@@ -209,8 +209,8 @@ regularization_l1_1e-4:
     num_workers: 0
     train_baseline: False
     gkan_hp:
-      msg_width: [10, 16, 16, 16]
-      node_width: [21, 16, 16, 2]
+      msg_width: [10, 8, 4, 2]
+      node_width: [7, 4, 4, 2]
       lamb_l1: 1e-4
       lamb_entropy: 0.0
       adam_warmup_epochs: 50
@@ -243,8 +243,8 @@ regularization_l1_1e-5:
     num_workers: 0
     train_baseline: False
     gkan_hp:
-      msg_width: [10, 16, 16, 16]
-      node_width: [21, 16, 16, 2]
+      msg_width: [10, 8, 4, 2]
+      node_width: [7, 4, 4, 2]
       lamb_l1: 1e-5
       lamb_entropy: 0.0
       lbfgs_max_iter: 30
@@ -284,8 +284,8 @@ regularization_sparse-init:
     num_workers: 0
     train_baseline: False
     gkan_hp:
-      msg_width: [10, 16, 16, 16]
-      node_width: [21, 16, 16, 2]
+      msg_width: [10, 8, 4, 2]
+      node_width: [7, 4, 4, 2]
       lamb_l1: 0.0
       lamb_entropy: 0.0
       lbfgs_max_iter: 30
@@ -327,8 +327,8 @@ regularization_entropy_1e-3:
     num_workers: 0
     train_baseline: False
     gkan_hp:
-      msg_width: [10, 16, 16, 16]
-      node_width: [21, 16, 16, 2]
+      msg_width: [10, 8, 4, 2]
+      node_width: [7, 4, 4, 2]
       lamb_l1: 0
       lamb_entropy: 1e-3
       lbfgs_max_iter: 30
@@ -369,8 +369,8 @@ regularization_entropy_1e-4:
     num_workers: 0
     train_baseline: False
     gkan_hp:
-      msg_width: [10, 16, 16, 16]
-      node_width: [21, 16, 16, 2]
+      msg_width: [10, 8, 4, 2]
+      node_width: [7, 4, 4, 2]
       lamb_l1: 0
       lamb_entropy: 1e-4
       lbfgs_max_iter: 30
@@ -413,8 +413,8 @@ regularization_combined_1e-4:
     num_workers: 0
     train_baseline: False
     gkan_hp:
-      msg_width: [10, 16, 16, 16]
-      node_width: [21, 16, 16, 2]
+      msg_width: [10, 8, 4, 2]
+      node_width: [7, 4, 4, 2]
       lamb_l1: 1e-4
       lamb_entropy: 1e-4
       lbfgs_max_iter: 30
@@ -455,8 +455,8 @@ regularization_combined_1e-3:
     num_workers: 0
     train_baseline: False
     gkan_hp:
-      msg_width: [10, 16, 16, 16]
-      node_width: [21, 16, 16, 2]
+      msg_width: [10, 8, 4, 2]
+      node_width: [7, 4, 4, 2]
       lamb_l1: 1e-3
       lamb_entropy: 1e-3
       lbfgs_max_iter: 30
