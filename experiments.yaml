@@ -250,7 +250,7 @@ regularization_l1_1e-5:
       lbfgs_max_iter: 30
       lbfgs_impl: torch
       sparse_init: False
-      optimizer_mode: two_phase
+      optimizer_mode: alternating
       adam_warmup_epochs: 50
       max_grid_updates: 0
       gradient_clip: 5.0
@@ -291,7 +291,7 @@ regularization_sparse-init:
       lbfgs_max_iter: 30
       lbfgs_impl: torch
       sparse_init: False
-      optimizer_mode: two_phase
+      optimizer_mode: alternating
       adam_warmup_epochs: 50
       max_grid_updates: 0
       gradient_clip: 5.0
@@ -334,7 +334,7 @@ regularization_entropy_1e-3:
       lbfgs_max_iter: 30
       lbfgs_impl: torch
       sparse_init: False
-      optimizer_mode: two_phase
+      optimizer_mode: alternating
       adam_warmup_epochs: 50
       max_grid_updates: 0
       gradient_clip: 5.0
@@ -376,7 +376,7 @@ regularization_entropy_1e-4:
       lbfgs_max_iter: 30
       lbfgs_impl: torch
       sparse_init: False
-      optimizer_mode: two_phase
+      optimizer_mode: alternating
       adam_warmup_epochs: 50
       max_grid_updates: 0
       gradient_clip: 5.0
@@ -420,7 +420,7 @@ regularization_combined_1e-4:
       lbfgs_max_iter: 30
       lbfgs_impl: torch
       sparse_init: False
-      optimizer_mode: two_phase
+      optimizer_mode: alternating
       adam_warmup_epochs: 50
       max_grid_updates: 0
       gradient_clip: 5.0
@@ -462,7 +462,7 @@ regularization_combined_1e-3:
       lbfgs_max_iter: 30
       lbfgs_impl: torch
       sparse_init: False
-      optimizer_mode: two_phase
+      optimizer_mode: alternating
       adam_warmup_epochs: 50
       max_grid_updates: 0
       gradient_clip: 5.0
