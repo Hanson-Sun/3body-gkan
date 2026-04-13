@@ -22,7 +22,7 @@ testing_gnn:
       epochs: 2
       batch_size: 256
       lr: 1e-3
-      lamb: 0.00
+      lamb: 1.00
       augment: True
       augmentation_scale: 3.0
   visualization_params:
@@ -52,7 +52,7 @@ testing_gkan:
       epochs: 2
       batch_size: 256
       lr: 1e-3
-      lamb: 0.00
+      lamb: 1.00
       augment: True
       augmentation_scale: 3.0
   visualization_params:
@@ -81,7 +81,7 @@ testing_both:
       epochs: 2
       batch_size: 256
       lr: 1e-3
-      lamb: 0.00
+      lamb: 1.00
       augment: True
       augmentation_scale: 3.0
   visualization_params:
@@ -114,7 +114,7 @@ baseline:
       epochs: 50
       batch_size: 256
       lr: 1e-3
-      lamb: 0.00
+      lamb: 1.00
       augment: True
       augmentation_scale: 3.0
   visualization_params:
@@ -152,7 +152,7 @@ regularization_control:
       kan_adam_batch_size: 256
       kan_lbfgs_batch_size: 256
       lr: 1e-3
-      lamb: 0.00
+      lamb: 1.00
       augment: True
       augmentation_scale: 3.0
   visualization_params:
@@ -192,7 +192,7 @@ regularization_l1_1e-3:
       kan_adam_batch_size: 256
       kan_lbfgs_batch_size: 256
       lr: 1e-3
-      lamb: 0.00
+      lamb: 1.00
       augment: True
       augmentation_scale: 3.0
   visualization_params:
@@ -228,7 +228,7 @@ regularization_l1_1e-4:
       kan_adam_batch_size: 256
       kan_lbfgs_batch_size: 256
       lr: 1e-3
-      lamb: 0.00
+      lamb: 1.00
       augment: True
       augmentation_scale: 3.0
   visualization_params:
@@ -268,7 +268,7 @@ regularization_l1_1e-5:
       kan_batch_size: 256
       kan_lbfgs_batch_size: 256
       lr: 1e-3
-      lamb: 0.00
+      lamb: 1.00
       augment: True
       augmentation_scale: 3.0
   visualization_params:
@@ -310,7 +310,7 @@ regularization_sparse-init:
       kan_batch_size: 256
       kan_lbfgs_batch_size: 256
       lr: 1e-3
-      lamb: 0.00
+      lamb: 1.00
       augment: True
       augmentation_scale: 3.0
   visualization_params:
@@ -355,7 +355,7 @@ regularization_entropy_1e-3:
       kan_batch_size: 256
       kan_lbfgs_batch_size: 256
       lr: 1e-3
-      lamb: 0.00
+      lamb: 1.00
       augment: True
       augmentation_scale: 3.0
   visualization_params:
@@ -398,7 +398,7 @@ regularization_entropy_1e-4:
       kan_adam_batch_size: 256
       kan_lbfgs_batch_size: 256
       lr: 1e-3
-      lamb: 0.00
+      lamb: 1.00
       augment: True
       augmentation_scale: 3.0
   visualization_params:
@@ -407,7 +407,7 @@ regularization_entropy_1e-4:
     symbolic_regression: False
 
 # -----------------------
-# Combined Entropy and L1 and Overall L1
+# Combined Entropy and L1
 # -----------------------
 regularization_combined_1e-4:
   name: "regularization_combined_1e-4"
@@ -443,7 +443,7 @@ regularization_combined_1e-4:
       kan_adam_batch_size: 256
       kan_lbfgs_batch_size: 256
       lr: 1e-3
-      lamb: 1e-3
+      lamb: 1.00
       augment: True
       augmentation_scale: 3.0
   visualization_params:
@@ -486,7 +486,7 @@ regularization_combined_1e-3:
       kan_adam_batch_size: 256
       kan_lbfgs_batch_size: 256
       lr: 1e-3
-      lamb: 1e-3
+      lamb: 1.00
       augment: True
       augmentation_scale: 3.0
   visualization_params:
