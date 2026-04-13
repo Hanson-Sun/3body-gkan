@@ -20,7 +20,7 @@ from nbody_gkan.data.dataset import FORCE_FN_MAP as DATASET_FORCE_FN_MAP
 from nbody_gkan.models import OrdinaryGraphKAN, OGN
 from nbody_gkan.nbody import NBodySimulator
 from nbody_gkan.models.model_loader import ModelLoader
-
+from tqdm.auto import tqdm
 import sympy as sp
 
 def _extract_equations_from_dict(data: dict, msg_in_dim: int, node_in_dim: int, save_path: Path = None):
@@ -44,7 +44,7 @@ def _extract_equations_from_dict(data: dict, msg_in_dim: int, node_in_dim: int, 
         current_inputs = input_symbols
         layer_keys = sorted(layers_dict.keys(), key=int)
 
-        for layer_key in layer_keys:
+        for layer_key in tqdm(layer_keys, desc="Layer", leave=False):
             layer = layers_dict[layer_key]
             out_dim = 0
             for edge in layer.keys():
@@ -53,14 +53,14 @@ def _extract_equations_from_dict(data: dict, msg_in_dim: int, node_in_dim: int, 
 
             next_inputs = [0] * out_dim
 
-            for edge, details in layer.items():
+            for edge, details in tqdm(layer.items(), desc="Edges", leave=False):
                 if details.get("passes_threshold", False):
                     i, j = map(int, edge.split('->'))
                     
                     a = float(details["a"])
                     b = float(details["b"])
                     
-                    if abs(a) < 1e-7:
+                    if abs(a) < 1e-2:
                         expr = b
                     else:
                         fn_name = details["fn"]
