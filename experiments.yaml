@@ -144,6 +144,7 @@ regularization_control:
       adam_warmup_epochs: 50
       max_grid_updates: 0
       sparse_init: False
+      optimizer_mode: alternating
     training_hp:
       epochs: 50
       batch_size: 256
@@ -182,6 +183,7 @@ regularization_l1_1e-3:
       adam_warmup_epochs: 50
       max_grid_updates: 0
       sparse_init: False
+      optimizer_mode: alternating
     training_hp:
       epochs: 50
       batch_size: 256
@@ -216,6 +218,7 @@ regularization_l1_1e-4:
       adam_warmup_epochs: 50
       max_grid_updates: 0
       sparse_init: False
+      optimizer_mode: alternating
     training_hp:
       epochs: 50
       batch_size: 256
