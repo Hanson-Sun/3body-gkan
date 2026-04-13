@@ -122,6 +122,7 @@ baseline:
     plot_splines: True
 
 # CONTROL
+# COMPLETED
 regularization_control:
   name: "regularization_control"
   data_dir: "/content/drive/MyDrive/3body-project/data"
@@ -156,7 +157,8 @@ regularization_control:
       augmentation_scale: 3.0
   visualization_params:
     save_video: True
-    plot_splines: False
+    plot_splines: True
+    symbolic_regression: False
 
 # -----------------------
 # L1 Regularization Sweep
@@ -195,7 +197,7 @@ regularization_l1_1e-3:
       augmentation_scale: 3.0
   visualization_params:
     save_video: True
-    plot_splines: False
+    plot_splines: True
 regularization_l1_1e-4:
   name: "regularization_l1_1e-4"
   data_dir: "/content/drive/MyDrive/3body-project/data"
@@ -230,7 +232,7 @@ regularization_l1_1e-4:
       augmentation_scale: 3.0
   visualization_params:
     save_video: True
-    plot_splines: False
+    plot_splines: True
 regularization_l1_1e-5:
   name: "regularization_l1_1e-5"
   data_dir: "/content/drive/MyDrive/3body-project/data"
@@ -253,7 +255,7 @@ regularization_l1_1e-5:
       lbfgs_max_iter: 30
       lbfgs_impl: torch
       sparse_init: False
-      optimizer_mode: alternating
+      optimizer_mode: two_phase
       adam_warmup_epochs: 50
       max_grid_updates: 0
       gradient_clip: 5.0
@@ -269,7 +271,7 @@ regularization_l1_1e-5:
       augmentation_scale: 3.0
   visualization_params:
     save_video: True
-    plot_splines: False
+    plot_splines: True
 
 # SPARSE INIT TEST
 regularization_sparse-init:
@@ -294,7 +296,7 @@ regularization_sparse-init:
       lbfgs_max_iter: 30
       lbfgs_impl: torch
       sparse_init: False
-      optimizer_mode: alternating
+      optimizer_mode: two_phase
       adam_warmup_epochs: 50
       max_grid_updates: 0
       gradient_clip: 5.0
@@ -310,7 +312,7 @@ regularization_sparse-init:
       augmentation_scale: 3.0
   visualization_params:
     save_video: True
-    plot_splines: False
+    plot_splines: True
 
 # ----------------------
 # Entropy Regularization
@@ -337,7 +339,7 @@ regularization_entropy_1e-3:
       lbfgs_max_iter: 30
       lbfgs_impl: torch
       sparse_init: False
-      optimizer_mode: alternating
+      optimizer_mode: two_phase
       adam_warmup_epochs: 50
       max_grid_updates: 0
       gradient_clip: 5.0
@@ -354,7 +356,7 @@ regularization_entropy_1e-3:
       augmentation_scale: 3.0
   visualization_params:
     save_video: True
-    plot_splines: False
+    plot_splines: True
 
 
 regularization_entropy_1e-4:
@@ -379,7 +381,7 @@ regularization_entropy_1e-4:
       lbfgs_max_iter: 30
       lbfgs_impl: torch
       sparse_init: False
-      optimizer_mode: alternating
+      optimizer_mode: two_phase
       adam_warmup_epochs: 50
       max_grid_updates: 0
       gradient_clip: 5.0
@@ -396,7 +398,7 @@ regularization_entropy_1e-4:
       augmentation_scale: 3.0
   visualization_params:
     save_video: True
-    plot_splines: False
+    plot_splines: True
 
 # -----------------------
 # Combined Entropy and L1 and Overall L1
@@ -423,7 +425,7 @@ regularization_combined_1e-4:
       lbfgs_max_iter: 30
       lbfgs_impl: torch
       sparse_init: False
-      optimizer_mode: alternating
+      optimizer_mode: two_phase
       adam_warmup_epochs: 50
       max_grid_updates: 0
       gradient_clip: 5.0
@@ -440,7 +442,7 @@ regularization_combined_1e-4:
       augmentation_scale: 3.0
   visualization_params:
     save_video: True
-    plot_splines: False
+    plot_splines: True
 
 # also with overall L1
 regularization_combined_1e-3:
@@ -465,7 +467,7 @@ regularization_combined_1e-3:
       lbfgs_max_iter: 30
       lbfgs_impl: torch
       sparse_init: False
-      optimizer_mode: alternating
+      optimizer_mode: two_phase
       adam_warmup_epochs: 50
       max_grid_updates: 0
       gradient_clip: 5.0
@@ -482,4 +484,4 @@ regularization_combined_1e-3:
       augmentation_scale: 3.0
   visualization_params:
     save_video: True
-    plot_splines: False
+    plot_splines: True
