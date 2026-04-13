@@ -57,18 +57,24 @@ def _extract_equations_from_dict(data: dict, msg_in_dim: int, node_in_dim: int, 
                 if details.get("passes_threshold", False):
                     i, j = map(int, edge.split('->'))
                     
-                    fn_name = details["fn"]
-                    a = details["a"]
-                    b = details["b"]
-                    ax = details["ax"]
-                    bx = details["bx"]
+                    a = float(details["a"])
+                    b = float(details["b"])
                     
-                    # Construct the native SymPy formula: y = a * fn(ax * x + bx) + b
-                    local_x = current_inputs[i]
-                    inner = ax * local_x + bx
-                    fn_applied = apply_fn(fn_name, inner)
-                    expr = a * fn_applied + b
+                    if abs(a) < 1e-7:
+                        expr = b
+                    else:
+                        fn_name = details["fn"]
+                        ax = float(details["ax"])
+                        bx = float(details["bx"])
+                        
+                        local_x = current_inputs[i]
+                        inner = ax * local_x + bx
+                        fn_applied = apply_fn(fn_name, inner)
+                        expr = a * fn_applied + b
                     
+                    if expr == 0 or expr == 0.0:
+                        continue
+                        
                     next_inputs[j] += expr
 
             current_inputs = next_inputs
