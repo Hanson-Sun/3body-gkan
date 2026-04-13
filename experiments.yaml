@@ -96,8 +96,8 @@ baseline:
   checkpoint_dir: "/content/drive/MyDrive/3body-project/checkpoints"
   output_dir: "/content/drive/MyDrive/3body-project/outputs"
   data_params:
-    n_train: 200
-    n_val: 20
+    n_train: 500
+    n_val: 50
     force_fn: "gravity"
     min_separation: 0.4
     max_retries: 50
@@ -129,8 +129,8 @@ regularization_control:
   checkpoint_dir: "/content/drive/MyDrive/3body-project/checkpoints"
   output_dir: "/content/drive/MyDrive/3body-project/outputs"
   data_params:
-    n_train: 200
-    n_val: 20
+    n_train: 500
+    n_val: 50
     force_fn: "gravity"
     min_separation: 0.4
     max_retries: 50
@@ -169,8 +169,8 @@ regularization_l1_1e-3:
   checkpoint_dir: "/content/drive/MyDrive/3body-project/checkpoints"
   output_dir: "/content/drive/MyDrive/3body-project/outputs"
   data_params:
-    n_train: 200
-    n_val: 20
+    n_train: 500
+    n_val: 50
     force_fn: "gravity"
     min_separation: 0.4
     max_retries: 50
@@ -205,8 +205,8 @@ regularization_l1_1e-4:
   checkpoint_dir: "/content/drive/MyDrive/3body-project/checkpoints"
   output_dir: "/content/drive/MyDrive/3body-project/outputs"
   data_params:
-    n_train: 200
-    n_val: 20
+    n_train: 500
+    n_val: 50
     force_fn: "gravity"
     min_separation: 0.4
     max_retries: 50
@@ -241,8 +241,8 @@ regularization_l1_1e-5:
   checkpoint_dir: "/content/drive/MyDrive/3body-project/checkpoints"
   output_dir: "/content/drive/MyDrive/3body-project/outputs"
   data_params:
-    n_train: 200
-    n_val: 20
+    n_train: 500
+    n_val: 50
     force_fn: "gravity"
     min_separation: 0.4
     max_retries: 50
@@ -283,8 +283,8 @@ regularization_sparse-init:
   checkpoint_dir: "/content/drive/MyDrive/3body-project/checkpoints"
   output_dir: "/content/drive/MyDrive/3body-project/outputs"
   data_params:
-    n_train: 200
-    n_val: 20
+    n_train: 500
+    n_val: 50
     force_fn: "gravity"
     min_separation: 0.4
     max_retries: 50
@@ -327,8 +327,8 @@ regularization_entropy_1e-3:
   checkpoint_dir: "/content/drive/MyDrive/3body-project/checkpoints"
   output_dir: "/content/drive/MyDrive/3body-project/outputs"
   data_params:
-    n_train: 200
-    n_val: 20
+    n_train: 500
+    n_val: 50
     force_fn: "gravity"
     min_separation: 0.4
     max_retries: 50
@@ -370,8 +370,8 @@ regularization_entropy_1e-4:
   checkpoint_dir: "/content/drive/MyDrive/3body-project/checkpoints"
   output_dir: "/content/drive/MyDrive/3body-project/outputs"
   data_params:
-    n_train: 200
-    n_val: 20
+    n_train: 500
+    n_val: 50
     force_fn: "gravity"
     min_separation: 0.4
     max_retries: 50
@@ -415,8 +415,8 @@ regularization_combined_1e-4:
   checkpoint_dir: "/content/drive/MyDrive/3body-project/checkpoints"
   output_dir: "/content/drive/MyDrive/3body-project/outputs"
   data_params:
-    n_train: 200
-    n_val: 20
+    n_train: 500
+    n_val: 50
     force_fn: "gravity"
     min_separation: 0.4
     max_retries: 50
@@ -458,8 +458,8 @@ regularization_combined_1e-3:
   checkpoint_dir: "/content/drive/MyDrive/3body-project/checkpoints"
   output_dir: "/content/drive/MyDrive/3body-project/outputs"
   data_params:
-    n_train: 200
-    n_val: 20
+    n_train: 500
+    n_val: 50
     force_fn: "gravity"
     min_separation: 0.4
     max_retries: 50
