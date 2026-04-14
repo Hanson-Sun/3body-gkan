@@ -145,7 +145,7 @@ regularization_control:
       adam_warmup_epochs: 50
       max_grid_updates: 0
       sparse_init: False
-      optimizer_mode: alternating
+      optimizer_mode: two_phase
     training_hp:
       epochs: 50
       batch_size: 256
@@ -233,7 +233,7 @@ regularization_l1_1e-4:
       augmentation_scale: 3.0
   visualization_params:
     save_video: True
-    plot_splines: True
+    plot_splines: False
     symbolic_regression: False
 regularization_l1_1e-5:
   name: "regularization_l1_1e-5"
@@ -273,7 +273,7 @@ regularization_l1_1e-5:
       augmentation_scale: 3.0
   visualization_params:
     save_video: True
-    plot_splines: True
+    plot_splines: False
     symbolic_regression: False
 
 # SPARSE INIT TEST
@@ -315,7 +315,7 @@ regularization_sparse-init:
       augmentation_scale: 3.0
   visualization_params:
     save_video: True
-    plot_splines: True
+    plot_splines: False
     symbolic_regression: False
 
 # ----------------------
@@ -360,7 +360,7 @@ regularization_entropy_1e-3:
       augmentation_scale: 3.0
   visualization_params:
     save_video: True
-    plot_splines: True
+    plot_splines: False
     symbolic_regression: False
 
 
@@ -403,7 +403,7 @@ regularization_entropy_1e-4:
       augmentation_scale: 3.0
   visualization_params:
     save_video: True
-    plot_splines: True
+    plot_splines: False
     symbolic_regression: False
 
 # -----------------------
@@ -448,7 +448,7 @@ regularization_combined_1e-4:
       augmentation_scale: 3.0
   visualization_params:
     save_video: True
-    plot_splines: True
+    plot_splines: False
     symbolic_regression: False
 
 # also with overall L1
