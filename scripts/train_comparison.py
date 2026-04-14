@@ -490,38 +490,38 @@ def main(yaml_params: Optional[dict] = None, checkpoint_dir: Optional[str] = Non
         kan_model.summary()
         print(" ")
 
-    kan_model, kan_history = train_kan(
-        kan_model, kan_adam_train_loader, kan_val_loader,
-        n_epochs=args.epochs,
-        device=device,
-        lamb=args.lamb,
-        optimizer_mode=args.kan_optimizer_mode,
-        adam_warmup_epochs=args.kan_adam_warmup_epochs,
-        alternating_adam_epochs=args.kan_alternating_adam_epochs,
-        lbfgs_rise_tol=args.kan_lbfgs_rise_tol,
-        adam_lr=args.lr,
-        grid_update_freq=args.kan_grid_update_freq,
-        grid_update_warmup=args.kan_grid_update_warmup,
-        max_grid_updates=args.kan_max_grid_updates,
-        gradient_clip=args.kan_gradient_clip,
-        lbfgs_lr=args.kan_lbfgs_lr,
-        lbfgs_max_iter=args.kan_lbfgs_max_iter,
-        lbfgs_max_eval=args.kan_lbfgs_max_eval,
-        lbfgs_line_search_fn=args.kan_lbfgs_line_search_fn,
-        lbfgs_impl=args.kan_lbfgs_impl,
-        lbfgs_tolerance_ys=args.kan_lbfgs_tolerance_ys,
-        lbfgs_train_loader=kan_lbfgs_train_loader,
-        square_loss=args.kan_square_loss,
-        augment=args.augment,
-        augmentation_scale=args.augmentation_scale,
-    )
-    visualize_training_loss(kan_history,
-                            title='Graph-KAN Training Loss',
-                            save_path=f'{checkpoint_dir}/kan_loss.png')
-    gkan_checkpoint_path = f"{checkpoint_dir}/graph_kan.pt"
-    loader = ModelLoader(OrdinaryGraphKAN, gkan_checkpoint_path)
-    loader.save(kan_model, gkan_checkpoint_path)
-    print(f"Saved checkpoint: {gkan_checkpoint_path}\n")
+        kan_model, kan_history = train_kan(
+            kan_model, kan_adam_train_loader, kan_val_loader,
+            n_epochs=args.epochs,
+            device=device,
+            lamb=args.lamb,
+            optimizer_mode=args.kan_optimizer_mode,
+            adam_warmup_epochs=args.kan_adam_warmup_epochs,
+            alternating_adam_epochs=args.kan_alternating_adam_epochs,
+            lbfgs_rise_tol=args.kan_lbfgs_rise_tol,
+            adam_lr=args.lr,
+            grid_update_freq=args.kan_grid_update_freq,
+            grid_update_warmup=args.kan_grid_update_warmup,
+            max_grid_updates=args.kan_max_grid_updates,
+            gradient_clip=args.kan_gradient_clip,
+            lbfgs_lr=args.kan_lbfgs_lr,
+            lbfgs_max_iter=args.kan_lbfgs_max_iter,
+            lbfgs_max_eval=args.kan_lbfgs_max_eval,
+            lbfgs_line_search_fn=args.kan_lbfgs_line_search_fn,
+            lbfgs_impl=args.kan_lbfgs_impl,
+            lbfgs_tolerance_ys=args.kan_lbfgs_tolerance_ys,
+            lbfgs_train_loader=kan_lbfgs_train_loader,
+            square_loss=args.kan_square_loss,
+            augment=args.augment,
+            augmentation_scale=args.augmentation_scale,
+        )
+        visualize_training_loss(kan_history,
+                                title='Graph-KAN Training Loss',
+                                save_path=f'{checkpoint_dir}/kan_loss.png')
+        gkan_checkpoint_path = f"{checkpoint_dir}/graph_kan.pt"
+        loader = ModelLoader(OrdinaryGraphKAN, gkan_checkpoint_path)
+        loader.save(kan_model, gkan_checkpoint_path)
+        print(f"Saved checkpoint: {gkan_checkpoint_path}\n")
 
     if args.train_baseline:
         # Create and train Baseline GNN
