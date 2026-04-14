@@ -1,5 +1,5 @@
 import torch
-from torch.optim import Adam
+from torch.optim import AdamW
 from tqdm.auto import tqdm
 from .trainer import Trainer
 
