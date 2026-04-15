@@ -259,13 +259,13 @@ minimal_merged_adam:
 min_mult_gravity:
   name: "min_mult_gravity"
   data_params:
-    n_train: 200
-    n_val: 20
+    n_train: 300
+    n_val: 30
     force_fn: "gravity"
     min_separation: 0.4
     max_retries: 50
   train_params:
-    train_baseline: True
+    train_baseline: False
     input_features:
       include: [pos, mass]  # Example subset: [pos, mass]
     gnn_hp:
@@ -276,17 +276,17 @@ min_mult_gravity:
       msg_mult_arity: [[], [], [3, 3], []]
       node_width: [5, 2]
       sparse_init: False
-      adam_warmup_epochs: 200
+      adam_warmup_epochs: 50
       max_grid_updates: 0
       gradient_clip: 0
     training_hp:
-      epochs: 67
+      epochs: 50
       batch_size: 64
       kan_adam_batch_size: 64
       kan_lbfgs_batch_size: 131072
       lr: 1e-3
       kan_square_loss: False
-      kan_lamb_schedule: [1e-4, 1e-3, 2e-3, 4e-2]
+      kan_lamb_schedule: [2e-4, 1e-3, 2e-3, 4e-2]
       augment: True
       augmentation_scale: 3.0
       lamb: 0.01

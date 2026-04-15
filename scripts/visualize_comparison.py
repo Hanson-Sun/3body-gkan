@@ -268,6 +268,21 @@ def _build_representative_samples(
     }
 
 
+def _expand_feature_labels(include: list[str], ndim: int) -> list[str]:
+    labels: list[str] = []
+    pos_labels = ["x", "y"] if ndim == 2 else [f"x{i}" for i in range(ndim)]
+    vel_labels = ["vx", "vy"] if ndim == 2 else [f"v{i}" for i in range(ndim)]
+
+    for name in include:
+        if name == "pos":
+            labels.extend(pos_labels)
+        elif name == "vel":
+            labels.extend(vel_labels)
+        elif name == "mass":
+            labels.append("m")
+    return labels
+
+
 def rollout(model, pos0, vel0, masses, dt, n_steps, edge_index, feature_spec: dict[str, list[str]]):
     """Rollout dynamics using leapfrog integration."""
     positions = [pos0.cpu().numpy()]
@@ -454,6 +469,7 @@ def visualize_kan_splines(
 def visualize_kan_network(model: 'OrdinaryGraphKAN',
                           data_sample: torch.Tensor,
                           network: str = 'msg',
+                          feature_spec: Optional[dict[str, list[str]]] = None,
                           save_path: str | Path | None = None) -> None:
     """
     Visualize msg or node KAN sub-network using pykan's native model.plot().
@@ -532,7 +548,23 @@ def visualize_kan_network(model: 'OrdinaryGraphKAN',
         return dense_acts, dense_spline_postacts
 
     # ── Variable names ─────────────────────────────────────────
-    base_vars = ['x', 'y', 'vx', 'vy', 'm'][:n_f]
+    resolved_feature_spec = feature_spec
+    if resolved_feature_spec is None:
+        resolved_feature_spec = getattr(model, "input_feature_spec", None)
+
+    base_vars: list[str] | None = None
+    if resolved_feature_spec is not None:
+        try:
+            include = normalize_feature_spec(resolved_feature_spec)["include"]
+            base_vars = _expand_feature_labels(include=include, ndim=ndim)
+        except Exception:
+            base_vars = None
+
+    if not base_vars or len(base_vars) != n_f:
+        base_vars = ['x', 'y', 'vx', 'vy', 'm'][:n_f]
+        if len(base_vars) < n_f:
+            base_vars.extend(f"f{i}" for i in range(len(base_vars), n_f))
+
     if network == 'msg':
         in_vars  = [f'{v}_i' for v in base_vars] + [f'{v}_j' for v in base_vars]
         out_vars = [f'msg{i}' for i in range(msg_dim)]
@@ -594,7 +626,7 @@ def visualize_kan_network(model: 'OrdinaryGraphKAN',
         widths = sorted(set(ax.get_position().width for ax in axes))
         if widths:
             min_w = widths[0]
-            inset_scale = 3
+            inset_scale = 2.0
             for ax in axes:
                 pos = ax.get_position()
                 # print(pos.width)
@@ -974,9 +1006,11 @@ def main(
         print("=" * 60)
         visualize_kan_network(kan_model, msg_sample_batch,
                                 network='msg',
+                                feature_spec=feature_spec,
                                 save_path=f'{args.output_dir}/kan_msg_network.png')
         visualize_kan_network(kan_model, node_sample_batch,
                                 network='node',
+                                feature_spec=feature_spec,
                                 save_path=f'{args.output_dir}/kan_node_network.png')
 
         # ── Symbolic regression — only once, after network viz ────
