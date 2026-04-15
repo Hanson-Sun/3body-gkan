@@ -603,12 +603,12 @@ def visualize_symbolic_expressions(
     
     txt_path = output_dir / 'extracted_equations.txt'
     
-    _extract_equations_from_dict(
-        data=serializable, 
-        msg_in_dim=msg_dim, 
-        node_in_dim=node_dim, 
-        save_path=txt_path
-    )
+    # _extract_equations_from_dict(
+    #     data=serializable, 
+    #     msg_in_dim=msg_dim, 
+    #     node_in_dim=node_dim, 
+    #     save_path=txt_path
+    # )
 
     return suggestions
 
