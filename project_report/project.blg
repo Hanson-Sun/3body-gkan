@@ -1,0 +1,15 @@
+[0] Config.pm:307> INFO - This is Biber 2.19
+[0] Config.pm:310> INFO - Logfile is 'project.blg'
+[120] biber-MSWIN64:340> INFO - === 
+[164] Biber.pm:419> INFO - Reading 'project.bcf'
+[290] Biber.pm:979> INFO - Found 2 citekeys in bib section 0
+[304] Biber.pm:4419> INFO - Processing section 0
+[320] Biber.pm:4610> INFO - Looking for bibtex file 'refs.bib' for section 0
+[373] bibtex.pm:1713> INFO - LaTeX decoding ...
+[379] bibtex.pm:1519> INFO - Found BibTeX data source 'refs.bib'
+[442] UCollate.pm:68> INFO - Overriding locale 'en-US' defaults 'variable = shifted' with 'variable = non-ignorable'
+[443] UCollate.pm:68> INFO - Overriding locale 'en-US' defaults 'normalization = NFD' with 'normalization = prenormalized'
+[443] Biber.pm:4239> INFO - Sorting list 'nyt/global//global/global' of type 'entry' with template 'nyt' and locale 'en-US'
+[443] Biber.pm:4245> INFO - No sort tailoring available for locale 'en-US'
+[449] bbl.pm:660> INFO - Writing 'project.bbl' with encoding 'UTF-8'
+[452] bbl.pm:763> INFO - Output to project.bbl
