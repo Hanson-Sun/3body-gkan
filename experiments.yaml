@@ -451,7 +451,6 @@ regularization_combined_1e-4:
     plot_splines: False
     symbolic_regression: False
 
-# also with overall L1
 regularization_combined_1e-3:
   name: "regularization_combined_1e-3"
   data_dir: "/content/drive/MyDrive/3body-project/data"
@@ -493,3 +492,133 @@ regularization_combined_1e-3:
     save_video: True
     plot_splines: True
     symbolic_regression: False
+
+# HIGHER REGULARIZATION
+regularization_combined_1e-1:
+  name: "regularization_combined_1e-1"
+  data_dir: "/content/drive/MyDrive/3body-project/data"
+  checkpoint_dir: "/content/drive/MyDrive/3body-project/checkpoints"
+  output_dir: "/content/drive/MyDrive/3body-project/outputs"
+  data_params:
+    n_train: 500
+    n_val: 50
+    force_fn: "gravity"
+    min_separation: 0.4
+    max_retries: 50
+  train_params:
+    num_workers: 0
+    train_baseline: False
+    gkan_hp:
+      msg_width: [10, 12, 12, 2]
+      node_width: [7, 8, 2]
+      lamb_l1: 1e-3
+      lamb_entropy: 1e-3
+      lbfgs_max_iter: 30
+      lbfgs_impl: torch
+      sparse_init: False
+      optimizer_mode: two_phase
+      adam_warmup_epochs: 50
+      max_grid_updates: 0
+      gradient_clip: 5.0
+      max_grid_updates: 0
+      sparse_init: False
+    training_hp:
+      epochs: 50
+      batch_size: 256
+      kan_adam_batch_size: 256
+      kan_lbfgs_batch_size: 256
+      lr: 1e-3
+      lamb: 10.00
+      augment: True
+      augmentation_scale: 3.0
+  visualization_params:
+    save_video: True
+    plot_splines: True
+    symbolic_regression: True
+
+# HIGHER REGULARIZATION
+regularization_combined_1e1:
+  name: "regularization_combined_1e1"
+  data_dir: "/content/drive/MyDrive/3body-project/data"
+  checkpoint_dir: "/content/drive/MyDrive/3body-project/checkpoints"
+  output_dir: "/content/drive/MyDrive/3body-project/outputs"
+  data_params:
+    n_train: 500
+    n_val: 50
+    force_fn: "gravity"
+    min_separation: 0.4
+    max_retries: 50
+  train_params:
+    num_workers: 0
+    train_baseline: False
+    gkan_hp:
+      msg_width: [10, 12, 12, 2]
+      node_width: [7, 8, 2]
+      lamb_l1: 1e-3
+      lamb_entropy: 1e-3
+      lbfgs_max_iter: 30
+      lbfgs_impl: torch
+      sparse_init: False
+      optimizer_mode: two_phase
+      adam_warmup_epochs: 50
+      max_grid_updates: 0
+      gradient_clip: 5.0
+      max_grid_updates: 0
+      sparse_init: False
+    training_hp:
+      epochs: 50
+      batch_size: 256
+      kan_adam_batch_size: 256
+      kan_lbfgs_batch_size: 256
+      lr: 1e-3
+      lamb: 100.00
+      augment: True
+      augmentation_scale: 3.0
+  visualization_params:
+    save_video: True
+    plot_splines: True
+    symbolic_regression: True
+
+
+# HIGHER REGULARIZATION
+regularization_combined_1e1:
+  name: "regularization_combined_1e2"
+  data_dir: "/content/drive/MyDrive/3body-project/data"
+  checkpoint_dir: "/content/drive/MyDrive/3body-project/checkpoints"
+  output_dir: "/content/drive/MyDrive/3body-project/outputs"
+  data_params:
+    n_train: 500
+    n_val: 50
+    force_fn: "gravity"
+    min_separation: 0.4
+    max_retries: 50
+  train_params:
+    num_workers: 0
+    train_baseline: False
+    gkan_hp:
+      msg_width: [10, 12, 12, 2]
+      node_width: [7, 8, 2]
+      lamb_l1: 1e-3
+      lamb_entropy: 1e-3
+      lbfgs_max_iter: 30
+      lbfgs_impl: torch
+      sparse_init: False
+      optimizer_mode: two_phase
+      adam_warmup_epochs: 50
+      max_grid_updates: 0
+      gradient_clip: 5.0
+      max_grid_updates: 0
+      sparse_init: False
+    training_hp:
+      epochs: 50
+      batch_size: 256
+      kan_adam_batch_size: 256
+      kan_lbfgs_batch_size: 256
+      lr: 1e-3
+      lamb: 1000.00
+      augment: True
+      augmentation_scale: 3.0
+  visualization_params:
+    save_video: True
+    plot_splines: True
+    symbolic_regression: True
