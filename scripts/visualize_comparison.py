@@ -2,14 +2,15 @@
 
 import argparse
 import json
+import shutil
 from pathlib import Path
-from typing import Optional
 from typing import Any
+from typing import Optional
 
+import matplotlib
 import numpy as np
 import torch
-import matplotlib
-import shutil
+
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 from matplotlib.animation import FuncAnimation, FFMpegWriter
@@ -17,7 +18,7 @@ from torch_geometric.data import Data
 from torch_geometric.loader import DataLoader as PyGLoader
 
 from nbody_gkan.data.dataset import FORCE_FN_MAP as DATASET_FORCE_FN_MAP
-from nbody_gkan.models import OrdinaryGraphKAN, OGN
+from nbody_gkan.models import OrdinaryGraphKAN, OGN, compute_edge_features
 from nbody_gkan.nbody import NBodySimulator
 from nbody_gkan.models.model_loader import ModelLoader
 
@@ -54,14 +55,14 @@ def _extract_graphkan_subnet_info(model: 'OrdinaryGraphKAN', network: str) -> di
 
 def parse_args(args=None):
     parser = argparse.ArgumentParser(description="Visualize trained models: rollout comparison and spline analysis.")
-    parser.add_argument("--output_dir",        type=str,   default="visualizations")
-    parser.add_argument("--checkpoint_dir",    type=str,   default="checkpoints/comparison")
-    parser.add_argument("--data_file",         type=str,   default="data/train.npz")
-    parser.add_argument("--rollout_time",      type=float, default=5.0)
-    parser.add_argument("--dt",                type=float, default=0.01)
-    parser.add_argument("--save_video",        action=argparse.BooleanOptionalAction, default=True)
+    parser.add_argument("--output_dir", type=str, default="visualizations")
+    parser.add_argument("--checkpoint_dir", type=str, default="checkpoints/comparison")
+    parser.add_argument("--data_file", type=str, default="data/train.npz")
+    parser.add_argument("--rollout_time", type=float, default=5.0)
+    parser.add_argument("--dt", type=float, default=0.01)
+    parser.add_argument("--save_video", action=argparse.BooleanOptionalAction, default=True)
     parser.add_argument("--plot_trajectories", action=argparse.BooleanOptionalAction, default=True)
-    parser.add_argument("--plot_splines",      action=argparse.BooleanOptionalAction, default=True)
+    parser.add_argument("--plot_splines", action=argparse.BooleanOptionalAction, default=True)
     return parser.parse_args(args)
 
 
@@ -262,6 +263,12 @@ def visualize_kan_splines(model, save_dir=None):
     n_f = model.n_f
     msg_dim = model.msg_dim
     msg_sample = torch.randn(64, 2 * n_f)
+    if model.edge_augmentations:
+        x_i, x_j = msg_sample[:, :n_f], msg_sample[:, n_f:]
+        aug = compute_edge_features(
+            x_i, x_j, model.ndim, model.edge_augmentations, model.softening
+        )
+        msg_sample = torch.cat([msg_sample, aug], dim=1)
     node_sample = torch.randn(64, n_f + msg_dim)
 
     def _plot_subnet(subnet, width, sample, tag):
@@ -272,9 +279,9 @@ def visualize_kan_splines(model, save_dir=None):
         with tempfile.TemporaryDirectory() as tmpdir:
             # Clone weights into a fresh KAN so plot() runs without side-effects
             clone = KAN(width=width, grid=subnet.grid, k=subnet.k,
-                       mult_arity=safe_mult_arity,
-                       seed=0, auto_save=False, ckpt_path=tmpdir,
-                       symbolic_enabled=False, save_act=True)
+                        mult_arity=safe_mult_arity,
+                        seed=0, auto_save=False, ckpt_path=tmpdir,
+                        symbolic_enabled=False, save_act=True)
 
             # Copy parameters
             for src_layer, dst_layer in zip(subnet.act_fun, clone.act_fun):
@@ -337,23 +344,24 @@ def visualize_kan_network(model: 'OrdinaryGraphKAN',
 
     # ── Select sub-network ────────────────────────────────────────
     info = _extract_graphkan_subnet_info(model, network)
-    layers    = info['layers']
-    src_kan   = info['subnet']
-    width     = info['width']
+    layers = info['layers']
+    src_kan = info['subnet']
+    width = info['width']
     mult_arity = info['mult_arity']
     mult_nodes = info['mult_nodes']
 
     grid_size = model.grid_size
-    k         = model.spline_order
-    n_f       = model.n_f
-    ndim      = model.ndim
-    msg_dim   = model.msg_dim
+    k = model.spline_order
+    n_f = model.n_f
+    ndim = model.ndim
+    msg_dim = model.msg_dim
 
     # Clamp sample size — pykan stores all activations, keep it small
     data_sample = data_sample[:50]
 
     print(f"\nPreparing trained '{network}' KAN for plotting (no cloning):")
-    print(f"  width={width}, mult_nodes={mult_nodes}, mult_arity={mult_arity}, grid={grid_size}, k={k}, n_samples={len(data_sample)}")
+    print(
+        f"  width={width}, mult_nodes={mult_nodes}, mult_arity={mult_arity}, grid={grid_size}, k={k}, n_samples={len(data_sample)}")
 
     # ── Populate activations in the trained subnet ───────────────
     src_kan.eval()
@@ -363,15 +371,23 @@ def visualize_kan_network(model: 'OrdinaryGraphKAN',
     # ── Variable names ─────────────────────────────────────────
     base_vars = ['x', 'y', 'vx', 'vy', 'm'][:n_f]
     if network == 'msg':
-        in_vars  = [f'{v}_i' for v in base_vars] + [f'{v}_j' for v in base_vars]
+        in_vars = [f'{v}_i' for v in base_vars] + [f'{v}_j' for v in base_vars]
+        if model.edge_augmentations:
+            from nbody_gkan.models.edge_features import _FEATURE_DIMS
+            for feat in model.edge_augmentations:
+                dim = _FEATURE_DIMS[feat]
+                if dim == "ndim":
+                    in_vars += [f"{feat}_{c}" for c in ["x", "y", "z"][:ndim]]
+                else:
+                    in_vars.append(feat)
         out_vars = [f'msg{i}' for i in range(msg_dim)]
     else:
-        in_vars  = base_vars + [f'msg{i}' for i in range(msg_dim)]
+        in_vars = base_vars + [f'msg{i}' for i in range(msg_dim)]
         out_vars = ['ax', 'ay'] if ndim == 2 else [f'a{i}' for i in range(ndim)]
 
     arch_str = '×'.join(str(w) for w in width)
-    title    = (f"Graph-KAN — {'Message' if network == 'msg' else 'Node Update'} "
-                f"Network  [{arch_str}]")
+    title = (f"Graph-KAN — {'Message' if network == 'msg' else 'Node Update'} "
+             f"Network  [{arch_str}]")
 
     print(f"  Plotting '{title}' via pykan.plot()...")
 
@@ -390,7 +406,7 @@ def visualize_kan_network(model: 'OrdinaryGraphKAN',
         in_vars=in_vars,
         out_vars=out_vars,
         title=title,
-        beta=100,            # match pykan doc recommendation for network overview
+        beta=100,  # match pykan doc recommendation for network overview
         scale=2,
         varscale=0.2,
         metric="forward_n",  # use forward scales to skip attribute() for high-arity mult
@@ -442,7 +458,8 @@ def visualize_kan_network(model: 'OrdinaryGraphKAN',
 
     gc.collect()
     torch.cuda.empty_cache()
-    
+
+
 def visualize_symbolic_expressions(
         kan_model,
         x_nodes: torch.Tensor,
@@ -482,9 +499,9 @@ def visualize_symbolic_expressions(
 
     if lib is None:
         lib = ['x', 'x^2', 'x^3', '1/x', '1/x^2',
-               'sqrt(x)', 'log(x)', 'abs(x)', 'sin(x)', 'cos(x)', 'exp(x)']
+               'sqrt(x)', 'log(x)', 'abs(x)', 'exp(x)']
 
-    sym_graph  = Data(x=x_nodes, edge_index=kan_model.edge_index)
+    sym_graph = Data(x=x_nodes, edge_index=kan_model.edge_index)
     sym_loader = PyGLoader([sym_graph] * max_batches, batch_size=1)
 
     suggestions = kan_model.suggest_symbolic(
@@ -530,20 +547,20 @@ def visualize_symbolic_expressions(
 
 
 def main(
-    yaml_params: Optional[dict] = None,
-    output_dir: Optional[str] = None,
-    checkpoint_dir: Optional[str] = None,
-    data_file: Optional[str] = None,
+        yaml_params: Optional[dict] = None,
+        output_dir: Optional[str] = None,
+        checkpoint_dir: Optional[str] = None,
+        data_file: Optional[str] = None,
 ):
     args = parse_args([] if yaml_params is not None else None)
 
     if yaml_params is not None:
-        args.output_dir        = output_dir     or args.output_dir
-        args.checkpoint_dir    = checkpoint_dir or args.checkpoint_dir
-        args.data_file         = data_file      or args.data_file
-        args.save_video        = yaml_params.get("save_video",        args.save_video)
+        args.output_dir = output_dir or args.output_dir
+        args.checkpoint_dir = checkpoint_dir or args.checkpoint_dir
+        args.data_file = data_file or args.data_file
+        args.save_video = yaml_params.get("save_video", args.save_video)
         args.plot_trajectories = yaml_params.get("plot_trajectories", args.plot_trajectories)
-        args.plot_splines      = yaml_params.get("plot_splines",      args.plot_splines)
+        args.plot_splines = yaml_params.get("plot_splines", args.plot_splines)
 
     Path(args.output_dir).mkdir(parents=True, exist_ok=True)
 
@@ -553,22 +570,29 @@ def main(
 
     # Load models
     print("\nLoading trained models...")
-    kan_model, _ = ModelLoader(OrdinaryGraphKAN, f'{args.checkpoint_dir}/graph_kan.pt').load()
+    kan_model = None
+    kan_ckpt_path = Path(args.checkpoint_dir) / 'graph_kan.pt'
+    if kan_ckpt_path.exists():
+        kan_model, _ = ModelLoader(OrdinaryGraphKAN, str(kan_ckpt_path)).load()
+        print(
+            f"Graph-KAN msg_width={getattr(kan_model, 'msg_width', 'N/A')}, node_width={getattr(kan_model, 'node_width', 'N/A')}")
+        print(
+            f"Graph-KAN msg_mult_nodes={getattr(kan_model, 'msg_mult_nodes', 0)}, node_mult_nodes={getattr(kan_model, 'node_mult_nodes', 0)}")
+    else:
+        print(f"Graph-KAN checkpoint not found at {kan_ckpt_path}; skipping KAN visualization.")
     gnn_ckpt_path = Path(args.checkpoint_dir) / 'baseline_gnn.pt'
     gnn_model = None
     if gnn_ckpt_path.exists():
         gnn_model, _ = ModelLoader(OGN, str(gnn_ckpt_path)).load()
     else:
         print(f"Baseline checkpoint not found at {gnn_ckpt_path}; skipping baseline visualization.")
-    print(f"Graph-KAN msg_width={getattr(kan_model, 'msg_width', 'N/A')}, node_width={getattr(kan_model, 'node_width', 'N/A')}")
-    print(f"Graph-KAN msg_mult_nodes={getattr(kan_model, 'msg_mult_nodes', 0)}, node_mult_nodes={getattr(kan_model, 'node_mult_nodes', 0)}")
     print("Models loaded successfully")
 
     # Load initial conditions
     print("\nLoading initial conditions...")
-    data       = np.load(args.data_file)
-    idx        = 1
-    positions  = data['positions']
+    data = np.load(args.data_file)
+    idx = 1
+    positions = data['positions']
     velocities = data['velocities']
     if positions.ndim == 4:
         pos0 = torch.from_numpy(positions[idx, 0]).float()
@@ -587,21 +611,24 @@ def main(
         raise ValueError(
             f"Unsupported positions shape {positions.shape}; expected 4D or 3D arrays."
         )
-    masses     = torch.from_numpy(data['masses']).float()
-    edge_index = kan_model.edge_index
+    masses = torch.from_numpy(data['masses']).float()
+    # Get edge_index from whichever model is available
+    edge_index = (kan_model or gnn_model).edge_index
     force_name, force_fn, force_kwargs = _load_force_config(data)
     print(f"Using rollout force function from data: {force_name} with kwargs={force_kwargs}")
 
     # Ground truth rollout
     print("Generating ground truth...")
-    sim       = NBodySimulator(masses.numpy(), force_fn=force_fn, **force_kwargs)
+    sim = NBodySimulator(masses.numpy(), force_fn=force_fn, **force_kwargs)
     gt_result = sim.simulate(pos0.numpy(), vel0.numpy(), t_end=args.rollout_time, dt=args.dt, save_every=5)
-    gt_pos    = gt_result['positions']
+    gt_pos = gt_result['positions']
 
     # Model rollouts
     n_steps = int(args.rollout_time / args.dt)
-    print(f"Rolling out Graph-KAN ({n_steps} steps)...")
-    kan_pos, _ = rollout(kan_model, pos0, vel0, masses, args.dt, n_steps, edge_index)
+    kan_pos = None
+    if kan_model is not None:
+        print(f"Rolling out Graph-KAN ({n_steps} steps)...")
+        kan_pos, _ = rollout(kan_model, pos0, vel0, masses, args.dt, n_steps, edge_index)
 
     gnn_pos = None
     if gnn_model is not None:
@@ -609,25 +636,23 @@ def main(
         gnn_pos, _ = rollout(gnn_model, pos0, vel0, masses, args.dt, n_steps, edge_index)
 
     # Animate (sampled to match ground truth cadence)
-    if (args.save_video):
+    if args.save_video:
         print("\n" + "=" * 60)
         print("Creating Animated Comparison")
         print("=" * 60)
+        trajectories = {'Ground Truth': gt_pos}
+        if kan_pos is not None:
+            trajectories['Graph-KAN'] = kan_pos[::5]
+        if gnn_pos is not None:
+            trajectories['Baseline GNN'] = gnn_pos[::5]
         animate_rollout(
-            ({
-                'Ground Truth': gt_pos,
-                'Graph-KAN':    kan_pos[::5],
-                'Baseline GNN': gnn_pos[::5],
-            } if gnn_pos is not None else {
-                'Ground Truth': gt_pos,
-                'Graph-KAN': kan_pos[::5],
-            }),
+            trajectories,
             dt=args.dt * 5,
             video_name=f'{args.output_dir}/rollout_comparison.mp4',
         )
 
-    # Spline visualizations
-    if args.plot_splines:
+    # Spline visualizations (only if GKAN model exists)
+    if args.plot_splines and kan_model is not None:
         print("\n" + "=" * 60)
         print("Graph-KAN Spline Analysis")
         print("=" * 60)
@@ -636,24 +661,31 @@ def main(
         # Build representative inputs for activation population
         with torch.no_grad():
             mass_expanded = masses.unsqueeze(1)
-            x_nodes  = torch.cat([pos0, vel0, mass_expanded], dim=1)
+            x_nodes = torch.cat([pos0, vel0, mass_expanded], dim=1)
             src, dst = kan_model.edge_index[0], kan_model.edge_index[1]
             msg_sample = torch.cat([x_nodes[src], x_nodes[dst]], dim=1)
+            if kan_model.edge_augmentations:
+                x_i, x_j = x_nodes[src], x_nodes[dst]
+                aug = compute_edge_features(
+                    x_i, x_j, kan_model.ndim,
+                    kan_model.edge_augmentations, kan_model.softening,
+                )
+                msg_sample = torch.cat([msg_sample, aug], dim=1)
 
             msg_sample_batch = (msg_sample.repeat(50, 1)
                                 + torch.randn(msg_sample.shape[0] * 50,
-                                                msg_sample.shape[1]) * 0.5)
+                                              msg_sample.shape[1]) * 0.5)
             node_sample_batch = torch.randn(200, kan_model.n_f + kan_model.msg_dim) * 0.5
 
         print("\n" + "=" * 60)
         print("Graph-KAN Native Network Visualization")
         print("=" * 60)
         visualize_kan_network(kan_model, msg_sample_batch,
-                                network='msg',
-                                save_path=f'{args.output_dir}/kan_msg_network.png')
+                              network='msg',
+                              save_path=f'{args.output_dir}/kan_msg_network.png')
         visualize_kan_network(kan_model, node_sample_batch,
-                                network='node',
-                                save_path=f'{args.output_dir}/kan_node_network.png')
+                              network='node',
+                              save_path=f'{args.output_dir}/kan_node_network.png')
 
         # ── Symbolic regression — only once, after network viz ────
         print("\n" + "=" * 60)

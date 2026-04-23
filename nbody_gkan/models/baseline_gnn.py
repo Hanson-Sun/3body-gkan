@@ -13,8 +13,9 @@ import torch
 from torch.nn import Sequential as Seq, Linear as Lin, ReLU
 from torch_geometric.nn import MessagePassing
 
-from .ordinary_mixin import OrdinaryMixin
+from .edge_features import compute_edge_features, edge_feature_dim
 from .graph_mixin import GraphMixin
+from .ordinary_mixin import OrdinaryMixin
 
 
 class GN(MessagePassing, GraphMixin):
@@ -40,19 +41,23 @@ class GN(MessagePassing, GraphMixin):
     """
 
     def __init__(
-            self, n_f: int, msg_dim: int, ndim: int, hidden: int = 300, aggr: str = "add"
+            self, n_f: int, msg_dim: int, ndim: int, hidden: int = 300, aggr: str = "add",
+            edge_augmentations: Optional[list[str]] = None,
+            softening: float = 1e-2,
     ):
         super().__init__(aggr=aggr)
-        
+
         self.n_f = n_f
         self.msg_dim = msg_dim
         self.ndim = ndim
         self.hidden = hidden
+        self.edge_augmentations = list(edge_augmentations) if edge_augmentations else []
+        self.softening = float(softening)
+        self.n_aug = edge_feature_dim(ndim, self.edge_augmentations)
 
-        # Message function: [x_i, x_j] (2*n_f) → msg_dim
-        # 4 layers, configurable hidden dimension (default 300) - matches original
+        # Message function: [x_i, x_j, edge_features] → msg_dim
         self.msg_fnc = Seq(
-            Lin(2 * n_f, hidden),
+            Lin(2 * n_f + self.n_aug, hidden),
             ReLU(),
             Lin(hidden, hidden),
             ReLU(),
@@ -109,8 +114,12 @@ class GN(MessagePassing, GraphMixin):
         torch.Tensor
             Messages, shape (n_edges, msg_dim)
         """
-        # Concatenate all features: [x_i, x_j]
         tmp = torch.cat([x_i, x_j], dim=1)  # (n_edges, 2*n_f)
+        if self.edge_augmentations:
+            aug = compute_edge_features(
+                x_i, x_j, self.ndim, self.edge_augmentations, self.softening
+            )
+            tmp = torch.cat([tmp, aug], dim=1)
         return self.msg_fnc(tmp)
 
     def update(
@@ -134,7 +143,7 @@ class GN(MessagePassing, GraphMixin):
         # Concatenate [x, aggregated_messages]
         tmp = torch.cat([x, aggr_out], dim=1)  # (n_nodes, msg_dim+n_f)
         return self.node_fnc(tmp)
-        
+
     def summary(self):
         super().summary()
 
@@ -172,8 +181,13 @@ class OGN(OrdinaryMixin, GN):
             edge_index: torch.Tensor,
             hidden: int = 300,
             aggr: str = "add",
+            edge_augmentations: Optional[list[str]] = None,
+            softening: float = 1e-2,
     ):
-        super().__init__(n_f, msg_dim, ndim, hidden, aggr=aggr)
+        super().__init__(
+            n_f, msg_dim, ndim, hidden, aggr=aggr,
+            edge_augmentations=edge_augmentations, softening=softening,
+        )
         self.ndim = ndim
         self.register_buffer("edge_index", edge_index)
 

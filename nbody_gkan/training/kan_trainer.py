@@ -1,5 +1,7 @@
 import torch
 import warnings
+
+from torch.optim.lr_scheduler import ReduceLROnPlateau
 from tqdm import tqdm
 from .trainer import Trainer
 
@@ -115,6 +117,17 @@ class KANTrainer(Trainer):
         # Start with Adam if warmup is requested, otherwise LBFGS immediately
         self.optimizer = self._adam_optimizer if adam_warmup_epochs > 0 else self._lbfgs_optimizer
         self._using_lbfgs = adam_warmup_epochs == 0
+
+        if scheduler is None:
+            scheduler = ReduceLROnPlateau(
+                self._adam_optimizer,
+                mode="min",
+                factor=0.5,
+                patience=5,
+                threshold=1e-4,
+                min_lr=1e-5,
+                cooldown=1,
+            )
 
         self.scheduler         = scheduler
         self.lamb              = 0.0

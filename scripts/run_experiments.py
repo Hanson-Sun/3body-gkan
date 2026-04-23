@@ -11,7 +11,7 @@ import train_comparison
 import visualize_comparison
 
 
-def main(overwrite: bool = True, selected: list[str] | None = None) -> None:
+def main(overwrite: bool = False, selected: list[str] | None = None) -> None:
     with open("experiments.yaml") as f:
         experiments = yaml.safe_load(f)
 
