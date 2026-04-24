@@ -1,15 +1,18 @@
 [0] Config.pm:307> INFO - This is Biber 2.19
 [0] Config.pm:310> INFO - Logfile is 'project.blg'
-[120] biber-MSWIN64:340> INFO - === 
-[164] Biber.pm:419> INFO - Reading 'project.bcf'
-[290] Biber.pm:979> INFO - Found 2 citekeys in bib section 0
-[304] Biber.pm:4419> INFO - Processing section 0
-[320] Biber.pm:4610> INFO - Looking for bibtex file 'refs.bib' for section 0
-[373] bibtex.pm:1713> INFO - LaTeX decoding ...
-[379] bibtex.pm:1519> INFO - Found BibTeX data source 'refs.bib'
-[442] UCollate.pm:68> INFO - Overriding locale 'en-US' defaults 'variable = shifted' with 'variable = non-ignorable'
-[443] UCollate.pm:68> INFO - Overriding locale 'en-US' defaults 'normalization = NFD' with 'normalization = prenormalized'
-[443] Biber.pm:4239> INFO - Sorting list 'nyt/global//global/global' of type 'entry' with template 'nyt' and locale 'en-US'
-[443] Biber.pm:4245> INFO - No sort tailoring available for locale 'en-US'
-[449] bbl.pm:660> INFO - Writing 'project.bbl' with encoding 'UTF-8'
-[452] bbl.pm:763> INFO - Output to project.bbl
+[138] biber-MSWIN64:340> INFO - === 
+[181] Biber.pm:419> INFO - Reading 'project.bcf'
+[311] Biber.pm:979> INFO - Found 9 citekeys in bib section 0
+[329] Biber.pm:4419> INFO - Processing section 0
+[344] Biber.pm:4610> INFO - Looking for bibtex file 'refs.bib' for section 0
+[386] bibtex.pm:1713> INFO - LaTeX decoding ...
+[412] bibtex.pm:1519> INFO - Found BibTeX data source 'refs.bib'
+[526] UCollate.pm:68> INFO - Overriding locale 'en-US' defaults 'variable = shifted' with 'variable = non-ignorable'
+[526] UCollate.pm:68> INFO - Overriding locale 'en-US' defaults 'normalization = NFD' with 'normalization = prenormalized'
+[526] Biber.pm:4239> INFO - Sorting list 'nyt/global//global/global' of type 'entry' with template 'nyt' and locale 'en-US'
+[527] Biber.pm:4245> INFO - No sort tailoring available for locale 'en-US'
+[546] bbl.pm:660> INFO - Writing 'project.bbl' with encoding 'UTF-8'
+[555] bbl.pm:763> INFO - Output to project.bbl
+[556] Biber.pm:131> WARN - I didn't find a database entry for 'transformers' (section 0)
+[556] Biber.pm:131> WARN - I didn't find a database entry for 'ml-is-fun' (section 0)
+[556] Biber.pm:133> INFO - WARNINGS: 2
