@@ -54,8 +54,8 @@
   Hanson Sun\\
   \texttt{jsun33@students.cs.ubc.ca}
   \And
-  Chad G.\ Petey\\
-  \texttt{chadg@cs.ubc.ca}
+  Eitan Klinger\\
+  \texttt{ekling01@students.cs.ubc.ca}
 }
 
 \begin{document}
@@ -75,6 +75,39 @@ Main paper content can be \textbf{up to six pages},
 followed by an unlimited number of pages containing references and appendices
 (which the course staff, like NeurIPS reviewers, won't \emph{necessarily} read).
 
+\section{Experiment Methodology}
+\subsection{Regularization}
+Idea: try to test out and find the best regularization hyperparameters to encourage sparse networks. all experiments done using gravity, n\_train = 500, n\_val = 50, msg\_width =  msg\_width: [10, 12, 12, 2], node\_width: [7, 8, 2], over 50 epochs using adam 
+\begin{itemize}
+    \item control with no regularization
+    \item sweep of l1 regularization: 1e-3, 1e-4, 1e-5
+    \item sweep of entropy regularization: 1e-3, 1e-4
+    \item sparse initialization
+    \item sweep of both l1 and entropy regularization: 1e-4, 1e-3, 1e-1, 1e1, 1e2
+\end{itemize}
+
+\section{Results}
+\subsection{Regularization}
+I think most of this actually goes in discussion?
+\begin{itemize}
+    \item all ts sucks ass!!!!
+    \item regularization did not encourage sparsity
+    \item just made model learn worse as regularization increased (regularization penalty overwhelming loss function?)
+    \item like no discernible diff :(
+    \item sparse init just sucked
+    \item regularization combined 1e1, 1e2 literally did not learn like the training error stayed flat. same for sparse init
+\end{itemize}
+TODO: generate loss plots overlaid, regenerate visualizations for experiments that are missing them
+\section{Discussion (REAL)}
+\subsection{Regularization}
+Why does all ts suck so much ass? And why no sparse?
+\begin{itemize}
+    \item maybe gravity just requires dense networks to model without using feature engineering; having to learn relative positions, multiplication and stuff might just be too hard for our little guys
+    \item maybe the nature of KANs just doesn't lend itself to learning networks
+    \item maybe if we had a bajillion more epochs it would actually fix itself
+\end{itemize}
+
+\newpage
 \section{What goes in the report}
 Part of your grade is based on the contribution of your project:
 did you do something meaningful in your project, that adds something new to the world?
