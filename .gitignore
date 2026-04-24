@@ -5,7 +5,7 @@
 __pycache__
 figures/*
 visualizations/*
-data/*
-checkpoints/*
-outputs/*
+# data/*
+# checkpoints/*
+# outputs/*
 test_outputs/*
