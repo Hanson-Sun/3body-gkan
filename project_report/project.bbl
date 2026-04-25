@@ -19,6 +19,83 @@
 
 \refsection{0}
   \datalist[entry]{nyt/global//global/global}
+    \entry{arroyo2025vanishinggradientsoversmoothingoversquashing}{misc}{}
+      \name{author}{8}{}{%
+        {{un=0,uniquepart=base,hash=48f96aaddbadd69913f0810cd3063a09}{%
+           family={Arroyo},
+           familyi={A\bibinitperiod},
+           given={Álvaro},
+           giveni={Á\bibinitperiod},
+           givenun=0}}%
+        {{un=0,uniquepart=base,hash=8955c1920d43e9128b0aed9387432583}{%
+           family={Gravina},
+           familyi={G\bibinitperiod},
+           given={Alessio},
+           giveni={A\bibinitperiod},
+           givenun=0}}%
+        {{un=0,uniquepart=base,hash=03348c14dff565b12fa37590668c7612}{%
+           family={Gutteridge},
+           familyi={G\bibinitperiod},
+           given={Benjamin},
+           giveni={B\bibinitperiod},
+           givenun=0}}%
+        {{un=0,uniquepart=base,hash=d61a31d12f680d4a2fc8116a2bccbf97}{%
+           family={Barbero},
+           familyi={B\bibinitperiod},
+           given={Federico},
+           giveni={F\bibinitperiod},
+           givenun=0}}%
+        {{un=0,uniquepart=base,hash=5e8325c1bacf95876d112f109fb7c349}{%
+           family={Gallicchio},
+           familyi={G\bibinitperiod},
+           given={Claudio},
+           giveni={C\bibinitperiod},
+           givenun=0}}%
+        {{un=0,uniquepart=base,hash=108f41853b282fc3106a33b8890c1f8b}{%
+           family={Dong},
+           familyi={D\bibinitperiod},
+           given={Xiaowen},
+           giveni={X\bibinitperiod},
+           givenun=0}}%
+        {{un=0,uniquepart=base,hash=8e2cf15e0e3f2b957c8a1532cd04184f}{%
+           family={Bronstein},
+           familyi={B\bibinitperiod},
+           given={Michael},
+           giveni={M\bibinitperiod},
+           givenun=0}}%
+        {{un=0,uniquepart=base,hash=b4945596e71bcffbc9d1b4af0d5e16f1}{%
+           family={Vandergheynst},
+           familyi={V\bibinitperiod},
+           given={Pierre},
+           giveni={P\bibinitperiod},
+           givenun=0}}%
+      }
+      \strng{namehash}{56c7ab5e731fd8486a88e09577c96d22}
+      \strng{fullhash}{9fd61842b8d6266d42d94cdefafd3e0e}
+      \strng{bibnamehash}{9fd61842b8d6266d42d94cdefafd3e0e}
+      \strng{authorbibnamehash}{9fd61842b8d6266d42d94cdefafd3e0e}
+      \strng{authornamehash}{56c7ab5e731fd8486a88e09577c96d22}
+      \strng{authorfullhash}{9fd61842b8d6266d42d94cdefafd3e0e}
+      \field{sortinit}{A}
+      \field{sortinithash}{2f401846e2029bad6b3ecc16d50031e2}
+      \field{extradatescope}{labelyear}
+      \field{labeldatesource}{}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{eprintclass}{cs.LG}
+      \field{eprinttype}{arXiv}
+      \field{title}{On Vanishing Gradients, Over-Smoothing, and Over-Squashing in GNNs: Bridging Recurrent and Graph Learning}
+      \field{year}{2025}
+      \verb{eprint}
+      \verb 2502.10818
+      \endverb
+      \verb{urlraw}
+      \verb https://arxiv.org/abs/2502.10818
+      \endverb
+      \verb{url}
+      \verb https://arxiv.org/abs/2502.10818
+      \endverb
+    \endentry
     \entry{cappi2025unveilingactualperformanceneuralbased}{article}{}
       \name{author}{4}{}{%
         {{un=0,uniquepart=base,hash=1817a82490b61ea9f52c2cc560b90bb2}{%
@@ -440,6 +517,7 @@
       \endverb
     \endentry
   \enddatalist
+  \missing{cite}
   \missing{ml-is-fun}
   \missing{transformers}
 \endrefsection

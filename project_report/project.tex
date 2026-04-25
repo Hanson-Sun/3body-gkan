@@ -101,18 +101,28 @@ KANs provide a different route to interpretability. \cite{liu2024kankolmogorovar
 
 \section{Methodology}
 
-We evaluate GKANs on synthetic $n$-body simulation data generated with a leapfrog integrator. The main dataset uses Newtonian gravity, and we also generate additional force laws for generalization tests. Each example consists of initial positions, velocities, and masses, with targets given by the future trajectories.
+We evaluate GKANs on synthetic $n$-body simulation data generated with a leapfrog integrator. The main dataset uses Newtonian gravity,
+\begin{equation}
+  a_{i} = G \sum_{j \neq i} m_{j} \frac{r_{j} - r_{i}}{\|r_{j} - r_{i}\|^{3}}
+\end{equation}
+with additional force laws for generalization tests. Each example consists of initial positions, velocities, and masses, with targets given by the future trajectories.
 
 \hs{we need to provide the formulas of the force laws we used somewhere, maybe in appendix}
 \hs{we also should provide baseline specification somewhere, ie how many layers, width, etc}
 
-We compare two models: a graph convolutional network baseline following Cranmer et al.\cite{cranmer2020discoveringsymbolicmodelsdeep}, and a GKAN that replaces selected MLP components with KAN layers. Both models are trained on the same data, with the same loss and optimization setup, to keep the comparison fair.
+We compare two models: a graph convolutional network baseline following \cite{cranmer2020discoveringsymbolicmodelsdeep}, and a GKAN that replaces selected MLP components with KAN layers. Both models are trained on the same data, with the same loss and optimization setup, to keep the comparison fair.
 
 We evaluate models using trajectory prediction error on held-out simulations. We also examine interpretability through sparsity, visual structure of learned edge functions, and how easily the model can reflect physically meaningful relationships.
 
 We organize our experiments around a few questions: whether GKANs can match GNN performance at similar parameter counts, whether sparse regularization makes learned functions easier to interpret, whether smaller KAN-style architectures are sufficient, whether physically motivated feature engineering helps, and whether the same trends hold under different force laws such as Hooke's law.
 
 \hs{will probably skip multkans, dont think i got anything useful there. can include if theres space}
+
+\hs{state what we expect to learn}
+We expect the node KAN to learn how to aggregate messages into a final acceleration vector, while the edge KANs learn the pairwise interaction functions. We hypothesize that regularization will encourage sparsity and interpretability, and that smaller KAN architectures may still perform well if they capture the right inductive biases.
+
+\subsection{Baseline GNN}
+
 
 \subsection{Regularization}
 Sparsification can be achieved in KAN layers through L1 regularization of weights, as in traditional MLP layers, though an additional entropy regularizer is often needed to make sufficiently sparse KANs \cite{liu2024kankolmogorovarnoldnetworks}. This suite of experiments serves to both validate regularization patterns found in traditional KANs, as well as find ideal regularization hyperparameters to encourage sparse and interpretable networks. To do so, we run a sweep through different magnitudes of L1 regularization, entropy regularization, and both combined, comparing the models to each other, as well as a control with no regularization. Doing so helps identify the efficacy of different regularizations in creating sparser models. 
@@ -292,9 +302,28 @@ I have no idea what mathematical relationships it actually learned. \texttt{/shr
 
 % discuss infeasiblility for certain asymptotic functions for spline edges, discuss potential tricks with grid updates etc. 
 
-discuss potential for physically informed loss function (e.g., incorporating conservation laws or physical constraints into the loss function, hamiltonian loss functions, etc). THis may partially explain poor learning results over all
+\ag{discuss future improvements like pruning low-weighted edges every few epochs} \hs{should be in regularization section.}
 
-discuss future improvements like pruning low-weighted edges every few epochs
+Beyond interpretability, a major challenge in our experiments was optimization. Although GKANs are expressive in principle, they were consistently harder to train than comparable MLP-based GNN baselines. Loss often decreased slowly, converged to worse minima, or was highly sensitive to initialization and optimizer choice. We hypothesize this is mainly due to two factors: (1) optimization difficulty of spline-based edge functions, and (2) interaction with message passing leading to irregular gradients.
+
+\paragraph{Optimization difficulty of spline-based edge functions.}
+Each KAN edge learns a nonlinear spline, so the model must learn both the function value and its local gradient behavior. Flat spline regions can suppress gradients, while steep regions can create unstable updates. This becomes more difficult when many KAN layers are composed.
+
+For gravity, the learned interaction also involves inverse-distance terms, which are asymptotic and poorly conditioned for spline approximation. This likely made optimization especially difficult. In support of this, enforcing a minimum separation distance between bodies noticeably improved training, whereas unconstrained runs reduced loss by less than $5\%$. Moreover, replacing gravity with the better-conditioned Hooke's law produced much larger loss decreases of roughly $90\%$.
+
+\paragraph{Interaction with message passing.}
+Message passing may further amplify these issues, since errors in learned edge functions propagate across the graph. Prior work has identified oversmoothing, oversquashing, and gradient degradation in deeper GNNs \parencite{arroyo2025vanishinggradientsoversmoothingoversquashing}. Our results are consistent with this behavior. We tested Adam, L-BFGS, warmup schedules, and alternating optimization, but none consistently improved training. This suggests that optimization may be intrinsically challenging for GKANs in message-passing settings.
+
+\ag{discuss potential for physically informed loss function (e.g., incorporating conservation laws or physical constraints into the loss function, hamiltonian loss functions, etc). This may partially explain poor learning results over all}
+
+\paragraph{Physically-informed loss function.}
+A common approach to improving learning in dynamical systems is to incorporate physical structure directly into the loss function. In particular, Hamiltonian and Lagrangian graph neural networks enforce conservation laws by parameterizing or constraining the system dynamics through a Hamiltonian function. More recent physics-informed GNNs extend this idea by explicitly enforcing conservation of linear and angular momentum through equivariant message passing \parencite{sharma2025dynamicalgraphnetphysicsinformedgraph}. In our setting, such constraints could reduce the effective hypothesis space of the model and encourage solutions consistent with known mechanics, potentially improving both optimization stability and long-term rollout accuracy in GKANs.
+
+\hs{adaptive grid updates i guess? dont think this would matter that much tbh}
+
+
+\section{Conclusion}
+
 
 \newpage
 
