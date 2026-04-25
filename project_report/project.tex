@@ -24,6 +24,8 @@
 
 \usepackage{multirow}
 
+\usepackage{subcaption}
+\usepackage{graphicx}
 % I recommend the biblatex package.
 % If you hate it for some reason, though, you can use natbib instead:
 % comment out this block and uncomment the next one.
@@ -126,7 +128,7 @@ We expect the node KAN to learn how to aggregate messages into a final accelerat
 We follow the baseline GCN architecture, a node MLP of $(110 \to 300 \to 300 \to 2)$ and a message MLP of $(10 \to 300 \to 300 \to 300 \to 100)$. Note that we compute the loss as the \textit{mean} over individual samples rather than the \textit{sum}. The model is trained without regularization using an L2 loss, optimized with Adam at a learning rate of $1e{-3}$.
 
 \subsection{Regularization}
-Sparsification can be achieved in KAN layers through L1 regularization of weights, as in traditional MLP layers, though an additional entropy regularizer is often needed to make sufficiently sparse KANs \cite{liu2024kankolmogorovarnoldnetworks}. This suite of experiments serves to both validate regularization patterns found in traditional KANs, as well as find ideal regularization hyperparameters to encourage sparse and interpretable networks. To do so, we run a sweep through different magnitudes of L1 regularization, entropy regularization, and both combined, comparing the models to each other, as well as a control with no regularization. Doing so helps identify the efficacy of different regularizations in creating sparser models. 
+Sparsification can be achieved in KAN layers through L1 regularization of weights, as in traditional MLP layers, though an additional entropy regularizer is often needed to make sufficiently sparse KANs \cite{liu2024kankolmogorovarnoldnetworks}. This suite of experiments serves to both validate regularization patterns found in traditional KANs, as well as find ideal regularization hyperparameters to encourage sparse and interpretable networks. To do so, we run a sweep through different magnitudes of L1 regularization, entropy regularization, and both combined, comparing the models to each other, as well as a control with no regularization. Doing so helps identify the efficacy of different regularizations in creating sparser models. Additionally, a model utilizing sparse initialization is also trained, which forces the networks to be sparse before training
 
 Each GKAN network uses a node network of 3 layers $(7 \to 8 \to 2)$, a message network of 4 layers $(10 \to 12 \to 12 \to 2)$, and is trained over 50 epochs. Once all models are trained, they are compared in both training loss, validation loss against a test set, as well as visually compared for how sparse the networks are. The ideal regularization approach is determined by which hyperparameters provide a relatively sparse and interpretable network without sacrificing performance on the validation set.
 
@@ -206,11 +208,12 @@ The node update network always consists of 1 layer ($7 \to 2$). The models are a
 The baseline GNN model achieves a training loss of $1.12 \times 10^{-2}$ and a validation loss of $1.02 \times 10^{-2}$ after 50 epochs. This serves as a reference point for evaluating the performance of the GKAN models.
 
 \subsection{Regularization}
-Unregularized training loss and validation loss for each combination of L1-norm and entropy regularizations in Table \ref{tab:regularization} display marginal differences between values. The largest gap in validation losses between two of the models is 0.08e-1, comparing the control (0 L1-norm, 0 entropy) to the maximal regularization (1e2 L1-norm, 1e2 entropy). 
+Unregularized training loss and validation loss for each combination of L1-norm and entropy regularizations in Table \ref{tab:regularization} display marginal differences between values. The largest gap in validation losses between two of the models is 0.08e-1, comparing the control (0 L1-norm, 0 entropy) to the maximal regularization (1e2 L1-norm, 1e2 entropy). The sparse initialization is the only model to not follow this trend, with training loss 3.95e-01 and validation loss 3.57e-01.
 
 None of the networks produced by each model are interpretable through visual inspection, even the 1e2 regularization, which did not have a significantly sparser network compared to the control.
 
 \begin{table}
+    \centering
   \caption{Unregularized loss values for regularization experiments}
   \label{tab:regularization}
   \centering
@@ -332,6 +335,8 @@ A common approach to improving learning in dynamical systems is to incorporate p
 
 \hs{we need to add github links, rollout, charts, images}
 
+
+
 \section{Supplementary material} \label{app:info}
 
 % arthur
@@ -379,6 +384,82 @@ Looking at the visualizations, it seems that the models without any augmentation
 I have no idea what mathematical relationships it actually learned. \texttt{/shrug} \hs{show image}
 
 \hs{plots and rollouts? maybe keep in appendix}
+\newpage
+\section{Loss Plots}
+
+% 1. Control (Baseline)
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.4\textwidth]{figures/no_regularization_loss.png}
+    \caption{Training and validation loss over 50 epochs for the regularization control.}
+    \label{fig:reg_control}
+\end{figure}
+
+% 2. L1-norm Only
+\begin{figure}[htbp]
+    \centering
+    \begin{subfigure}[b]{0.4\textwidth}
+        \includegraphics[width=\textwidth]{figures/l1_1e-4_loss.png}\caption{L1-norm 1e-4}\label{fig:l1_1e-4}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[b]{0.4\textwidth}
+        \includegraphics[width=\textwidth]{figures/l1_1e-3_loss.png}\caption{L1-norm 1e-3}\label{fig:l1_1e-3}
+    \end{subfigure}
+    \caption{Training and validation loss over 50 epochs for L1-norm regularization experiments.}
+    \label{fig:l1_losses}
+\end{figure}
+
+% 3. Entropy Only
+\begin{figure}[htbp]
+    \centering
+    \begin{subfigure}[b]{0.4\textwidth}
+        \includegraphics[width=\textwidth]{figures/entropy_1e-4_loss.png}\caption{Entropy 1e-4}\label{fig:entropy_1e-4}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[b]{0.4\textwidth}
+        \includegraphics[width=\textwidth]{figures/entropy_1e-3_loss.png}\caption{Entropy 1e-3}\label{fig:entropy_1e-3}
+    \end{subfigure}
+    \caption{Training and validation loss over 50 epochs for Entropy regularization experiments.}
+    \label{fig:entropy_losses}
+\end{figure}
+
+% 4. Combined (L1-norm and Entropy)
+\begin{figure}[htbp]
+    \centering
+    \begin{subfigure}[b]{0.4\textwidth}
+        \includegraphics[width=\textwidth]{figures/combined_1e-4_loss.png}\caption{L1-norm and Entropy 1e-4}\label{fig:comb_1e-4}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[b]{0.4\textwidth}
+        \includegraphics[width=\textwidth]{figures/combined_1e-3_loss.png}\caption{L1-norm and Entropy 1e-3}\label{fig:comb_1e-3}
+    \end{subfigure}
+    
+    \vspace{1em} % Spacing between rows
+    
+    \begin{subfigure}[b]{0.4\textwidth}
+        \includegraphics[width=\textwidth]{figures/combined_1e-1_loss.png}\caption{L1-norm and Entropy 1e-1}\label{fig:comb_1e-1}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[b]{0.4\textwidth}
+        \includegraphics[width=\textwidth]{figures/combined_1e1_loss.png}\caption{L1-norm and Entropy 1e1}\label{fig:comb_1e1}
+    \end{subfigure}
+    
+    \vspace{1em} % Spacing between rows
+    
+    \begin{subfigure}[b]{0.4\textwidth}
+        \includegraphics[width=\textwidth]{figures/combined_1e2_loss.png}\caption{L1-norm and Entropy 1e2}\label{fig:comb_1e2}
+    \end{subfigure}
+    \caption{Training and validation loss over 50 epochs for combined L1-norm and Entropy regularization experiments.}
+    \label{fig:combined_losses}
+\end{figure}
+
+% 5. Sparse Init
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.4\textwidth]{figures/sparse_init_loss.png}
+    \caption{Training and validation loss over 50 epochs with sparse initialization.}
+    \label{fig:sparse_init}
+\end{figure}
 
 \newpage
 \section{What goes in the report}
