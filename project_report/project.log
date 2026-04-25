@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.25 (MiKTeX 23.9) (preloaded format=pdflatex 2024.9.5)  24 APR 2026 00:49
+This is pdfTeX, Version 3.141592653-2.6-1.40.25 (MiKTeX 23.9) (preloaded format=pdflatex 2024.9.5)  24 APR 2026 23:13
 entering extended mode
  \write18 enabled.
  %&-line parsing enabled.
@@ -771,42 +771,76 @@ Package microtype Info: Loading generic protrusion settings for font family
 
 
 {C:/Users/docto/AppData/Local/MiKTeX/fonts/map/pdftex/pdftex.map}{C:/Users/docto/AppData/Local/Programs/MiKTeX/fonts/enc/dvips/base/8r.enc}]
-LaTeX Font Info:    Trying to load font information for TS1+ptm on input line 118.
+LaTeX Font Info:    Trying to load font information for TS1+ptm on input line 122.
  (C:\Users\docto\AppData\Local\Programs\MiKTeX\tex/latex/psnfss\ts1ptm.fd
 File: ts1ptm.fd 2001/06/04 font definitions for TS1/ptm.
-) [2] [3] [4] [5] [6]
+) [2] [3]
 
-LaTeX Warning: Citation 'transformers' on page 7 undefined on input line 273.
+LaTeX Warning: Citation 'arroyo2025vanishinggradientsoversmoothingoversquashing' on page 4 undefined on input line 190.
 
 
-LaTeX Warning: Citation 'ml-is-fun' on page 7 undefined on input line 275.
+Underfull \hbox (badness 6300) in paragraph at lines 190--191
+ []\T1/ptm/b/n/10 (+20) Interaction with mes-sage pass-ing.[] \T1/ptm/m/n/10 (+20) Mes-sage pass-ing may fur-ther am-plify these is-
+ []
+
+
+Underfull \hbox (badness 2426) in paragraph at lines 190--191
+\T1/ptm/m/n/10 (+20) sues, since er-rors in learned edge func-tions prop-a-gate across the graph. Prior work
+ []
+
+
+Underfull \hbox (badness 2359) in paragraph at lines 190--191
+\T1/ptm/m/n/10 (+20) has iden-ti-fied over-smooth-ing, over-squash-ing, and gra-di-ent degra-da-tion in deeper GNNs
+ []
+
+[4] [5] [6] [7]
+
+LaTeX Warning: Citation 'transformers' on page 8 undefined on input line 313.
+
+
+LaTeX Warning: Citation 'ml-is-fun' on page 8 undefined on input line 315.
 
 
 Underfull \vbox (badness 2538) has occurred while \output is active []
 
- [7] [8] (project.aux)
+ [8] [9] (project.aux)
  ***********
 LaTeX2e <2023-06-01> patch level 1
 L3 programming layer <2023-08-29>
  ***********
-Package rerunfilecheck Info: File `project.out' has not changed.
-(rerunfilecheck)             Checksum: 9E351BCB28EB0D19C200026484EA92C2;2112.
+
+
+LaTeX Warning: There were undefined references.
+
+
+Package rerunfilecheck Warning: File `project.out' has changed.
+(rerunfilecheck)                Rerun to get outlines right
+(rerunfilecheck)                or use package `bookmark'.
+
+Package rerunfilecheck Info: Checksums for `project.out':
+(rerunfilecheck)             Before: 65656C6EF3F216F06DF8A09176F8D5A5;2206
+(rerunfilecheck)             After:  EE74D6B23461E7C881BF802FC3CBB3CB;2239.
+
+Package biblatex Warning: Please (re)run Biber on the file:
+(biblatex)                project
+(biblatex)                and rerun LaTeX afterwards.
+
 Package logreq Info: Writing requests to 'project.run.xml'.
 \openout1 = `project.run.xml'.
 
  ) 
 Here is how much of TeX's memory you used:
- 22774 strings out of 475248
- 410763 string characters out of 5757814
+ 22809 strings out of 475248
+ 411064 string characters out of 5757814
  1942801 words of memory out of 5000000
- 43780 multiletter control sequences out of 15000+600000
- 599212 words of font info for 196 fonts, out of 8000000 for 9000
+ 43782 multiletter control sequences out of 15000+600000
+ 600370 words of font info for 214 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
  72i,9n,81p,1062b,1781s stack positions out of 10000i,1000n,20000p,200000b,200000s
  <C:\Users\docto\AppData\Local\MiKTeX\fonts/pk/ljfour/jknappen/ec/dpi600\ectt1000.pk><C:/Users/docto/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmex10.pfb><C:/Users/docto/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmmi10.pfb><C:/Users/docto/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmmi7.pfb><C:/Users/docto/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmr10.pfb><C:/Users/docto/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmr7.pfb><C:/Users/docto/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmsy10.pfb><C:/Users/docto/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmsy7.pfb><C:/Users/docto/AppData/Local/Programs/MiKTeX/fonts/type1/urw/helvetic/uhvr8a.pfb><C:/Users/docto/AppData/Local/Programs/MiKTeX/fonts/type1/urw/times/utmb8a.pfb><C:/Users/docto/AppData/Local/Programs/MiKTeX/fonts/type1/urw/times/utmr8a.pfb><C:/Users/docto/AppData/Local/Programs/MiKTeX/fonts/type1/urw/times/utmri8a.pfb>
-Output written on project.pdf (8 pages, 195395 bytes).
+Output written on project.pdf (9 pages, 203456 bytes).
 PDF statistics:
- 322 PDF objects out of 1000 (max. 8388607)
- 48 named destinations out of 1000 (max. 500000)
- 43153 words of extra memory for PDF output out of 51595 (max. 10000000)
+ 336 PDF objects out of 1000 (max. 8388607)
+ 54 named destinations out of 1000 (max. 500000)
+ 43161 words of extra memory for PDF output out of 51595 (max. 10000000)
 

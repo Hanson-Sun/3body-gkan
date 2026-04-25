@@ -83,7 +83,7 @@ Many scientific systems can be modeled as interacting objects governed by underl
 
 We study the $n$-body problem as a testbed for this goal. Given the initial states of several bodies, the task is to predict their future trajectories under pairwise forces. Prior work has shown that graph neural networks (GNNs) are a strong fit for this setting because they naturally represent objects as nodes and interactions as edges. In particular, \cite{cranmer2020discoveringsymbolicmodelsdeep} showed that a GNN trained on simulated $n$-body dynamics can be combined with symbolic regression to recover analytical force laws.
 
-A limitation of this approach is that the GNN itself is not directly interpretable. The learned representation is still a black box, and symbolic regression is a separate post-hoc step. Recent work on Kolmogorov-Arnold Networks (KANs) suggests a possible alternative. KANs replace standard MLP-style node activations with learnable univariate functions on edges, which can make the learned model easier to inspect. Liu et al. \cite{liu2024kankolmogorovarnoldnetworks,liu2024kan20kolmogorovarnoldnetworks} showed that KANs can be effective while remaining more transparent than standard MLPs.
+A limitation of this approach is that the GNN itself is not directly interpretable. The learned representation is still a black box, and symbolic regression is a separate post-hoc step. Recent work on Kolmogorov-Arnold Networks (KANs) suggests a possible alternative. KANs replace standard MLP-style node activations with learnable univariate functions on edges, which can make the learned model easier to inspect. \cite{liu2024kankolmogorovarnoldnetworks} showed that KANs can be effective while remaining more transparent than standard MLPs.
 
 In this project, we ask whether this idea can be extended to relational physical systems. We introduce a hybrid Graph KAN (GKAN) architecture, where KAN layers replace MLP components inside a message-passing GNN. We evaluate this model on simulated $n$-body dynamics and compare it against standard GNN baselines, with a focus on both prediction quality and interpretability.
 
@@ -91,11 +91,11 @@ In this project, we ask whether this idea can be extended to relational physical
 
 This project builds on three main lines of work: graph-based physics learning, symbolic discovery, and interpretable neural architectures.
 
-Cranmer et al.\cite{cranmer2020discoveringsymbolicmodelsdeep} is the closest prior work. They trained GNNs on simulated $n$-body systems and used symbolic regression to recover physical laws from learned interaction functions. Their results show that graph models can discover useful structure, but interpretability comes only after a separate extraction step.
+\cite{cranmer2020discoveringsymbolicmodelsdeep} is the closest prior work. They trained GNNs on simulated $n$-body systems and used symbolic regression to recover physical laws from learned interaction functions. Their results show that graph models can discover useful structure, but interpretability comes only after a separate extraction step.
 
-Other work has strengthened graph models for physical simulation. Thangamuthu et al.\cite{thangamuthu2023unravellingperformancephysicsinformedgraph} compared several physics-informed GNNs across multiple dynamical systems, while Dynami-CAL GraphNet\cite{sharma2025dynamicalgraphnetphysicsinformedgraph} adds conservation and symmetry constraints directly into message passing. These methods improve performance, but do not directly address whether the learned interactions are easy to interpret.
+Other work has strengthened graph models for physical simulation. \cite{thangamuthu2023unravellingperformancephysicsinformedgraph} compared several physics-informed GNNs across multiple dynamical systems, while Dynami-CAL GraphNet \parencite{sharma2025dynamicalgraphnetphysicsinformedgraph} adds conservation and symmetry constraints directly into message passing. These methods improve performance, but do not directly address whether the learned interactions are easy to interpret.
 
-KANs provide a different route to interpretability. Liu et al.\cite{liu2024kankolmogorovarnoldnetworks,liu2024kan20kolmogorovarnoldnetworks} showed that KANs can represent scientific relationships through learnable univariate functions, and KAN 2.0 adds multiplicative structure that is especially relevant for physical equations. Related continuous-time work such as KAN-ODEs\cite{Koenig_2024} and Graph KAN-ODEs\cite{cappi2025unveilingactualperformanceneuralbased} further motivate combining KANs with dynamical systems and graph structure.
+KANs provide a different route to interpretability. \cite{liu2024kankolmogorovarnoldnetworks} showed that KANs can represent scientific relationships through learnable univariate functions, and KAN 2.0 adds multiplicative structure that is especially relevant for physical equations. Related continuous-time work such as KAN-ODEs \parencite{Koenig_2024} and Graph KAN-ODEs \parencite{cappi2025unveilingactualperformanceneuralbased} further motivate combining KANs with dynamical systems and graph structure.
 
 \section{Methodology}
 
@@ -163,17 +163,44 @@ Why does all ts suck so much ass? And why no sparse?
     \hs{maybe think about potential improvements?}
 \end{itemize}
 
-\subsection{Learning}
+\subsection{KAN't Optimize}
 
-discuss difficulties with learning usng GKANs (tests with differently conditioned problems, min separation distance in data, poor loss landscape, L2 vs L1 losses)
+% Overall, our results suggest that the main bottleneck for GKANs in this setting may not be representational power, but trainability. Better optimization and stronger physical inductive biases may be necessary before the interpretability advantages of KAN-based graph models can be fully realized.
 
-dicuss things we tried (L-BFGS, Adam, hybrid opitmization, alternating optimization (nothing works)). Why is this different from KAN paper (they use L-BFGS)
+% discuss difficulties with learning usng GKANs (tests with differently conditioned problems, min separation distance in data, poor loss landscape, L2 vs L1 losses)
 
-discuss challenges of using message passing architecture (could this be adding irregularity to loss landscape? preventing convergence and proper learning)
+% dicuss things we tried (L-BFGS, Adam, hybrid opitmization, alternating optimization (nothing works)). Why is this different from KAN paper (they use L-BFGS)
 
-discuss infeasiblility for certain asymptotic functions for spline edges, discuss potential tricks with grid updates etc. 
+% discuss challenges of using message passing architecture (could this be adding irregularity to loss landscape? preventing convergence and proper learning)
 
-discuss potential for physically informed loss function (e.g., incorporating conservation laws or physical constraints into the loss function, hamiltonian loss functions, etc). THis may partially explain poor learning results over all
+% discuss infeasiblility for certain asymptotic functions for spline edges, discuss potential tricks with grid updates etc. 
+
+% discuss potential for physically informed loss function (e.g., incorporating conservation laws or physical constraints into the loss function, hamiltonian loss functions, etc). THis may partially explain poor learning results over all
+
+% \cite{arroyo2025vanishinggradientsoversmoothingoversquashing}
+
+Beyond interpretability, a major challenge in our experiments was optimization. Although GKANs are expressive in principle, they were consistently harder to train than comparable MLP-based GNN baselines. Loss often decreased slowly, converged to worse minima, or was highly sensitive to initialization and optimizer choice. We hypothesize this is mainly due to two factors: (1) optimization difficulty of spline-based edge functions, and (2) interaction with message passing leading to irregular gradients.
+
+\paragraph{Optimization difficulty of spline-based edge functions.}
+Each KAN edge learns a nonlinear spline, so the model must learn both the function value and its local gradient behavior. Flat spline regions can suppress gradients, while steep regions can create unstable updates. This becomes more difficult when many KAN layers are composed.
+
+For gravity, the learned interaction also involves inverse-distance terms, which are asymptotic and poorly conditioned for spline approximation. This likely made optimization especially difficult. In support of this, enforcing a minimum separation distance between bodies noticeably improved training, whereas unconstrained runs reduced loss by less than $5\%$. Moreover, replacing gravity with the better-conditioned Hooke's law produced much larger loss decreases of roughly $90\%$.
+
+\paragraph{Interaction with message passing.}
+Message passing may further amplify these issues, since errors in learned edge functions propagate across the graph. Prior work has identified oversmoothing, oversquashing, and gradient degradation in deeper GNNs \cite{arroyo2025vanishinggradientsoversmoothingoversquashing}. Our results are consistent with this behavior. We tested Adam, L-BFGS, warmup schedules, and alternating optimization, but none consistently improved training. This suggests that optimization may be intrinsically challenging for GKANs in message-passing settings.
+
+
+
+\section{Conclusion}
+
+Although raw performance was weaker than expected, several directions may improve learning:
+
+\begin{itemize}
+    \item \textbf{Physics-informed objectives:} include conservation of energy, momentum, or Hamiltonian consistency in the loss.
+    \item \textbf{Adaptive KAN parameterization:} use grid updates, better knot placement, or multiplicative nodes.
+    \item \textbf{Two-stage training:} first optimize predictive accuracy, then sparsify or simplify the learned functions.
+\end{itemize}
+
 
 \newpage
 
