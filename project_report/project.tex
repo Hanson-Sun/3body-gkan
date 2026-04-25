@@ -123,6 +123,7 @@ We expect the node KAN to learn how to aggregate messages into a final accelerat
 
 \subsection{Baseline GNN}
 
+We follow the baseline GCN architecture, a node MLP of $(110 \to 300 \to 300 \to 2)$ and a message MLP of $(10 \to 300 \to 300 \to 300 \to 100)$. Note that we compute the loss as the \textit{mean} over individual samples rather than the \textit{sum}. The model is trained without regularization using an L2 loss, optimized with Adam at a learning rate of $1e{-3}$.
 
 \subsection{Regularization}
 Sparsification can be achieved in KAN layers through L1 regularization of weights, as in traditional MLP layers, though an additional entropy regularizer is often needed to make sufficiently sparse KANs \cite{liu2024kankolmogorovarnoldnetworks}. This suite of experiments serves to both validate regularization patterns found in traditional KANs, as well as find ideal regularization hyperparameters to encourage sparse and interpretable networks. To do so, we run a sweep through different magnitudes of L1 regularization, entropy regularization, and both combined, comparing the models to each other, as well as a control with no regularization. Doing so helps identify the efficacy of different regularizations in creating sparser models. 
@@ -200,6 +201,9 @@ The node update network always consists of 1 layer ($7 \to 2$). The models are a
 
 \section{Results}
 \hs{maybe have one big table summarizing losses for different configs (include maximal model somehow?)}
+
+\subsection{Baseline GNN}
+The baseline GNN model achieves a training loss of $1.12 \times 10^{-2}$ and a validation loss of $1.02 \times 10^{-2}$ after 50 epochs. This serves as a reference point for evaluating the performance of the GKAN models.
 
 \subsection{Regularization}
 Unregularized training loss and validation loss for each combination of L1-norm and entropy regularizations in Table \ref{tab:regularization} display marginal differences between values. The largest gap in validation losses between two of the models is 0.08e-1, comparing the control (0 L1-norm, 0 entropy) to the maximal regularization (1e2 L1-norm, 1e2 entropy). 

@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.25 (MiKTeX 23.9) (preloaded format=pdflatex 2024.9.5)  24 APR 2026 23:46
+This is pdfTeX, Version 3.141592653-2.6-1.40.25 (MiKTeX 23.9) (preloaded format=pdflatex 2024.9.5)  25 APR 2026 00:20
 entering extended mode
  \write18 enabled.
  %&-line parsing enabled.
@@ -783,32 +783,27 @@ Package microtype Info: Loading generic protrusion settings for font family
  [1
 
 
-{C:/Users/docto/AppData/Local/MiKTeX/fonts/map/pdftex/pdftex.map}{C:/Users/docto/AppData/Local/Programs/MiKTeX/fonts/enc/dvips/base/8r.enc}] [2]
-LaTeX Font Info:    Trying to load font information for TS1+ptm on input line 134.
- (C:\Users\docto\AppData\Local\Programs\MiKTeX\tex/latex/psnfss\ts1ptm.fd
-File: ts1ptm.fd 2001/06/04 font definitions for TS1/ptm.
-)
+{C:/Users/docto/AppData/Local/MiKTeX/fonts/map/pdftex/pdftex.map}{C:/Users/docto/AppData/Local/Programs/MiKTeX/fonts/enc/dvips/base/8r.enc}] [2] [3]
 
 LaTeX Warning: `h' float specifier changed to `ht'.
 
+[4]
+Underfull \vbox (badness 2753) has occurred while \output is active []
 
-LaTeX Warning: `h' float specifier changed to `ht'.
+ [5] [6] [7]
+Underfull \vbox (badness 10000) has occurred while \output is active []
 
-[3]
+ [8] [9] [10]
 
-LaTeX Warning: `h' float specifier changed to `ht'.
-
-[4] [5] [6] [7] [8] [9]
-
-LaTeX Warning: Citation 'transformers' on page 10 undefined on input line 392.
+LaTeX Warning: Citation 'transformers' on page 11 undefined on input line 435.
 
 
-LaTeX Warning: Citation 'ml-is-fun' on page 10 undefined on input line 394.
+LaTeX Warning: Citation 'ml-is-fun' on page 11 undefined on input line 437.
 
 
 Underfull \vbox (badness 2538) has occurred while \output is active []
 
- [10] [11] (project.aux)
+ [11] [12] (project.aux)
  ***********
 LaTeX2e <2023-06-01> patch level 1
 L3 programming layer <2023-08-29>
@@ -818,7 +813,7 @@ L3 programming layer <2023-08-29>
 LaTeX Warning: There were undefined references.
 
 Package rerunfilecheck Info: File `project.out' has not changed.
-(rerunfilecheck)             Checksum: E4F6203CE843451B2A488FFB8EE0AD62;3060.
+(rerunfilecheck)             Checksum: 35ECF2E3085F2490F0CC173BA8248D7F;3181.
 
 Package biblatex Warning: Please (re)run Biber on the file:
 (biblatex)                project
@@ -829,17 +824,17 @@ Package logreq Info: Writing requests to 'project.run.xml'.
 
  ) 
 Here is how much of TeX's memory you used:
- 22917 strings out of 475248
- 413119 string characters out of 5757814
+ 22891 strings out of 475248
+ 412709 string characters out of 5757814
  1941801 words of memory out of 5000000
- 43864 multiletter control sequences out of 15000+600000
- 600751 words of font info for 220 fonts, out of 8000000 for 9000
+ 43843 multiletter control sequences out of 15000+600000
+ 600479 words of font info for 217 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
  72i,10n,81p,1062b,1781s stack positions out of 10000i,1000n,20000p,200000b,200000s
  <C:\Users\docto\AppData\Local\MiKTeX\fonts/pk/ljfour/jknappen/ec/dpi600\ectt1000.pk><C:/Users/docto/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmex10.pfb><C:/Users/docto/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmmi10.pfb><C:/Users/docto/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmmi7.pfb><C:/Users/docto/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmr10.pfb><C:/Users/docto/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmr7.pfb><C:/Users/docto/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmsy10.pfb><C:/Users/docto/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmsy7.pfb><C:/Users/docto/AppData/Local/Programs/MiKTeX/fonts/type1/urw/helvetic/uhvr8a.pfb><C:/Users/docto/AppData/Local/Programs/MiKTeX/fonts/type1/urw/times/utmb8a.pfb><C:/Users/docto/AppData/Local/Programs/MiKTeX/fonts/type1/urw/times/utmr8a.pfb><C:/Users/docto/AppData/Local/Programs/MiKTeX/fonts/type1/urw/times/utmri8a.pfb>
-Output written on project.pdf (11 pages, 225185 bytes).
+Output written on project.pdf (12 pages, 230244 bytes).
 PDF statistics:
- 383 PDF objects out of 1000 (max. 8388607)
- 67 named destinations out of 1000 (max. 500000)
- 43201 words of extra memory for PDF output out of 51595 (max. 10000000)
+ 394 PDF objects out of 1000 (max. 8388607)
+ 70 named destinations out of 1000 (max. 500000)
+ 41161 words of extra memory for PDF output out of 42996 (max. 10000000)
 
