@@ -1,4 +1,6 @@
-\documentclass{article}
+\documentclass[draft]{article}
+% \documentclass{article}
+% AG: Exceeds compile timeout on Overleaf due to figures.
 
 \usepackage{project_440_550}
 % Please submit it as is here, with line numbers.
@@ -181,23 +183,25 @@ output & $a_{x,i} = h_{4,1}$, $a_{y,i} = h_{4,2}$ \\
 
 In this section, we also experiment with feature engineering by augmenting the dataset with computed features. Specifically, we are interested in computed features that allow us to ``skip steps'' during the decomposition process. For example, in the decomposition described by Figure \ref{fig:feasible-route-small}, it is necessary to compute the intermediate values $\Delta x$ and $\Delta y$ in the first layer. By providing these as inputs, we can eliminate 1 layer.
 
-In total, we designed and evaluated 4 smaller models with several combinations of computed features as listed in Figure \ref{fig:experiments-small}. For comparison, the baseline GNN model based on \cite{cranmer2020discoveringsymbolicmodelsdeep} has 300 hidden MLP layers and 427\,002 parameters.
+In total, we designed and evaluated 4 smaller models with several combinations of computed features as listed in Table \ref{tab:experiments-small}. For comparison, the baseline GNN model based on \cite{cranmer2020discoveringsymbolicmodelsdeep} has 300 hidden MLP layers and 427\,002 parameters.
 
-\begin{figure}[h]
+\begin{table}[h]
 
 \centering
+\caption{The smaller models.}
 \begin{tabular}{l|l|l|l}
+\hline
 experiment name & message network & parameters & computed features \\
 \hline
 \texttt{small} & 4 layers ($10 \to 6 \to 3 \to 4 \to 2$) & 2220 & \\
 \texttt{small\_rel\_pos} & 3 layers ($12 \to 5 \to 4 \to 2$) & 2020 & $\Delta x$, $\Delta y$ \\
 \texttt{small\_rel\_dsq} & 3 layers ($13 \to 5 \to 4 \to 2$) & 2112 & $\Delta x$, $\Delta y$, $\|r\|^{+2}$\\
 \texttt{small\_rel\_idc} & 3 layers ($13 \to 4 \to 4 \to 2$) & 1824 & $\Delta x$, $\Delta y, \|r\|^{-3}$ \\
+\hline
 \end{tabular}
-\caption{The smaller models.}
-\label{fig:experiments-small}
+\label{tab:experiments-small}
 
-\end{figure}
+\end{table}
 
 The node update network always consists of 1 layer ($7 \to 2$). The models are all trained for 50 epochs on the same dataset, which consists of 200 training trajectories and 20 validation trajectories. For exact details on the data generation process and training regime, as well as an outline of the feasible route for each model, refer to the appendices. \ag{Use a ref here.}
 
@@ -239,12 +243,14 @@ L1-norm & Entropy & Training Loss & Validation Loss \\
 
 \subsection{How small KAN we get?}
 
-Recall that we designed and evaluated 4 smaller models. The training loss and validation loss are summarized in Figure \ref{fig:results-small}.
+Recall that we designed and evaluated 4 smaller models. The training loss and validation loss are summarized in Table \ref{tab:results-small}.
 
-\begin{figure}[h]
+\begin{table}[h]
 
 \centering
-\begin{tabular}{l|c|c}
+\caption{The smaller models.}
+\begin{tabular}{l|l|l}
+\hline
 experiment name & training loss & validation loss \\
 \hline
 \texttt{baseline} & $1.592 \times 10^{-2}$ & $1.281 \times 10^{-2}$ \\
@@ -252,11 +258,11 @@ experiment name & training loss & validation loss \\
 \texttt{small\_rel\_pos} & $1.873 \times 10^{-2}$ & $1.639 \times 10^{-2}$ \\
 \texttt{small\_rel\_dsq} & $1.960 \times 10^{-2}$ & $1.172 \times 10^{-2}$ \\
 \texttt{small\_rel\_idc} & $2.594 \times 10^{-2}$ & $2.073 \times 10^{-2}$ \\
+\hline
 \end{tabular}
-\caption{The smaller models.}
-\label{fig:results-small}
+\label{tab:results-small}
 
-\end{figure}
+\end{table}
 
 The \texttt{small} GKAN model without any computed features performs about 1 order of magnitude worse compared to the baseline GNN. This alone is quite impressive when considering the difference in model size.
 
@@ -316,7 +322,7 @@ For gravity, the learned interaction also involves inverse-distance terms, which
 \paragraph{Interaction with message passing.}
 Message passing may further amplify these issues, since errors in learned edge functions propagate across the graph. Prior work has identified oversmoothing, oversquashing, and gradient degradation in deeper GNNs \parencite{arroyo2025vanishinggradientsoversmoothingoversquashing}. Our results are consistent with this behavior. We tested Adam, L-BFGS, warmup schedules, and alternating optimization, but none consistently improved training. This suggests that optimization may be intrinsically challenging for GKANs in message-passing settings.
 
-\ag{discuss potential for physically informed loss function (e.g., incorporating conservation laws or physical constraints into the loss function, hamiltonian loss functions, etc). This may partially explain poor learning results over all}
+\hs{discuss potential for physically informed loss function (e.g., incorporating conservation laws or physical constraints into the loss function, hamiltonian loss functions, etc). This may partially explain poor learning results over all}
 
 \paragraph{Physically-informed loss function.}
 A common approach to improving learning in dynamical systems is to incorporate physical structure directly into the loss function. In particular, Hamiltonian and Lagrangian graph neural networks enforce conservation laws by parameterizing or constraining the system dynamics through a Hamiltonian function. More recent physics-informed GNNs extend this idea by explicitly enforcing conservation of linear and angular momentum through equivariant message passing \parencite{sharma2025dynamicalgraphnetphysicsinformedgraph}. In our setting, such constraints could reduce the effective hypothesis space of the model and encourage solutions consistent with known mechanics, potentially improving both optimization stability and long-term rollout accuracy in GKANs.
@@ -339,51 +345,8 @@ A common approach to improving learning in dynamical systems is to incorporate p
 
 \section{Supplementary material} \label{app:info}
 
-% arthur
+This stuff doesn't count towards your page limit.
 
-Based on KA representation theory, there exists a model with the fewest possible parameters \hs{elaborate on said KA representation theory with more math} that can still represent the function we want to learn. The idea is to try several of these small models to see if it can learn without overparameterizing. We can also try augmenting the dataset with computed features; this makes the learned mathematical relationships more simple, which keeps the model small even though we introduced new features. In some cases, it reduces the size of the model even further.
-
-\hs{also show architecture layout of said minimal models. Justification can be brief, longer stuff in appendix.}
-
-Here is a summary of the augmented features we tried.
-
-\begin{center}
-
-\begin{tabular}{l|l}
-\texttt{rel\_pos} & $x_{j} - x_{i}$ \\
-\texttt{dist\_sq} & $\|x_{j} - x_{i}\|^{2}$ \\
-\texttt{inv\_dist\_sq} & $(\|x_{j} - x_{i}\|^{2} + \epsilon^{2})^{-1}$
-% excluding mass_weighted_rel_pos because in my opinion it doesn't really make sense and it didn't really improve the model. can discuss it if you think it's still relevant
-\end{tabular}
-
-\end{center}
-
-We tried 5 small models with a few combinations of augmented features. Here is a summary of the training and validation loss. All models were trained for 50 epochs on the same dataset, which consists of 200 training trajectories and 20 validation trajectories. Refer to my \texttt{experiments.yaml} for exact details, including the rationale for the layer widths and depth of each model.
-% git checkout arthur/feat
-
-\begin{center}
-
-\begin{tabular}{l|c|c|c}
-experiment & parameters & training loss & validation loss \\
-\hline
-\texttt{baseline} & $427002$ & $1.783 \times 10^{-2}$ & $1.289 \times 10^{-2}$ \\
-\texttt{minimal} & $1964$ & $1.418 \times 10^{-1}$ & $1.360 \times 10^{-1}$ \\
-\texttt{minimal\_merged} & $2220$ & $1.130 \times 10^{-1}$ & $1.185 \times 10^{-1}$ \\
-\texttt{minimal\_rel\_pos} & $2020$ & $1.873 \times 10^{-2}$ & $1.639 \times 10^{-2}$ \\
-\texttt{minimal\_rel\_pos\_dsq} & $2112$ & $1.960 \times 10^{-2}$ & $1.172 \times 10^{-2}$ \\
-\texttt{minimal\_rel\_pos\_idc} & $1824$ & $2.059 \times 10^{-2}$ & $1.558 \times 10^{-2}$ \\
-% bad naming here due to my mistake, idc = inv_dist_sq. and although the experiments are named "minimal" it's not necessarily the case that these are the smallest possible models, they're just reasonably small.
-\end{tabular}
-
-\end{center}
-
-The small models without any augmentation perform about 1 order of magnitude worse compared to the baseline. This alone is still quite impressive considering the difference in the total number of parameters. However, just by augmenting with \texttt{rel\_pos}, we start to see comparable results without significantly increasing the model complexity. The GKAN could be a highly efficient architecture for this use case.
-
-Looking at the visualizations, it seems that the models without any augmentation did not learn as effectively. The message and node update networks are both quite dense, which suggests that they did not learn to ignore distractors such as velocity. By augmenting the dataset with \texttt{rel\_pos}, we introduce an inductive bias that is apparently sufficient to ``push'' the model in the right direction, and interestingly, we can start to see sparsity in the networks. Refer to the visualizations for \texttt{minimal} and \texttt{minimal\_rel\_pos} to see this effect in action. \hs{link to KAN 2.0 paper}
-
-I have no idea what mathematical relationships it actually learned. \texttt{/shrug} \hs{show image}
-
-\hs{plots and rollouts? maybe keep in appendix}
 \newpage
 \section{Loss Plots}
 
@@ -462,6 +425,111 @@ I have no idea what mathematical relationships it actually learned. \texttt{/shr
 \end{figure}
 
 \newpage
+
+\ag{Plots for ``How small KAN we get?'' go here for now.}
+
+% gnn loss
+\begin{figure}[htbp]
+
+\centering
+\includegraphics[width=0.5\textwidth]{figures/baseline/gnn_loss.png}
+\caption{The baseline.}
+\label{fig:loss-baseline}
+
+\end{figure}
+
+% kan loss
+\begin{figure}[htbp]
+
+\centering
+
+\begin{subfigure}{0.5\textwidth}
+\includegraphics[width=\textwidth]{figures/small/kan_loss.png}
+\caption{\texttt{small}}
+\end{subfigure}
+
+\begin{subfigure}{0.5\textwidth}
+\includegraphics[width=\textwidth]{figures/small_rel_pos/kan_loss.png}
+\caption{\texttt{small\_rel\_pos}}
+\end{subfigure}
+
+\begin{subfigure}{0.5\textwidth}
+\includegraphics[width=\textwidth]{figures/small_rel_pos_dsq/kan_loss.png}
+\caption{\texttt{small\_rel\_dsq}}
+\end{subfigure}
+
+\begin{subfigure}{0.5\textwidth}
+\includegraphics[width=\textwidth]{figures/small_rel_pos_idc/kan_loss.png}
+\caption{\texttt{small\_rel\_idc}}
+\end{subfigure}
+
+\caption{The smaller models.}
+\label{fig:loss-small}
+
+\end{figure}
+
+% message network
+\begin{figure}[htbp]
+
+\centering
+
+\begin{subfigure}{0.5\textwidth}
+\includegraphics[width=\textwidth]{figures/small/kan_msg_network.png}
+\caption{\texttt{small}}
+\end{subfigure}
+
+\begin{subfigure}{0.5\textwidth}
+\includegraphics[width=\textwidth]{figures/small_rel_pos/kan_msg_network.png}
+\caption{\texttt{small\_rel\_pos}}
+\end{subfigure}
+
+\begin{subfigure}{0.5\textwidth}
+\includegraphics[width=\textwidth]{figures/small_rel_pos_dsq/kan_msg_network.png}
+\caption{\texttt{small\_rel\_dsq}}
+\end{subfigure}
+
+\begin{subfigure}{0.5\textwidth}
+\includegraphics[width=\textwidth]{figures/small_rel_pos_idc/kan_msg_network.png}
+\caption{\texttt{small\_rel\_idc}}
+\end{subfigure}
+
+\caption{The smaller models.}
+\label{fig:message-network-small}
+
+\end{figure}
+
+% node update network
+\begin{figure}[htbp]
+
+\centering
+
+\begin{subfigure}{0.5\textwidth}
+\includegraphics[width=\textwidth]{figures/small/kan_node_network.png}
+\caption{\texttt{small}}
+\end{subfigure}
+
+\begin{subfigure}{0.5\textwidth}
+\includegraphics[width=\textwidth]{figures/small_rel_pos/kan_node_network.png}
+\caption{\texttt{small\_rel\_pos}}
+\end{subfigure}
+
+\begin{subfigure}{0.5\textwidth}
+\includegraphics[width=\textwidth]{figures/small_rel_pos_dsq/kan_node_network.png}
+\caption{\texttt{small\_rel\_dsq}}
+\end{subfigure}
+
+\begin{subfigure}{0.5\textwidth}
+\includegraphics[width=\textwidth]{figures/small_rel_pos_idc/kan_node_network.png}
+\caption{\texttt{small\_rel\_idc}}
+\end{subfigure}
+
+\caption{The smaller models.}
+\label{fig:node-update-network-small}
+
+\end{figure}
+
+\newpage
+
 \section{What goes in the report}
 Part of your grade is based on the contribution of your project:
 did you do something meaningful in your project, that adds something new to the world?
