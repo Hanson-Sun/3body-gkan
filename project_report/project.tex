@@ -83,7 +83,7 @@ Many scientific systems can be modeled as interacting objects governed by underl
 
 We study the $n$-body problem as a testbed for this goal. Given the initial states of several bodies, the task is to predict their future trajectories under pairwise forces. Prior work has shown that graph neural networks (GNNs) are a strong fit for this setting because they naturally represent objects as nodes and interactions as edges. In particular, \cite{cranmer2020discoveringsymbolicmodelsdeep} showed that a GNN trained on simulated $n$-body dynamics can be combined with symbolic regression to recover analytical force laws.
 
-A limitation of this approach is that the GNN itself is not directly interpretable. The learned representation is still a black box, and symbolic regression is a separate post-hoc step. Recent work on Kolmogorov-Arnold Networks (KANs) suggests a possible alternative. KANs replace standard MLP-style node activations with learnable univariate functions on edges, which can make the learned model easier to inspect. Liu et al.\cite{liu2024kankolmogorovarnoldnetworks,liu2024kan20kolmogorovarnoldnetworks} showed that KANs can be effective while remaining more transparent than standard MLPs.
+A limitation of this approach is that the GNN itself is not directly interpretable. The learned representation is still a black box, and symbolic regression is a separate post-hoc step. Recent work on Kolmogorov-Arnold Networks (KANs) suggests a possible alternative. KANs replace standard MLP-style node activations with learnable univariate functions on edges, which can make the learned model easier to inspect. Liu et al. \cite{liu2024kankolmogorovarnoldnetworks,liu2024kan20kolmogorovarnoldnetworks} showed that KANs can be effective while remaining more transparent than standard MLPs.
 
 In this project, we ask whether this idea can be extended to relational physical systems. We introduce a hybrid Graph KAN (GKAN) architecture, where KAN layers replace MLP components inside a message-passing GNN. We evaluate this model on simulated $n$-body dynamics and compare it against standard GNN baselines, with a focus on both prediction quality and interpretability.
 
@@ -113,12 +113,16 @@ We organize our experiments around a few questions: whether GKANs can match GNN 
 \hs{will probably skip multkans, dont think i got anything useful there. can include if theres space}
 
 \subsection{Regularization}
+Sparsification can be achieved in KAN layers through L1 regularization of weights, as in traditional MLP layers, though an additional entropy regularizer is often needed to make sufficiently sparse KANs \cite{liu2024kankolmogorovarnoldnetworks}. This suite of experiments serves to both validate regularization patterns found in traditional KANs, as well as find ideal regularization hyperparameters to encourage sparse and interpretable networks. To do so, we run a sweep through different magnitudes of L1 regularization, entropy regularization, and both combined, comparing the models to each other, as well as a control with no regularization. Doing so helps identify the efficacy of different regularizations in creating sparser models. 
+
+Each GKAN network uses a node network of dimensions [7, 8, 2], a message network of dimensions [10, 12, 12, 2], and is trained over 50 epochs. Once all models are trained, they are compared in both training loss, validation loss against a test set, as well as visually compared for how sparse the networks are. The ideal regularization approach is determined by which hyperparameters provide a relatively sparse and interpretable network without sacrificing performance on the validation set.
+
 Idea: try to test out and find the best regularization hyperparameters to encourage sparse networks. all experiments done using gravity, n\_train = 500, n\_val = 50, msg\_width =  msg\_width: [10, 12, 12, 2], node\_width: [7, 8, 2], over 50 epochs using adam
 \begin{itemize}
     \item control with no regularization
-    \item sweep of l1 regularization: 1e-3, 1e-4, 1e-5
+    \item sweep of l1 regularization: 1e-3, 1e-4, 1e-5 \ek{maybe drop the 1e-5, since it's the only case using that number and isn't important}
     \item sweep of entropy regularization: 1e-3, 1e-4
-    \item sparse initialization
+    \item sparse initialization 
     \item sweep of both l1 and entropy regularization: 1e-4, 1e-3, 1e-1, 1e1, 1e2
 \end{itemize}
 \hs{justify choice of regularization (L1 and entropy)}
@@ -128,18 +132,27 @@ Idea: try to test out and find the best regularization hyperparameters to encour
 \hs{maybe have one big table summarizing losses for different configs (include maximal model somehow?)}
 
 \subsection{Regularization}
+\ek{insert table with training loss, val loss at 50 epochs? TODO: load respective checkpoints to get actual numbers, and plot the losses on a graph. make a script so we can do this for other models}
+
+
 I think most of this actually goes in discussion?
 \begin{itemize}
     \item all ts sucks ass!!!!
     \item regularization did not encourage sparsity
     \item just made model learn worse as regularization increased (regularization penalty overwhelming loss function?)
     \item like no discernible diff :(
-    \item sparse init just sucked
+    \item sparse init just sucked \ek{barely worth mentioning}
     \item regularization combined 1e1, 1e2 literally did not learn like the training error stayed flat. same for sparse init
 \end{itemize}
 TODO: generate loss plots overlaid, regenerate visualizations for experiments that are missing them
 \section{Discussion (REAL)}
 \subsection{Regularization}
+None of the different regularizations used resulted in networks sparse enough to be interpretable through visual inspection. Even using multipliers of 10 or 100 for the overall regularization only produced marginally sparser GKANs compared to the no-regularization control, while being unable to learn due to the regularization loss overpowering prediction loss. It was expected that the L1-norm and entropy regularizations alone would be insufficient, though even combined, as outlined in \cite{liu2024kankolmogorovarnoldnetworks}, results are disappointing. This may be explained by:
+\begin{enumerate}
+    \item The gravitational $n$-body problem requiring dense networks to accurately represent the dynamic system. Though  \cite{liu2024kan20kolmogorovarnoldnetworks} provides an example of a symbolic KAN modeling gravitational force between two bodies in a small, interpretable network, indicating that the gravitational forces do not require dense networks. \ek{I HATE THIS I HATE THIS THIS}
+    \item Constant regularization does not allow for balance between learning and sparsity. The experiments did not increase regularization magnitudes over the learning period, which may have done a better job of letting the model optimize for accurate predictions first, then learn a sparse representation after.
+\end{enumerate}
+
 Why does all ts suck so much ass? And why no sparse?
 \begin{itemize}
     \item maybe gravity just requires dense networks to model without using feature engineering; having to learn relative positions, multiplication and stuff might just be too hard for our little guys
