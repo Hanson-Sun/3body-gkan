@@ -205,7 +205,7 @@ The node update network always consists of 1 layer ($7 \to 2$). The models are a
 \hs{maybe have one big table summarizing losses for different configs (include maximal model somehow?)}
 
 \subsection{Baseline GNN}
-The baseline GNN model achieves a training loss of $1.12 \times 10^{-2}$ and a validation loss of $1.02 \times 10^{-2}$ after 50 epochs. This serves as a reference point for evaluating the performance of the GKAN models.
+The baseline GNN model achieves a training loss of $1.783 \times 10^{-2}$ and a validation loss of $1.289 \times 10^{-2}$ after 50 epochs. This serves as a reference point for evaluating the performance of the GKAN models.
 
 \subsection{Regularization}
 Unregularized training loss and validation loss for each combination of L1-norm and entropy regularizations in Table \ref{tab:regularization} display marginal differences between values. The largest gap in validation losses between two of the models is 0.08e-1, comparing the control (0 L1-norm, 0 entropy) to the maximal regularization (1e2 L1-norm, 1e2 entropy). The sparse initialization is the only model to not follow this trend, with training loss 3.95e-01 and validation loss 3.57e-01.
@@ -264,7 +264,7 @@ Furthermore, by introducing simple computed features such as $\Delta x$ and $\De
 
 \ag{Include loss plots and rollouts here?}
 
-\section{Discussion (REAL)}
+\section{Discussion}
 \subsection{Regularization}
 It was expected that the L1-norm and entropy regularizations alone would be insufficient, though even combined---as outlined in \cite{liu2024kankolmogorovarnoldnetworks} to be a better approach---results are disappointing. The differences between losses in the experiments is easily explained as noise, and none of the regularization techniques encouraged sparse networks. This may be explained by:
 \begin{enumerate}
