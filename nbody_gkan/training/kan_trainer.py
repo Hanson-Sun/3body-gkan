@@ -276,16 +276,16 @@ class KANTrainer(Trainer):
         # Phase switch check comes first
         self._maybe_switch_to_lbfgs(epoch)
         # Also gate on Adam warmup so first grid update is not on switch epoch.
-        grid_warmup_epoch = max(self.grid_update_warmup, self.adam_warmup_epochs)
+        grid_warmup_epoch = self.grid_update_warmup
 
         # Grid updates only during LBFGS phase — noisy Adam gradients
         # make grid updates unreliable during warmup
-        if (self._using_lbfgs
-                and self.grid_update_freq > 0
-                and epoch > grid_warmup_epoch
-                and epoch % self.grid_update_freq == 0
-                and self._n_grid_updates < self.max_grid_updates
-                and hasattr(self.model, 'update_grids')):
+        if (self.grid_update_freq > 0
+            and epoch > grid_warmup_epoch
+            and epoch % self.grid_update_freq == 0
+            and self._n_grid_updates < self.max_grid_updates
+            and hasattr(self.model, 'update_grids')):
+
             tqdm.write(f"  Updating KAN grids (update #{self._n_grid_updates + 1})...")
             self.model.update_grids(self.lbfgs_train_loader, device=self.device)
             # Reset LBFGS history after grid changes to avoid stale curvature info
