@@ -14,11 +14,8 @@ import torch
 # Maps feature name -> number of output dimensions (as a function of ndim).
 _FEATURE_DIMS: dict[str, int | str] = {
     "rel_pos": "ndim",
-    "rel_vel": "ndim",
     "dist_sq": 1,
-    "dist": 1,
-    "inv_dist_sq": 1,
-    "mass_weighted_rel_pos": "ndim",
+    "inv_dist_cu": 1,
 }
 
 AVAILABLE_FEATURES = tuple(_FEATURE_DIMS.keys())
@@ -96,17 +93,10 @@ def compute_edge_features(
     for name in features:
         if name == "rel_pos":
             parts.append(_dx())
-        elif name == "rel_vel":
-            parts.append(x_j[:, ndim : 2 * ndim] - x_i[:, ndim : 2 * ndim])
         elif name == "dist_sq":
             parts.append(_r_sq())
-        elif name == "dist":
-            parts.append(torch.sqrt(_r_sq() + softening**2))
-        elif name == "inv_dist_sq":
-            parts.append((_r_sq() + softening**2) ** -1)
-        elif name == "mass_weighted_rel_pos":
-            m_j = x_j[:, 2 * ndim : 2 * ndim + 1]
-            parts.append(m_j * _dx())
+        elif name == "inv_dist_cu":
+            parts.append(torch.pow(_r_sq() + softening, -1.5))
         else:
             raise ValueError(
                 f"Unknown edge feature {name!r}. "
