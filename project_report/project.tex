@@ -22,6 +22,8 @@
 \usepackage{hyperref}       % hyperlinks
 \usepackage{url}            % simple URL typesetting
 
+\usepackage{multirow}
+
 % I recommend the biblatex package.
 % If you hate it for some reason, though, you can use natbib instead:
 % comment out this block and uncomment the next one.
@@ -127,6 +129,73 @@ Idea: try to test out and find the best regularization hyperparameters to encour
 \end{itemize}
 \hs{justify choice of regularization (L1 and entropy)}
 
+\subsection{How small KAN we get?}
+
+The Kolmogorov-Arnold (KA) representation theorem states that any multivariate function can be decomposed into a finite number of univariate functions, combined via addition and function composition. \ag{Who do I cite here? K and A from the 50s? Also, re-stating this stuff isn't actually that useful...}
+
+\[
+f(x_{1 \ldots n}) = \sum_{i = 0}^{2n} \Phi_{i} \left( \sum_{j = 1}^{n} \phi_{i, j}(x_{j}) \right)
+\]
+
+This suggests the existence of models with significantly fewer parameters that can still represent the function we want to learn. In this section, we design and evaluate several smaller models to determine if the GKAN can perform well without extreme overparameterization.
+
+To design a smaller model, we work backwards from a proposed ``feasible route'' of function compositions and additions that yields the desired force law. In other words, we set layer widths and depths based on the number of arithmetic steps needed to decompose the desired force law into univariate functions by hand. We then observe whether the model is capable of recovering the desired force law by ``undoing'' our decomposition.
+
+To illustrate this process, Figure \ref{fig:feasible-route-small} is one example of a feasible route. In this example, the message network consists of 4 layers ($10 \to 6 \to 3 \to 4 \to 2$) because the acceleration vector can be computed in 4 arithmetic steps; the node update network consists of just 1 layer ($7 \to 2$) because it only needs to aggregate acceleration vectors from the messages. \ag{I suppose we should explain the other 3 experiments in an appendix.}
+
+\begin{figure}[h]
+
+\centering
+\begin{tabular}{c|l}
+input & $m_{i}$, $s_{x,i}$, $s_{y,i}$, $v_{x,i}$, $v_{y,i}$, $m_{j}$, $s_{x,j}$, $s_{y,j}$, $v_{x,j}$, $v_{y,j}$ \\
+\hline
+\multirow{6}{*}{1} & $h_{1,1} = s_{x,j} - s_{x,i} \propto \Delta x$ \\
+& $h_{1,2} = s_{y,j} - s_{y,i} \propto \Delta y$ \\
+& $h_{1,3} = m_{j} + s_{x,j} - s_{x,i} \propto m_{j} + \Delta x$ \\
+& $h_{1,4} = m_{j} - s_{x,j} + s_{x,i} \propto m_{j} - \Delta x$ \\
+& $h_{1,5} = m_{j} + s_{y,j} - s_{y,i} \propto m_{j} + \Delta y$ \\
+& $h_{1,6} = m_{j} - s_{y,j} + s_{y,i} \propto m_{j} - \Delta y$ \\
+\hline
+\multirow{3}{*}{2} & $h_{2, 1} = h_{1, 1}^{2} + h_{1, 2}^{2} \propto \|r\|^{2}$ \\
+& $h_{2, 2} = h_{1,3}^{2} - h_{1,4}^{2} \propto m_{j} \Delta x$ \\
+& $h_{2, 3} = h_{1,5}^{2} - h_{1,6}^{2} \propto m_{j} \Delta y$ \\
+\hline
+\multirow{4}{*}{3} & $h_{3,1} = h_{2,1}^{-1.5} + h_{2,2} \propto \|r\|^{-3} + m_{j} \Delta x$ \\
+& $h_{3,2} = h_{2,1}^{-1.5} - h_{2,2} \propto \|r\|^{-3} - m_{j} \Delta x$ \\
+& $h_{3,3} = h_{2,1}^{-1.5} + h_{2,3} \propto \|r\|^{-3} + m_{j} \Delta y$ \\
+& $h_{3,4} = h_{2,1}^{-1.5} - h_{2,3} \propto \|r\|^{-3} - m_{j} \Delta y$ \\
+\hline
+\multirow{2}{*}{4} & $h_{4,1} = h_{3,1}^{2} - h_{3,2}^{2} \propto \|r\|^{-3} m_{j} \Delta x$ \\
+& $h_{4,2} = h_{3,3}^{2} - h_{3,4}^{2} \propto \|r\|^{-3} m_{j} \Delta y$ \\
+\hline
+output & $a_{x,i} = h_{4,1}$, $a_{y,i} = h_{4,2}$ \\
+\end{tabular}
+\caption{A feasible route. \ag{Need a better way to present this.}}
+\label{fig:feasible-route-small}
+
+\end{figure}
+
+In this section, we also experiment with feature engineering by augmenting the dataset with computed features. Specifically, we are interested in computed features that allow us to ``skip steps'' during the decomposition process. For example, in the decomposition described by Figure \ref{fig:feasible-route-small}, it is necessary to compute the intermediate values $\Delta x$ and $\Delta y$ in the first layer. By providing these as inputs, we can eliminate 1 layer.
+
+In total, we designed and evaluated 4 smaller models with several combinations of computed features as listed in Figure \ref{fig:experiments-small}. For comparison, the baseline GNN model based on \cite{cranmer2020discoveringsymbolicmodelsdeep} has 300 hidden MLP layers and 427\,002 parameters.
+
+\begin{figure}[h]
+
+\centering
+\begin{tabular}{l|l|l|l}
+experiment name & message network & parameters & computed features \\
+\hline
+\texttt{small} & 4 layers ($10 \to 6 \to 3 \to 4 \to 2$) & 2220 & \\
+\texttt{small\_rel\_pos} & 3 layers ($12 \to 5 \to 4 \to 2$) & 2020 & $\Delta x$, $\Delta y$ \\
+\texttt{small\_rel\_dsq} & 3 layers ($13 \to 5 \to 4 \to 2$) & 2112 & $\Delta x$, $\Delta y$, $\|r\|^{+2}$\\
+\texttt{small\_rel\_idc} & 3 layers ($13 \to 4 \to 4 \to 2$) & 1824 & $\Delta x$, $\Delta y, \|r\|^{-3}$ \\
+\end{tabular}
+\caption{The smaller models.}
+\label{fig:experiments-small}
+
+\end{figure}
+
+The node update network always consists of 1 layer ($7 \to 2$). The models are all trained for 50 epochs on the same dataset, which consists of 200 training trajectories and 20 validation trajectories. For exact details on the data generation process and training regime, as well as an outline of the feasible route for each model, refer to the appendices. \ag{Use a ref here.}
 
 \section{Results}
 \hs{maybe have one big table summarizing losses for different configs (include maximal model somehow?)}
@@ -145,6 +214,34 @@ I think most of this actually goes in discussion?
     \item regularization combined 1e1, 1e2 literally did not learn like the training error stayed flat. same for sparse init
 \end{itemize}
 TODO: generate loss plots overlaid, regenerate visualizations for experiments that are missing them
+
+\subsection{How small KAN we get?}
+
+Recall that we designed and evaluated 4 smaller models. The training loss and validation loss are summarized in Figure \ref{fig:results-small}.
+
+\begin{figure}[h]
+
+\centering
+\begin{tabular}{l|c|c}
+experiment name & training loss & validation loss \\
+\hline
+\texttt{baseline} & $1.592 \times 10^{-2}$ & $1.281 \times 10^{-2}$ \\
+\texttt{small} & $1.130 \times 10^{-1}$ & $1.185 \times 10^{-1}$ \\
+\texttt{small\_rel\_pos} & $1.873 \times 10^{-2}$ & $1.639 \times 10^{-2}$ \\
+\texttt{small\_rel\_dsq} & $1.960 \times 10^{-2}$ & $1.172 \times 10^{-2}$ \\
+\texttt{small\_rel\_idc} & $2.594 \times 10^{-2}$ & $2.073 \times 10^{-2}$ \\
+\end{tabular}
+\caption{The smaller models.}
+\label{fig:results-small}
+
+\end{figure}
+
+The \texttt{small} GKAN model without any computed features performs about 1 order of magnitude worse compared to the baseline GNN. This alone is quite impressive when considering the difference in model size.
+
+Furthermore, by introducing simple computed features such as $\Delta x$ and $\Delta y$ (which would not be unreasonable to include, even without \textit{a priori} knowledge of the desired force law), we observe significantly improved performance on par with the baseline---with the additional benefit of a 99.5\% reduction in model size. This suggests that the GKAN could be a highly efficient architecture for domain-informed use cases.
+
+\ag{Include loss plots and rollouts here?}
+
 \section{Discussion (REAL)}
 \subsection{Regularization}
 None of the different regularizations used resulted in networks sparse enough to be interpretable through visual inspection. Even using multipliers of 10 or 100 for the overall regularization only produced marginally sparser GKANs compared to the no-regularization control, while being unable to learn due to the regularization loss overpowering prediction loss. It was expected that the L1-norm and entropy regularizations alone would be insufficient, though even combined, as outlined in \cite{liu2024kankolmogorovarnoldnetworks}, results are disappointing. This may be explained by:
@@ -163,6 +260,26 @@ Why does all ts suck so much ass? And why no sparse?
     \hs{maybe think about potential improvements?}
 \end{itemize}
 
+\subsection{How small KAN we get?}
+
+\ag{Could do interpretability analysis. Pass synthetic inputs through the network to see the relationships empirically (sanity check). Then try symbolic regression per-layer and analytically composing them to see if it recovers the force law?}
+
+\ag{The following is outdated.} Looking at the visualizations, it seems that the models without any augmentation did not learn as effectively. The message and node update networks are both quite dense, which suggests that they did not learn to ignore distractors such as velocity. By augmenting the dataset with \texttt{rel\_pos}, we introduce an inductive bias that is apparently sufficient to ``push'' the model in the right direction, and interestingly, we can start to see sparsity in the networks. Refer to the visualizations for \texttt{minimal} and \texttt{minimal\_rel\_pos} to see this effect in action. \hs{link to KAN 2.0 paper}
+
+I have no idea what mathematical relationships it actually learned. \texttt{/shrug} \hs{show image}
+
+\hs{plots and rollouts? maybe keep in appendix}
+
+\subsection{How small KAN we get?}
+
+\ag{Could do interpretability analysis. Pass synthetic inputs through the network to see the relationships empirically (sanity check). Then try symbolic regression per-layer and analytically composing them to see if it recovers the force law?}
+
+\ag{The following is outdated.} Looking at the visualizations, it seems that the models without any augmentation did not learn as effectively. The message and node update networks are both quite dense, which suggests that they did not learn to ignore distractors such as velocity. By augmenting the dataset with \texttt{rel\_pos}, we introduce an inductive bias that is apparently sufficient to ``push'' the model in the right direction, and interestingly, we can start to see sparsity in the networks. Refer to the visualizations for \texttt{minimal} and \texttt{minimal\_rel\_pos} to see this effect in action. \hs{link to KAN 2.0 paper}
+
+I have no idea what mathematical relationships it actually learned. \texttt{/shrug} \hs{show image}
+
+\hs{plots and rollouts? maybe keep in appendix}
+
 \subsection{KAN't Optimize}
 
 % Overall, our results suggest that the main bottleneck for GKANs in this setting may not be representational power, but trainability. Better optimization and stronger physical inductive biases may be necessary before the interpretability advantages of KAN-based graph models can be fully realized.
@@ -175,32 +292,9 @@ Why does all ts suck so much ass? And why no sparse?
 
 % discuss infeasiblility for certain asymptotic functions for spline edges, discuss potential tricks with grid updates etc. 
 
-% discuss potential for physically informed loss function (e.g., incorporating conservation laws or physical constraints into the loss function, hamiltonian loss functions, etc). THis may partially explain poor learning results over all
+discuss potential for physically informed loss function (e.g., incorporating conservation laws or physical constraints into the loss function, hamiltonian loss functions, etc). THis may partially explain poor learning results over all
 
-% \cite{arroyo2025vanishinggradientsoversmoothingoversquashing}
-
-Beyond interpretability, a major challenge in our experiments was optimization. Although GKANs are expressive in principle, they were consistently harder to train than comparable MLP-based GNN baselines. Loss often decreased slowly, converged to worse minima, or was highly sensitive to initialization and optimizer choice. We hypothesize this is mainly due to two factors: (1) optimization difficulty of spline-based edge functions, and (2) interaction with message passing leading to irregular gradients.
-
-\paragraph{Optimization difficulty of spline-based edge functions.}
-Each KAN edge learns a nonlinear spline, so the model must learn both the function value and its local gradient behavior. Flat spline regions can suppress gradients, while steep regions can create unstable updates. This becomes more difficult when many KAN layers are composed.
-
-For gravity, the learned interaction also involves inverse-distance terms, which are asymptotic and poorly conditioned for spline approximation. This likely made optimization especially difficult. In support of this, enforcing a minimum separation distance between bodies noticeably improved training, whereas unconstrained runs reduced loss by less than $5\%$. Moreover, replacing gravity with the better-conditioned Hooke's law produced much larger loss decreases of roughly $90\%$.
-
-\paragraph{Interaction with message passing.}
-Message passing may further amplify these issues, since errors in learned edge functions propagate across the graph. Prior work has identified oversmoothing, oversquashing, and gradient degradation in deeper GNNs \cite{arroyo2025vanishinggradientsoversmoothingoversquashing}. Our results are consistent with this behavior. We tested Adam, L-BFGS, warmup schedules, and alternating optimization, but none consistently improved training. This suggests that optimization may be intrinsically challenging for GKANs in message-passing settings.
-
-
-
-\section{Conclusion}
-
-Although raw performance was weaker than expected, several directions may improve learning:
-
-\begin{itemize}
-    \item \textbf{Physics-informed objectives:} include conservation of energy, momentum, or Hamiltonian consistency in the loss.
-    \item \textbf{Adaptive KAN parameterization:} use grid updates, better knot placement, or multiplicative nodes.
-    \item \textbf{Two-stage training:} first optimize predictive accuracy, then sparsify or simplify the learned functions.
-\end{itemize}
-
+discuss future improvements like pruning low-weighted edges every few epochs
 
 \newpage
 
@@ -212,51 +306,7 @@ Although raw performance was weaker than expected, several directions may improv
 
 \section{Supplementary material} \label{app:info}
 
-% arthur
-
-Based on KA representation theory, there exists a model with the fewest possible parameters \hs{elaborate on said KA representation theory with more math} that can still represent the function we want to learn. The idea is to try several of these small models to see if it can learn without overparameterizing. We can also try augmenting the dataset with computed features; this makes the learned mathematical relationships more simple, which keeps the model small even though we introduced new features. In some cases, it reduces the size of the model even further.
-
-\hs{also show architecture layout of said minimal models. Justification can be brief, longer stuff in appendix.}
-
-Here is a summary of the augmented features we tried.
-
-\begin{center}
-
-\begin{tabular}{l|l}
-\texttt{rel\_pos} & $x_{j} - x_{i}$ \\
-\texttt{dist\_sq} & $\|x_{j} - x_{i}\|^{2}$ \\
-\texttt{inv\_dist\_sq} & $(\|x_{j} - x_{i}\|^{2} + \epsilon^{2})^{-1}$
-% excluding mass_weighted_rel_pos because in my opinion it doesn't really make sense and it didn't really improve the model. can discuss it if you think it's still relevant
-\end{tabular}
-
-\end{center}
-
-We tried 5 small models with a few combinations of augmented features. Here is a summary of the training and validation loss. All models were trained for 50 epochs on the same dataset, which consists of 200 training trajectories and 20 validation trajectories. Refer to my \texttt{experiments.yaml} for exact details, including the rationale for the layer widths and depth of each model.
-% git checkout arthur/feat
-
-\begin{center}
-
-\begin{tabular}{l|c|c|c}
-experiment & parameters & training loss & validation loss \\
-\hline
-\texttt{baseline} & $427002$ & $1.783 \times 10^{-2}$ & $1.289 \times 10^{-2}$ \\
-\texttt{minimal} & $1964$ & $1.418 \times 10^{-1}$ & $1.360 \times 10^{-1}$ \\
-\texttt{minimal\_merged} & $2220$ & $1.130 \times 10^{-1}$ & $1.185 \times 10^{-1}$ \\
-\texttt{minimal\_rel\_pos} & $2020$ & $1.873 \times 10^{-2}$ & $1.639 \times 10^{-2}$ \\
-\texttt{minimal\_rel\_pos\_dsq} & $2112$ & $1.960 \times 10^{-2}$ & $1.172 \times 10^{-2}$ \\
-\texttt{minimal\_rel\_pos\_idc} & $1824$ & $2.059 \times 10^{-2}$ & $1.558 \times 10^{-2}$ \\
-% bad naming here due to my mistake, idc = inv_dist_sq. and although the experiments are named "minimal" it's not necessarily the case that these are the smallest possible models, they're just reasonably small.
-\end{tabular}
-
-\end{center}
-
-The small models without any augmentation perform about 1 order of magnitude worse compared to the baseline. This alone is still quite impressive considering the difference in the total number of parameters. However, just by augmenting with \texttt{rel\_pos}, we start to see comparable results without significantly increasing the model complexity. The GKAN could be a highly efficient architecture for this use case.
-
-Looking at the visualizations, it seems that the models without any augmentation did not learn as effectively. The message and node update networks are both quite dense, which suggests that they did not learn to ignore distractors such as velocity. By augmenting the dataset with \texttt{rel\_pos}, we introduce an inductive bias that is apparently sufficient to ``push'' the model in the right direction, and interestingly, we can start to see sparsity in the networks. Refer to the visualizations for \texttt{minimal} and \texttt{minimal\_rel\_pos} to see this effect in action. \hs{link to KAN 2.0 paper}
-
-I have no idea what mathematical relationships it actually learned. \texttt{/shrug} \hs{show image}
-
-\hs{plots and rollouts? maybe keep in appendix}
+This stuff doesn't count towards your page limit.
 
 \newpage
 \section{What goes in the report}
