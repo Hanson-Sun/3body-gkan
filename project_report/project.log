@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.25 (MiKTeX 23.9) (preloaded format=pdflatex 2024.9.5)  26 APR 2026 00:07
+This is pdfTeX, Version 3.141592653-2.6-1.40.25 (MiKTeX 23.9) (preloaded format=pdflatex 2024.9.5)  26 APR 2026 00:11
 entering extended mode
  \write18 enabled.
  %&-line parsing enabled.
@@ -257,7 +257,6 @@ File: puenc.def 2023-07-08 v7.01b Hyperref: PDF Unicode definition (HO)
 Now handling font encoding PU ...
 ... no UTF-8 mapping file for font encoding PU
 )
-Package hyperref Info: Option `draft' set `true' on input line 4050.
 Package hyperref Info: Hyper figures OFF on input line 4167.
 Package hyperref Info: Link nesting OFF on input line 4172.
 Package hyperref Info: Hyper index ON on input line 4175.
@@ -813,15 +812,16 @@ Package grfext Info: Graphics extension search list:
  (C:\Users\docto\AppData\Local\Programs\MiKTeX\tex/latex/00miktex\epstopdf-sys.cfg
 File: epstopdf-sys.cfg 2021/03/18 v2.0 Configuration of epstopdf for MiKTeX
 ))
-
-Package hyperref Warning: Draft mode on.
-
 Package hyperref Info: Link coloring OFF on input line 80.
+ (project.out) (project.out)
+\@outlinefile=\write4
+\openout4 = `project.out'.
+
 Package caption Info: Begin \AtBeginDocument code.
 Package caption Info: End \AtBeginDocument code.
 Package biblatex Info: Trying to load language 'USenglish'...
 Package biblatex Info: ... file 'USenglish.lbx' found.
-(C:\Users\docto\AppData\Local\Programs\MiKTeX\tex/latex/biblatex/lbx\USenglish.lbx
+ (C:\Users\docto\AppData\Local\Programs\MiKTeX\tex/latex/biblatex/lbx\USenglish.lbx
 File: USenglish.lbx 2023/03/05 v3.19 biblatex localization (PK/MW)
 Package biblatex Info: Trying to load language 'american'...
 Package biblatex Info: ... file 'american.lbx' found.
@@ -897,99 +897,206 @@ LaTeX Warning: `h' float specifier changed to `ht'.
 Underfull \vbox (badness 1558) has occurred while \output is active []
 
  [7]
-<figures/reg/no_regularization_loss.png, id=36, 570.4512pt x 352.1958pt>
-<figures/reg/l1_1e-4_loss.png, id=38, 570.4512pt x 352.1958pt>
-<figures/reg/l1_1e-3_loss.png, id=39, 570.4512pt x 352.1958pt>
-<figures/reg/entropy_1e-4_loss.png, id=40, 570.4512pt x 352.1958pt>
-<figures/reg/entropy_1e-3_loss.png, id=41, 570.4512pt x 352.1958pt>
-<figures/reg/combined_1e-4_loss.png, id=42, 570.4512pt x 352.1958pt>
-<figures/reg/combined_1e-3_loss.png, id=43, 570.4512pt x 352.1958pt>
-<figures/reg/combined_1e-1_loss.png, id=44, 570.4512pt x 352.1958pt>
-<figures/reg/combined_1e1_loss.png, id=45, 570.4512pt x 352.1958pt>
-<figures/reg/combined_1e2_loss.png, id=46, 570.4512pt x 352.1958pt>
- [8]
-<figures/reg/sparse_init_loss.png, id=54, 569.4876pt x 352.1958pt>
-<figures/reg/com1e2_node_network.png, id=55, 2370.2151pt x 1275.3246pt>
-<figures/reg/control_node_network.png, id=56, 2370.2151pt x 1275.3246pt>
-<figures/reg/control_msg_network.png, id=57, 2632.5552pt x 1730.8665pt>
+<figures/reg/no_regularization_loss.png, id=219, 570.4512pt x 352.1958pt>
+File: figures/reg/no_regularization_loss.png Graphic file (type png)
+<use figures/reg/no_regularization_loss.png>
+Package pdftex.def Info: figures/reg/no_regularization_loss.png  used on input line 351.
+(pdftex.def)             Requested size: 158.99156pt x 98.16272pt.
+<figures/reg/l1_1e-4_loss.png, id=221, 570.4512pt x 352.1958pt>
+File: figures/reg/l1_1e-4_loss.png Graphic file (type png)
+<use figures/reg/l1_1e-4_loss.png>
+Package pdftex.def Info: figures/reg/l1_1e-4_loss.png  used on input line 359.
+(pdftex.def)             Requested size: 158.99156pt x 98.16272pt.
+<figures/reg/l1_1e-3_loss.png, id=222, 570.4512pt x 352.1958pt>
+File: figures/reg/l1_1e-3_loss.png Graphic file (type png)
+<use figures/reg/l1_1e-3_loss.png>
+Package pdftex.def Info: figures/reg/l1_1e-3_loss.png  used on input line 363.
+(pdftex.def)             Requested size: 158.99156pt x 98.16272pt.
+<figures/reg/entropy_1e-4_loss.png, id=223, 570.4512pt x 352.1958pt>
+File: figures/reg/entropy_1e-4_loss.png Graphic file (type png)
+<use figures/reg/entropy_1e-4_loss.png>
+Package pdftex.def Info: figures/reg/entropy_1e-4_loss.png  used on input line 372.
+(pdftex.def)             Requested size: 158.99156pt x 98.16272pt.
+<figures/reg/entropy_1e-3_loss.png, id=224, 570.4512pt x 352.1958pt>
+File: figures/reg/entropy_1e-3_loss.png Graphic file (type png)
+<use figures/reg/entropy_1e-3_loss.png>
+Package pdftex.def Info: figures/reg/entropy_1e-3_loss.png  used on input line 376.
+(pdftex.def)             Requested size: 158.99156pt x 98.16272pt.
+<figures/reg/combined_1e-4_loss.png, id=225, 570.4512pt x 352.1958pt>
+File: figures/reg/combined_1e-4_loss.png Graphic file (type png)
+<use figures/reg/combined_1e-4_loss.png>
+Package pdftex.def Info: figures/reg/combined_1e-4_loss.png  used on input line 385.
+(pdftex.def)             Requested size: 158.99156pt x 98.16272pt.
+<figures/reg/combined_1e-3_loss.png, id=226, 570.4512pt x 352.1958pt>
+File: figures/reg/combined_1e-3_loss.png Graphic file (type png)
+<use figures/reg/combined_1e-3_loss.png>
+Package pdftex.def Info: figures/reg/combined_1e-3_loss.png  used on input line 389.
+(pdftex.def)             Requested size: 158.99156pt x 98.16272pt.
+<figures/reg/combined_1e-1_loss.png, id=227, 570.4512pt x 352.1958pt>
+File: figures/reg/combined_1e-1_loss.png Graphic file (type png)
+<use figures/reg/combined_1e-1_loss.png>
+Package pdftex.def Info: figures/reg/combined_1e-1_loss.png  used on input line 395.
+(pdftex.def)             Requested size: 158.99156pt x 98.16272pt.
+<figures/reg/combined_1e1_loss.png, id=228, 570.4512pt x 352.1958pt>
+File: figures/reg/combined_1e1_loss.png Graphic file (type png)
+<use figures/reg/combined_1e1_loss.png>
+Package pdftex.def Info: figures/reg/combined_1e1_loss.png  used on input line 399.
+(pdftex.def)             Requested size: 158.99156pt x 98.16272pt.
+<figures/reg/combined_1e2_loss.png, id=229, 570.4512pt x 352.1958pt>
+File: figures/reg/combined_1e2_loss.png Graphic file (type png)
+<use figures/reg/combined_1e2_loss.png>
+Package pdftex.def Info: figures/reg/combined_1e2_loss.png  used on input line 405.
+(pdftex.def)             Requested size: 158.99156pt x 98.16272pt.
+ [8 <./figures/reg/no_regularization_loss.png> <./figures/reg/l1_1e-4_loss.png> <./figures/reg/l1_1e-3_loss.png> <./figures/reg/entropy_1e-4_loss.png> <./figures/reg/entropy_1e-3_loss.png>]
+<figures/reg/sparse_init_loss.png, id=246, 569.4876pt x 352.1958pt>
+File: figures/reg/sparse_init_loss.png Graphic file (type png)
+<use figures/reg/sparse_init_loss.png>
+Package pdftex.def Info: figures/reg/sparse_init_loss.png  used on input line 413.
+(pdftex.def)             Requested size: 158.99156pt x 98.32394pt.
+<figures/reg/com1e2_node_network.png, id=247, 2370.2151pt x 1275.3246pt>
+File: figures/reg/com1e2_node_network.png Graphic file (type png)
+<use figures/reg/com1e2_node_network.png>
+Package pdftex.def Info: figures/reg/com1e2_node_network.png  used on input line 421.
+(pdftex.def)             Requested size: 158.99156pt x 85.54555pt.
+File: figures/reg/com1e2_node_network.png Graphic file (type png)
+<use figures/reg/com1e2_node_network.png>
+Package pdftex.def Info: figures/reg/com1e2_node_network.png  used on input line 425.
+(pdftex.def)             Requested size: 158.99156pt x 85.54555pt.
+<figures/reg/control_node_network.png, id=248, 2370.2151pt x 1275.3246pt>
+File: figures/reg/control_node_network.png Graphic file (type png)
+<use figures/reg/control_node_network.png>
+Package pdftex.def Info: figures/reg/control_node_network.png  used on input line 429.
+(pdftex.def)             Requested size: 158.99156pt x 85.54555pt.
+<figures/reg/control_msg_network.png, id=249, 2632.5552pt x 1730.8665pt>
+File: figures/reg/control_msg_network.png Graphic file (type png)
+<use figures/reg/control_msg_network.png>
+Package pdftex.def Info: figures/reg/control_msg_network.png  used on input line 433.
+(pdftex.def)             Requested size: 158.99156pt x 104.53418pt.
 
 Underfull \vbox (badness 10000) has occurred while \output is active []
 
- [9]
-<figures/baseline/gnn_loss.png, id=61, 570.4512pt x 352.1958pt>
-<figures/small/kan_loss.png, id=62, 570.4512pt x 352.1958pt>
-<figures/small_rel_pos/kan_loss.png, id=63, 570.4512pt x 352.1958pt>
-<figures/small_rel_pos_dsq/kan_loss.png, id=64, 570.4512pt x 352.1958pt>
-<figures/small_rel_pos_idc/kan_loss.png, id=65, 570.4512pt x 352.1958pt>
+ [9 <./figures/reg/combined_1e-4_loss.png> <./figures/reg/combined_1e-3_loss.png> <./figures/reg/combined_1e-1_loss.png> <./figures/reg/combined_1e1_loss.png> <./figures/reg/combined_1e2_loss.png> <./figures/reg/sparse_init_loss.png>]
+<figures/baseline/gnn_loss.png, id=262, 570.4512pt x 352.1958pt>
+File: figures/baseline/gnn_loss.png Graphic file (type png)
+<use figures/baseline/gnn_loss.png>
+Package pdftex.def Info: figures/baseline/gnn_loss.png  used on input line 445.
+(pdftex.def)             Requested size: 158.99156pt x 98.16272pt.
+<figures/small/kan_loss.png, id=263, 570.4512pt x 352.1958pt>
+File: figures/small/kan_loss.png Graphic file (type png)
+<use figures/small/kan_loss.png>
+Package pdftex.def Info: figures/small/kan_loss.png  used on input line 453.
+(pdftex.def)             Requested size: 158.99156pt x 98.16272pt.
+<figures/small_rel_pos/kan_loss.png, id=264, 570.4512pt x 352.1958pt>
+File: figures/small_rel_pos/kan_loss.png Graphic file (type png)
+<use figures/small_rel_pos/kan_loss.png>
+Package pdftex.def Info: figures/small_rel_pos/kan_loss.png  used on input line 458.
+(pdftex.def)             Requested size: 158.99156pt x 98.16272pt.
+<figures/small_rel_pos_dsq/kan_loss.png, id=265, 570.4512pt x 352.1958pt>
+File: figures/small_rel_pos_dsq/kan_loss.png Graphic file (type png)
+<use figures/small_rel_pos_dsq/kan_loss.png>
+Package pdftex.def Info: figures/small_rel_pos_dsq/kan_loss.png  used on input line 463.
+(pdftex.def)             Requested size: 158.99156pt x 98.16272pt.
+<figures/small_rel_pos_idc/kan_loss.png, id=266, 570.4512pt x 352.1958pt>
+File: figures/small_rel_pos_idc/kan_loss.png Graphic file (type png)
+<use figures/small_rel_pos_idc/kan_loss.png>
+Package pdftex.def Info: figures/small_rel_pos_idc/kan_loss.png  used on input line 468.
+(pdftex.def)             Requested size: 158.99156pt x 98.16272pt.
 
 Underfull \vbox (badness 10000) has occurred while \output is active []
 
- [10]
-<figures/small/kan_msg_network.png, id=69, 2813.712pt x 2181.3495pt>
-<figures/small_rel_pos/kan_msg_network.png, id=70, 2530.4136pt x 1730.8665pt>
-<figures/small_rel_pos_dsq/kan_msg_network.png, id=71, 2530.4136pt x 1730.8665pt>
-<figures/small_rel_pos_idc/kan_msg_network.png, id=72, 2530.4136pt x 1730.8665pt>
-<figures/small/kan_node_network.png, id=73, 2086.9167pt x 803.1606pt>
-<figures/small_rel_pos/kan_node_network.png, id=74, 2086.9167pt x 803.1606pt>
-<figures/small_rel_pos_dsq/kan_node_network.png, id=75, 2086.9167pt x 803.1606pt>
-<figures/small_rel_pos_idc/kan_node_network.png, id=76, 2086.9167pt x 803.1606pt>
+ [10 <./figures/reg/com1e2_node_network.png> <./figures/reg/control_node_network.png> <./figures/reg/control_msg_network.png> <./figures/baseline/gnn_loss.png>]
+<figures/small/kan_msg_network.png, id=276, 2813.712pt x 2181.3495pt>
+File: figures/small/kan_msg_network.png Graphic file (type png)
+<use figures/small/kan_msg_network.png>
+Package pdftex.def Info: figures/small/kan_msg_network.png  used on input line 478.
+(pdftex.def)             Requested size: 158.99156pt x 123.25313pt.
+<figures/small_rel_pos/kan_msg_network.png, id=277, 2530.4136pt x 1730.8665pt>
+File: figures/small_rel_pos/kan_msg_network.png Graphic file (type png)
+<use figures/small_rel_pos/kan_msg_network.png>
+Package pdftex.def Info: figures/small_rel_pos/kan_msg_network.png  used on input line 483.
+(pdftex.def)             Requested size: 158.99156pt x 108.73352pt.
+<figures/small_rel_pos_dsq/kan_msg_network.png, id=278, 2530.4136pt x 1730.8665pt>
+File: figures/small_rel_pos_dsq/kan_msg_network.png Graphic file (type png)
+<use figures/small_rel_pos_dsq/kan_msg_network.png>
+Package pdftex.def Info: figures/small_rel_pos_dsq/kan_msg_network.png  used on input line 489.
+(pdftex.def)             Requested size: 158.99156pt x 108.73352pt.
+<figures/small_rel_pos_idc/kan_msg_network.png, id=279, 2530.4136pt x 1730.8665pt>
+File: figures/small_rel_pos_idc/kan_msg_network.png Graphic file (type png)
+<use figures/small_rel_pos_idc/kan_msg_network.png>
+Package pdftex.def Info: figures/small_rel_pos_idc/kan_msg_network.png  used on input line 494.
+(pdftex.def)             Requested size: 158.99156pt x 108.73352pt.
+<figures/small/kan_node_network.png, id=280, 2086.9167pt x 803.1606pt>
+File: figures/small/kan_node_network.png Graphic file (type png)
+<use figures/small/kan_node_network.png>
+Package pdftex.def Info: figures/small/kan_node_network.png  used on input line 504.
+(pdftex.def)             Requested size: 158.99156pt x 61.17809pt.
+<figures/small_rel_pos/kan_node_network.png, id=281, 2086.9167pt x 803.1606pt>
+File: figures/small_rel_pos/kan_node_network.png Graphic file (type png)
+<use figures/small_rel_pos/kan_node_network.png>
+Package pdftex.def Info: figures/small_rel_pos/kan_node_network.png  used on input line 509.
+(pdftex.def)             Requested size: 158.99156pt x 61.17809pt.
+<figures/small_rel_pos_dsq/kan_node_network.png, id=282, 2086.9167pt x 803.1606pt>
+File: figures/small_rel_pos_dsq/kan_node_network.png Graphic file (type png)
+<use figures/small_rel_pos_dsq/kan_node_network.png>
+Package pdftex.def Info: figures/small_rel_pos_dsq/kan_node_network.png  used on input line 515.
+(pdftex.def)             Requested size: 158.99156pt x 61.17809pt.
+<figures/small_rel_pos_idc/kan_node_network.png, id=283, 2086.9167pt x 803.1606pt>
+File: figures/small_rel_pos_idc/kan_node_network.png Graphic file (type png)
+<use figures/small_rel_pos_idc/kan_node_network.png>
+Package pdftex.def Info: figures/small_rel_pos_idc/kan_node_network.png  used on input line 520.
+(pdftex.def)             Requested size: 158.99156pt x 61.17809pt.
 
 Underfull \vbox (badness 10000) has occurred while \output is active []
 
- [11]
-<figures/small_rel_pos/msg_kan_responses.png, id=81, 2421.045pt x 416.2752pt>
-<figures/small_rel_pos/node_kan_responses.png, id=82, 1408.7832pt x 415.7934pt>
+ [11 <./figures/small/kan_loss.png> <./figures/small_rel_pos/kan_loss.png> <./figures/small_rel_pos_dsq/kan_loss.png> <./figures/small_rel_pos_idc/kan_loss.png> <./figures/small/kan_msg_network.png> <./figures/small_rel_pos/kan_msg_network.png> <./figures/small_rel_pos_dsq/kan_msg_network.png> <./figures/small_rel_pos_idc/kan_msg_network.png>]
+<figures/small_rel_pos/msg_kan_responses.png, id=298, 2421.045pt x 416.2752pt>
+File: figures/small_rel_pos/msg_kan_responses.png Graphic file (type png)
+<use figures/small_rel_pos/msg_kan_responses.png>
+Package pdftex.def Info: figures/small_rel_pos/msg_kan_responses.png  used on input line 530.
+(pdftex.def)             Requested size: 158.99156pt x 27.33195pt.
+<figures/small_rel_pos/node_kan_responses.png, id=299, 1408.7832pt x 415.7934pt>
+File: figures/small_rel_pos/node_kan_responses.png Graphic file (type png)
+<use figures/small_rel_pos/node_kan_responses.png>
+Package pdftex.def Info: figures/small_rel_pos/node_kan_responses.png  used on input line 535.
+(pdftex.def)             Requested size: 158.99156pt x 46.92383pt.
 
 Underfull \vbox (badness 10000) has occurred while \output is active []
 
- [12]
-<figures/different_function_losses/min_gravity_loss.png, id=86, 570.4512pt x 352.1958pt>
-<figures/different_function_losses/min_linear_gravity_loss.png, id=87, 570.4512pt x 352.1958pt>
-<figures/different_function_losses/min_hooke_loss.png, id=88, 570.4512pt x 352.1958pt>
-<figures/different_function_losses/min_nice_loss.png, id=89, 570.4512pt x 352.1958pt>
+ [12 <./figures/small/kan_node_network.png> <./figures/small_rel_pos/kan_node_network.png> <./figures/small_rel_pos_dsq/kan_node_network.png> <./figures/small_rel_pos_idc/kan_node_network.png> <./figures/small_rel_pos/msg_kan_responses.png> <./figures/small_rel_pos/node_kan_responses.png>]
+<figures/different_function_losses/min_gravity_loss.png, id=310, 570.4512pt x 352.1958pt>
+File: figures/different_function_losses/min_gravity_loss.png Graphic file (type png)
+<use figures/different_function_losses/min_gravity_loss.png>
+Package pdftex.def Info: figures/different_function_losses/min_gravity_loss.png  used on input line 662.
+(pdftex.def)             Requested size: 158.99156pt x 98.16272pt.
+<figures/different_function_losses/min_linear_gravity_loss.png, id=311, 570.4512pt x 352.1958pt>
+File: figures/different_function_losses/min_linear_gravity_loss.png Graphic file (type png)
+<use figures/different_function_losses/min_linear_gravity_loss.png>
+Package pdftex.def Info: figures/different_function_losses/min_linear_gravity_loss.png  used on input line 666.
+(pdftex.def)             Requested size: 158.99156pt x 98.16272pt.
+<figures/different_function_losses/min_hooke_loss.png, id=312, 570.4512pt x 352.1958pt>
+File: figures/different_function_losses/min_hooke_loss.png Graphic file (type png)
+<use figures/different_function_losses/min_hooke_loss.png>
+Package pdftex.def Info: figures/different_function_losses/min_hooke_loss.png  used on input line 670.
+(pdftex.def)             Requested size: 158.99156pt x 98.16272pt.
+<figures/different_function_losses/min_nice_loss.png, id=313, 570.4512pt x 352.1958pt>
+File: figures/different_function_losses/min_nice_loss.png Graphic file (type png)
+<use figures/different_function_losses/min_nice_loss.png>
+Package pdftex.def Info: figures/different_function_losses/min_nice_loss.png  used on input line 674.
+(pdftex.def)             Requested size: 158.99156pt x 98.16272pt.
 
 Underfull \vbox (badness 10000) has occurred while \output is active []
 
  [13]
-<figures/different_function_kans/min_gravity_sparse/kan_msg_network.png, id=94, 2813.712pt x 2181.3495pt>
-<figures/different_function_kans/min_hooke_sparse/kan_msg_network.png, id=95, 2813.712pt x 2181.3495pt>
-<figures/different_function_kans/min_nice_sparse/kan_msg_network.png, id=96, 2813.712pt x 2181.3495pt>
-<figures/different_function_kans/min_gravity_sparse/kan_node_network.png, id=97, 2086.9167pt x 803.1606pt>
-<figures/different_function_kans/min_hooke_sparse/kan_node_network.png, id=98, 2086.9167pt x 803.1606pt>
-<figures/different_function_kans/min_nice_sparse/kan_node_network.png, id=99, 2086.9167pt x 803.1606pt>
-
-Underfull \vbox (badness 10000) has occurred while \output is active []
-
- [14] [15] (project.aux)
- ***********
-LaTeX2e <2023-06-01> patch level 1
-L3 programming layer <2023-08-29>
- ***********
-
-
-LaTeX Warning: There were undefined references.
-
-
-Package biblatex Warning: Please (re)run Biber on the file:
-(biblatex)                project
-(biblatex)                and rerun LaTeX afterwards.
-
-Package logreq Info: Writing requests to 'project.run.xml'.
-\openout1 = `project.run.xml'.
-
- ) 
-Here is how much of TeX's memory you used:
- 25680 strings out of 475248
- 471223 string characters out of 5757814
- 1946801 words of memory out of 5000000
- 46667 multiletter control sequences out of 15000+600000
- 607238 words of font info for 214 fonts, out of 8000000 for 9000
- 1141 hyphenation exceptions out of 8191
- 72i,12n,81p,1203b,1778s stack positions out of 10000i,1000n,20000p,200000b,200000s
- <C:\Users\docto\AppData\Local\MiKTeX\fonts/pk/ljfour/jknappen/ec/dpi600\ectt0900.pk> <C:\Users\docto\AppData\Local\MiKTeX\fonts/pk/ljfour/jknappen/ec/dpi600\ectt1000.pk><C:/Users/docto/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmex10.pfb><C:/Users/docto/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmmi10.pfb><C:/Users/docto/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmmi7.pfb><C:/Users/docto/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmr10.pfb><C:/Users/docto/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmr6.pfb><C:/Users/docto/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmr7.pfb><C:/Users/docto/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmr9.pfb><C:/Users/docto/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmsy10.pfb><C:/Users/docto/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmsy6.pfb><C:/Users/docto/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmsy7.pfb><C:/Users/docto/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmsy9.pfb><C:/Users/docto/AppData/Local/Programs/MiKTeX/fonts/type1/urw/helvetic/uhvr8a.pfb><C:/Users/docto/AppData/Local/Programs/MiKTeX/fonts/type1/urw/times/utmb8a.pfb><C:/Users/docto/AppData/Local/Programs/MiKTeX/fonts/type1/urw/times/utmr8a.pfb><C:/Users/docto/AppData/Local/Programs/MiKTeX/fonts/type1/urw/times/utmri8a.pfb>
-Output written on project.pdf (15 pages, 234995 bytes).
-PDF statistics:
- 239 PDF objects out of 1000 (max. 8388607)
- 0 named destinations out of 1000 (max. 500000)
- 50884 words of extra memory for PDF output out of 51595 (max. 10000000)
-
+<figures/different_function_kans/min_gravity_sparse/kan_msg_network.png, id=320, 2813.712pt x 2181.3495pt>
+File: figures/different_function_kans/min_gravity_sparse/kan_msg_network.png Graphic file (type png)
+<use figures/different_function_kans/min_gravity_sparse/kan_msg_network.png>
+Package pdftex.def Info: figures/different_function_kans/min_gravity_sparse/kan_msg_network.png  used on input line 683.
+(pdftex.def)             Requested size: 158.99156pt x 123.25313pt.
+<figures/different_function_kans/min_hooke_sparse/kan_msg_network.png, id=321, 2813.712pt x 2181.3495pt>
+File: figures/different_function_kans/min_hooke_sparse/kan_msg_network.png Graphic file (type png)
+<use figures/different_function_kans/min_hooke_sparse/kan_msg_network.png>
+Package pdftex.def Info: figures/different_function_kans/min_hooke_sparse/kan_msg_network.png  used on input line 687.
+(pdftex.def)             Requested size: 158.99156pt x 123.25313pt.
+<figures/different_function_kans/min_nice_sparse/kan_msg_network.png, id=322, 2813.712pt x 2181.3495pt>
+File: figures/different_function_kans/min_nice_sparse/kan_msg_network.png Graphic file (type png)
+<use figures/diff
