@@ -82,7 +82,7 @@
 
 
 \begin{abstract}
-  We investigate whether Kolmogorov-Arnold Networks (KANs) can be integrated into graph neural networks (GNNs) to produce interpretable models of $n$-body physical systems. We introduce Graph KANs (GKANs), a hybrid architecture that replaces MLP components in message-passing GNNs with learnable spline-based edge functions. We evaluate GKANs on simulated $n$-body dynamics under several force laws and assess both predictive performance and interpretability through sparsity and network visualization. Our results are largely negative: GKANs are consistently harder to optimize than MLP baselines, and standard regularization techniques fail to produce interpretable sparse networks. We attribute this primarily to the interaction between spline-based edge functions and message passing, which amplifies gradient instability. Despite this, we find that physics-informed feature engineering can recover baseline GNN performance at a 99.5\% reduction in model size, and that smoother force laws are substantially easier to learn---suggesting that GKANs may still hold promise under the right inductive biases.
+  We investigate whether Kolmogorov-Arnold Networks (KANs) can be integrated into graph neural networks (GNNs) to produce interpretable models of $n$-body physical systems. We introduce Graph KANs (GKANs), a hybrid architecture that replaces MLP components in message-passing GNNs with learnable spline-based edge functions. We evaluate GKANs on simulated $n$-body dynamics under several force laws and assess both predictive performance and interpretability through sparsity and network visualization. Our results are largely negative: GKANs are consistently harder to optimize than MLP baselines, and standard regularization techniques fail to produce interpretable sparse networks. We attribute this primarily to the interaction between spline-based edge functions and message passing, which amplifies gradient instability. Despite this, we find that physics-informed feature engineering can recover baseline GNN performance with a 99.5\% reduction in model size, and that smoother force laws are substantially easier to learn---suggesting that GKANs may still hold promise under the right inductive biases.
 \end{abstract}
 
 \section{Introduction}
@@ -93,7 +93,7 @@ We study the $n$-body problem as a testbed for this goal. Given the initial stat
 
 A limitation of this approach is that the GNN itself is not directly interpretable. The learned representation is still a black box, and symbolic regression is a separate post-hoc step. Recent work on Kolmogorov-Arnold Networks (KANs) suggests a possible alternative. KANs replace standard MLP-style node activations with learnable univariate functions on edges, which can make the learned model easier to inspect. \cite{liu2024kankolmogorovarnoldnetworks} showed that KANs can be effective while remaining more transparent than standard MLPs.
 
-In this project, we ask whether this idea can be extended to relational physical systems. We introduce a hybrid Graph KAN (GKAN) architecture, where KAN layers replace MLP components inside a message-passing GNN. We evaluate this model on simulated $n$-body dynamics and compare it against standard GNN baselines, with a focus on both prediction quality and interpretability.  However, whether KANs integrate well with message passing is not obvious---the two components impose different structural 
+In this project, we ask whether this idea can be extended to relational physical systems. We introduce a hybrid Graph KAN (GKAN) architecture, where KAN layers replace MLP components inside a message-passing GNN. We evaluate this model on simulated $n$-body dynamics and compare it against standard GNN baselines, with a focus on both prediction quality and interpretability.  However, whether KANs integrate well with message passing is not obvious---the two components impose different structural
 demands on optimization, and our results reveal this tension in practice.
 
 \section{Related Work}
@@ -109,16 +109,18 @@ KANs provide a different route to interpretability. \cite{liu2024kankolmogorovar
 \section{Methodology}
 
 We evaluate GKANs on synthetic $n$-body simulation data generated with a leapfrog integrator. The main dataset uses Newtonian gravity,
-\begin{equation}
-  a_{i} = G \sum_{j \neq i} m_{j} \frac{r_{j} - r_{i}}{\|r_{j} - r_{i}\|^{3}}
-\end{equation}
-with additional force laws for generalization tests. Each example consists of initial positions, velocities, and masses, with targets given by future trajectories. We compare a GCN baseline following \cite{cranmer2020discoveringsymbolicmodelsdeep} against a GKAN that replaces selected MLP components with KAN layers, trained on identical data with the same loss and optimizer. We evaluate both predictive performance on held-out simulations and interpretability through network sparsity and visualization of learned edge functions.
+
+\[
+a_{i} = G \sum_{j \neq i} m_{j} \frac{r_{j} - r_{i}}{\|r_{j} - r_{i}\|^{3}}
+\]
+
+with additional force laws for generalization tests. Each example consists of initial positions, velocities, and masses, with targets given by future trajectories. We compare a GNN baseline following \cite{cranmer2020discoveringsymbolicmodelsdeep} against a GKAN that replaces selected MLP components with KAN layers, trained on identical data with the same loss and optimizer. We evaluate both predictive performance on held-out simulations and interpretability through network sparsity and visualization of learned edge functions.
 
 Our experiments address four questions: whether GKANs match GNN performance at comparable parameter counts; whether sparse regularization improves interpretability; whether physically motivated minimal architectures are sufficient; and whether these trends generalize across force laws.
 
 \subsection{Baseline GNN}
 
-We follow the baseline GCN architecture from \cite{cranmer2020discoveringsymbolicmodelsdeep}, a node MLP of $(110 \to 300 \to 300 \to 2)$ and a message MLP of $(10 \to 300 \to 300 \to 300 \to 100)$. Note that we compute the loss as the \textit{mean} over individual samples rather than the \textit{sum}. The model is trained without regularization using an L2 loss, optimized with Adam at a learning rate of $1e{-3}$.
+We follow the baseline GNN architecture from \cite{cranmer2020discoveringsymbolicmodelsdeep}, a node MLP of $(110 \to 300 \to 300 \to 2)$ and a message MLP of $(10 \to 300 \to 300 \to 300 \to 100)$. Note that we compute the loss as the \textit{mean} over individual samples rather than the \textit{sum} (as in \cite{cranmer2020discoveringsymbolicmodelsdeep}). The model is trained without regularization using an L2 loss, optimized with Adam at a learning rate of $10^{-3}$.
 
 \subsection{GKAN Architecture}
 
@@ -127,9 +129,9 @@ Our GKAN replaces the MLP components of the baseline GCN with KAN layers. Specif
 We expect the node KAN to learn how to aggregate messages into a final acceleration vector, while the edge KANs learn the pairwise interaction functions. We hypothesize that regularization will encourage sparsity and interpretability, and that smaller KAN architectures may still perform well if they capture the right inductive biases.
 
 \subsection{Regularization}
-Sparsification can be achieved in KAN layers through L1 regularization of weights, as in traditional MLP layers, though an additional entropy regularizer is often needed to make sufficiently sparse KANs \cite{liu2024kankolmogorovarnoldnetworks}. This suite of experiments serves to both validate regularization patterns found in traditional KANs, as well as find ideal regularization hyperparameters to encourage sparse and interpretable networks. To do so, we run a sweep through different magnitudes of L1 regularization, entropy regularization, and both combined, comparing the models to each other, as well as a control with no regularization. Doing so helps identify the efficacy of different regularizations in creating sparser models. Additionally, a model utilizing sparse initialization is also trained, which forces the networks to be sparse before training
+Sparsification can be achieved in KAN layers through L1 regularization of weights, as in traditional MLP layers, though an additional entropy regularizer is often needed to make sufficiently sparse KANs \parencite{liu2024kankolmogorovarnoldnetworks}. This suite of experiments serves to both validate regularization patterns found in traditional KANs, as well as find ideal regularization hyperparameters to encourage sparse and interpretable networks. To do so, we run a sweep through different magnitudes of L1 regularization, entropy regularization, and both combined, comparing the models to each other, as well as a control with no regularization. Doing so helps identify the efficacy of different regularizations in creating sparser models. Additionally, a model utilizing sparse initialization is also trained, which forces the networks to be sparse before training.
 
-Each GKAN network uses a node network of 3 layers $(7 \to 8 \to 2)$, a message network of 4 layers $(10 \to 12 \to 12 \to 2)$, and is trained over 50 epochs. Once all models are trained, they are compared in both training loss, validation loss against a test set, as well as visually compared for how sparse the networks are. The ideal regularization approach is determined by which hyperparameters provide a relatively sparse and interpretable network without sacrificing performance on the validation set.
+Each GKAN network uses a node network of 3 layers $(7 \to 8 \to 2)$, a message network of 4 layers $(10 \to 12 \to 12 \to 2)$, and is trained over 50 epochs. Once all models are trained, they are compared in both training loss and validation loss against a test set, as well as visually compared for how sparse the networks are. The ideal regularization approach is determined by which hyperparameters provide a relatively sparse and interpretable network without sacrificing performance on the validation set.
 
 \subsection{How small KAN we get?}
 
@@ -199,20 +201,21 @@ experiment name & message network & parameters & computed features \\
 
 \end{table}
 
-The node update network always consists of 1 layer ($7 \to 2$). The models are all trained for 50 epochs on the same dataset, which consists of 200 training trajectories and 20 validation trajectories. For exact details on the data generation process and training regime, as well as an outline of the feasible route for each model, refer to the appendices. \ag{Use a ref here.}
+The node update network always consists of 1 layer ($7 \to 2$). The models are all trained for 50 epochs on the same dataset, which consists of 200 training trajectories and 20 validation trajectories. For exact details on the data generation process and training regime, as well as an outline of the feasible route for each model, refer to the appendices.
 
 \subsection{Different Force Functions}
 
-Utilizing the derived minimal model above, we also test the GKAN's ability to learn different force functions. In particular, we replace the gravitational force with the following three force functions
-\begin{align*}
-  a_{\text{lin}}   &= G \sum_{j \neq i} m_{j} \frac{s_{j} - s_{i}}{\|s_{j} - s_{i}\|^{2}}, \quad
-  a_{\text{hooke}} &= G \sum_{j \neq i} \frac{s_{j} - s_{i}}{m_i}, \quad
-  a_{\text{nice}}  &= G \sum_{j \neq i} \frac{e^{\|s_j - s_i\|^2}}{m_i}(s_j - s_i)
-\end{align*}
+Utilizing the derived small model above, we also test the GKAN's ability to learn different force functions. In particular, we replace the gravitational force with the following three force functions:
 
-$a_{\text{lin}}$ is a linear gravity function that has a $1/r$ fall off instead of $1/r^2$. $a_{\text{hooke}}$ is a Hooke's law function that has a linear relationship with distance. $a_{\text{nice}}$ is an arbitrary function with a nice gradient.
+\[
+a_{\text{lin}} = G \sum_{j \neq i} m_{j} \frac{s_{j} - s_{i}}{\|s_{j} - s_{i}\|^{2}}, \quad
+a_{\text{hooke}} = G \sum_{j \neq i} \frac{s_{j} - s_{i}}{m_i}, \quad
+a_{\text{nice}} = G \sum_{j \neq i} \exp(\|s_j - s_i\|^2) \frac{s_j - s_i}{m_i}
+\]
 
-We also also use ran similar regularization experiments on the different force functions to see if the same patterns hold. 
+$a_{\text{lin}}$ is a linear gravity function that has a $1/r$ fall-off instead of $1/r^2$. $a_{\text{hooke}}$ is a Hooke's law function that has a linear relationship with distance. $a_{\text{nice}}$ is an arbitrary function with a nice gradient.
+
+We also also ran similar regularization experiments on the different force functions to see if the same patterns hold.
 
 \section{Results}
 
@@ -275,8 +278,6 @@ experiment name & training loss & validation loss \\
 The \texttt{small} GKAN model without any computed features performs about 1 order of magnitude worse compared to the baseline GNN. This alone is quite impressive when considering the difference in model size.
 
 Furthermore, by introducing simple computed features such as $\Delta x$ and $\Delta y$ (which would not be unreasonable to include, even without \textit{a priori} knowledge of the desired force law), we observe significantly improved performance on par with the baseline---with the additional benefit of a 99.5\% reduction in model size. This suggests that the GKAN could be a highly efficient architecture for domain-informed use cases.
-
-\ag{Include loss plots and rollouts here?}
 
 \subsection{Different Force Functions}
 
@@ -342,7 +343,7 @@ A natural extension is to incorporate physical structure directly into the loss 
 
 \section{Conclusion}
 
-We introduced GKANs, an architecture combining KAN layers with GCNs, and evaluated them on $n$-body dynamics. Our results were largely negative: GKANs were consistently harder to optimize than MLP-based GNN baselines, regularization failed to produce interpretable sparse networks, and training loss had mediocre decrease. This was surprising given that prior work demonstrates KANs can recover physical laws effectively---though notably in simpler, non-relational settings without message passing. Our experiments do leave us hopeful: GKANs trained with feature engineering showed good performance at a $99.5\%$ reduction in model size, and smoother force laws were substantially easier to learn, hinting that the architecture has real potential under the right conditions.
+We introduced GKANs, an architecture combining KAN layers with GNNs, and evaluated them on $n$-body dynamics. Our results were largely negative: GKANs were consistently harder to optimize than MLP-based GNN baselines, regularization failed to produce interpretable sparse networks, and training loss had mediocre decreases. This was surprising given that prior work demonstrates KANs can recover physical laws effectively---though notably in simpler, non-relational settings without message passing. Our experiments do leave us hopeful: GKANs trained with feature engineering showed good performance with a $99.5\%$ reduction in model size, and smoother force laws were substantially easier to learn, hinting that the architecture has real potential under the right conditions.
 
 Many directions remain unexplored. Pruning low-weight edges during training, physically-informed loss functions enforcing conservation laws, and decoupled optimization schedules that prioritize accuracy before sparsity are all natural next steps. Resolving the gradient degradation introduced by message passing---perhaps through equivariant or symmetry-constrained architectures---may be the most critical open problem for making GKANs practical.
 
@@ -353,9 +354,6 @@ So KAN it learn? Kind of.
 \printbibliography[title={References}]
 
 \appendix
-
-\hs{we need to add github links, rollout, charts, images}
-
 
 \section{Supplementary material} \label{app:info}
 
@@ -369,14 +367,33 @@ There are several additional features that we implemented but did not have time 
     \item MultKan support, which is a variation of KAN that includes multiplication nodes in addition to addition and function composition.
     \item Reguarlization schedules that increase regularization magnitudes over the course of training to encourage learning first, then sparsity.
     \item Incomplete support for Hamiltonian GNNs.
-    \item Large scale GKAN experiments with ~500k parameters. 
+    \item Large scale GKAN experiments with ~500k parameters.
 \end{itemize}
 
-\hs{maybe put some rollout videos in here via link, would be cool}
+The repository also includes animated visualizations showcasing the rollouts (forward simulation) for selected models, which are linked in Table \ref{tab:rollout-links}.
+
+\begin{table}[h]
+
+\centering
+\caption{Hyperlinks to rollouts for selected models.}
+\begin{tabular}{l|l}
+\hline
+experiment name & hyperlink \\
+\hline
+\texttt{baseline} & \href{https://github.com/Hanson-Sun/3body-gkan/blob/main/outputs/baseline/rollout_comparison.gif}{\texttt{[...]/outputs/baseline/rollout\_comparison.gif}} \\
+\texttt{small} & \href{https://github.com/Hanson-Sun/3body-gkan/blob/main/outputs/small/rollout_comparison.gif}{\texttt{[...]/outputs/small/rollout\_comparison.gif}} \\
+\texttt{small\_rel\_pos} & \href{https://github.com/Hanson-Sun/3body-gkan/blob/main/outputs/small_rel_pos/rollout_comparison.gif}{\texttt{[...]/outputs/small\_rel\_pos/rollout\_comparison.gif}} \\
+\texttt{small\_rel\_dsq} & \href{https://github.com/Hanson-Sun/3body-gkan/blob/main/outputs/small_rel_pos_dsq/rollout_comparison.gif}{\texttt{[...]/outputs/small\_rel\_pos\_dsq/rollout\_comparison.gif}} \\
+\texttt{small\_rel\_idc} & \href{https://github.com/Hanson-Sun/3body-gkan/blob/main/outputs/small_rel_pos_idc/rollout_comparison.gif}{\texttt{[...]/outputs/small\_rel\_pos\_idc/rollout\_comparison.gif}} \\
+\hline
+\end{tabular}
+\label{tab:rollout-links}
+
+\end{table}
 
 \subsection{Additional Visualizations and Results}
 
-This section will hold any addition figures, plots, and visualizations related to the experiments that we could not fit.
+This section will hold any additional figures, plots, and visualizations related to the experiments that we could not fit into the report.
 
 \subsubsection{Regularization}
 
