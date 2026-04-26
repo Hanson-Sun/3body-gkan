@@ -92,7 +92,8 @@ We study the $n$-body problem as a testbed for this goal. Given the initial stat
 
 A limitation of this approach is that the GNN itself is not directly interpretable. The learned representation is still a black box, and symbolic regression is a separate post-hoc step. Recent work on Kolmogorov-Arnold Networks (KANs) suggests a possible alternative. KANs replace standard MLP-style node activations with learnable univariate functions on edges, which can make the learned model easier to inspect. \cite{liu2024kankolmogorovarnoldnetworks} showed that KANs can be effective while remaining more transparent than standard MLPs.
 
-In this project, we ask whether this idea can be extended to relational physical systems. We introduce a hybrid Graph KAN (GKAN) architecture, where KAN layers replace MLP components inside a message-passing GNN. We evaluate this model on simulated $n$-body dynamics and compare it against standard GNN baselines, with a focus on both prediction quality and interpretability.
+In this project, we ask whether this idea can be extended to relational physical systems. We introduce a hybrid Graph KAN (GKAN) architecture, where KAN layers replace MLP components inside a message-passing GNN. We evaluate this model on simulated $n$-body dynamics and compare it against standard GNN baselines, with a focus on both prediction quality and interpretability.  However, whether KANs integrate well with message passing is not obvious --- the two components impose different structural 
+demands on optimization, and our results reveal this tension in practice.
 
 \section{Related Work}
 
@@ -353,6 +354,11 @@ A common approach to improving learning in dynamical systems is to incorporate p
 
 \section{Conclusion}
 
+We introduced GKANs, an architecture combining KAN layers with GCNs, and evaluated them on $n$-body dynamics. Our results were largely negative: GKANs were consistently harder to optimize than MLP-based GNN baselines, regularization failed to produce interpretable sparse networks, and training loss had mediocre decrease. This was surprising given that prior work demonstrates KANs can recover physical laws effectively --- though notably in simpler, non-relational settings without message passing. Our experiments do leave us hopeful: GKANs trained with feature engineering showed good performance at a $99.5\%$ reduction in model size, and smoother force laws were substantially easier to learn, hinting that the architecture has real potential under the right conditions.
+
+Many directions remain unexplored. Pruning low-weight edges during training, physically-informed loss functions enforcing conservation laws, and decoupled optimization schedules that prioritize accuracy before sparsity are all natural next steps. Resolving the gradient degradation introduced by message passing --- perhaps through equivariant or symmetry-constrained architectures --- may be the most critical open problem for making GKANs practical.
+
+So KAN it learn? Kind of.
 
 \newpage
 
