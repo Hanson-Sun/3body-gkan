@@ -111,10 +111,10 @@ KANs provide a different route to interpretability. \cite{liu2024kankolmogorovar
 We evaluate GKANs on synthetic $n$-body simulation data generated with a leapfrog integrator. The main dataset uses Newtonian gravity,
 
 \[
-a_{i} = G \sum_{j \neq i} m_{j} \frac{r_{j} - r_{i}}{\|r_{j} - r_{i}\|^{3}}
+a_{i} = G \sum_{j \neq i} m_{j} \frac{s_{j} - s_{i}}{\|s_{j} - s_{i}\|^{3}}
 \]
 
-with additional force laws for generalization tests. Each example consists of initial positions, velocities, and masses, with targets given by future trajectories. We compare a GNN baseline following \cite{cranmer2020discoveringsymbolicmodelsdeep} against a GKAN that replaces selected MLP components with KAN layers, trained on identical data with the same loss and optimizer. We evaluate both predictive performance on held-out simulations and interpretability through network sparsity and visualization of learned edge functions.
+with additional force laws for generalization tests. Each example consists of initial positions, velocities, and masses, with targets given by future trajectories. We compare a GNN baseline following \cite{cranmer2020discoveringsymbolicmodelsdeep} against a GKAN, trained on identical data with the same loss and optimizer. We evaluate both predictive performance on held-out simulations and interpretability through network sparsity and visualization of learned edge functions.
 
 Our experiments address four questions: whether GKANs match GNN performance at comparable parameter counts; whether sparse regularization improves interpretability; whether physically motivated minimal architectures are sufficient; and whether these trends generalize across force laws.
 

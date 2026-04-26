@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.25 (MiKTeX 23.9) (preloaded format=pdflatex 2024.9.5)  25 APR 2026 22:38
+This is pdfTeX, Version 3.141592653-2.6-1.40.25 (MiKTeX 23.9) (preloaded format=pdflatex 2024.9.5)  25 APR 2026 23:06
 entering extended mode
  \write18 enabled.
  %&-line parsing enabled.
@@ -847,26 +847,12 @@ Package biblatex Info: Automatic encoding selection.
 \openout3 = `project.bcf'.
 
 Package biblatex Info: Trying to load bibliographic data...
-Package biblatex Info: ... file 'project.bbl' found.
- (project.bbl
+Package biblatex Info: ... file 'project.bbl' not found.
 
-Package biblatex Warning: The following entry could not be found
-(biblatex)                in the database:
-(biblatex)                ml-is-fun
-(biblatex)                Please verify the spelling and rerun
-(biblatex)                LaTeX afterwards.
-
-
-Package biblatex Warning: The following entry could not be found
-(biblatex)                in the database:
-(biblatex)                transformers
-(biblatex)                Please verify the spelling and rerun
-(biblatex)                LaTeX afterwards.
-
-)
+No file project.bbl.
 Package biblatex Info: Reference section=0 on input line 80.
 Package biblatex Info: Reference segment=0 on input line 80.
- (C:\Users\docto\AppData\Local\Programs\MiKTeX\tex/latex/microtype\mt-cmr.cfg
+(C:\Users\docto\AppData\Local\Programs\MiKTeX\tex/latex/microtype\mt-cmr.cfg
 File: mt-cmr.cfg 2013/05/19 v2.2 microtype config. file: Computer Modern Roman (RS)
 )
 LaTeX Font Info:    Trying to load font information for U+msa on input line 82.
@@ -897,95 +883,195 @@ Package microtype Info: Loading generic protrusion settings for font family
 (microtype)             `phv' (encoding: T1).
 (microtype)             For optimal results, create family-specific settings.
 (microtype)             See the microtype manual for details.
- [1
 
 
-{C:/Users/docto/AppData/Local/MiKTeX/fonts/map/pdftex/pdftex.map}{C:/Users/docto/AppData/Local/Programs/MiKTeX/fonts/enc/dvips/base/8r.enc}] [2]
+LaTeX Warning: Citation 'cranmer2020discoveringsymbolicmodelsdeep' on page 1 undefined on input line 92.
+
+
+LaTeX Warning: Citation 'liu2024kankolmogorovarnoldnetworks' on page 1 undefined on input line 94.
+
+[1
+
+
+{C:/Users/docto/AppData/Local/MiKTeX/fonts/map/pdftex/pdftex.map}{C:/Users/docto/AppData/Local/Programs/MiKTeX/fonts/enc/dvips/base/8r.enc}]
+
+LaTeX Warning: Citation 'cranmer2020discoveringsymbolicmodelsdeep' on page 2 undefined on input line 103.
+
+
+LaTeX Warning: Citation 'thangamuthu2023unravellingperformancephysicsinformedgraph' on page 2 undefined on input line 105.
+
+
+LaTeX Warning: Citation 'sharma2025dynamicalgraphnetphysicsinformedgraph' on page 2 undefined on input line 105.
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 105--106
+[]\T1/ptm/m/n/10 (+20) Other work has strength-ened graph mod-els for phys-i-cal sim-u-la-tion.
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 105--106
+[] \T1/ptm/m/n/10 (+20) com-pared sev-eral
+ []
+
+
+Underfull \hbox (badness 6380) in paragraph at lines 105--106
+\T1/ptm/m/n/10 (+20) ([]) adds con-ser-va-tion and sym-me-try
+ []
+
+
+LaTeX Warning: Citation 'liu2024kankolmogorovarnoldnetworks' on page 2 undefined on input line 107.
+
+
+LaTeX Warning: Citation 'Koenig_2024' on page 2 undefined on input line 107.
+
+
+LaTeX Warning: Citation 'cappi2025unveilingactualperformanceneuralbased' on page 2 undefined on input line 107.
+
+
+LaTeX Warning: Citation 'cranmer2020discoveringsymbolicmodelsdeep' on page 2 undefined on input line 117.
+
+
+LaTeX Warning: Citation 'cranmer2020discoveringsymbolicmodelsdeep' on page 2 undefined on input line 123.
+
+
+LaTeX Warning: Citation 'cranmer2020discoveringsymbolicmodelsdeep' on page 2 undefined on input line 123.
+
+[2]
+
+LaTeX Warning: Citation 'liu2024kankolmogorovarnoldnetworks' on page 3 undefined on input line 132.
+
+
+LaTeX Warning: Citation 'liu2024kankolmogorovarnoldnetworks' on page 3 undefined on input line 138.
+
 
 LaTeX Warning: `h' float specifier changed to `ht'.
 
-[3] [4] [5] [6] [7]
-LaTeX Font Info:    Trying to load font information for TS1+ptm on input line 368.
- (C:\Users\docto\AppData\Local\Programs\MiKTeX\tex/latex/psnfss\ts1ptm.fd
+
+LaTeX Warning: Citation 'cranmer2020discoveringsymbolicmodelsdeep' on page 3 undefined on input line 184.
+
+
+LaTeX Warning: `h' float specifier changed to `ht'.
+
+[3] [4]
+
+LaTeX Warning: Reference `fig:different_force_losses' on page 5 undefined on input line 288.
+
+
+LaTeX Warning: Reference `fig:different_force_losses' on page 5 undefined on input line 288.
+
+
+LaTeX Warning: Reference `fig:different_force_msg_models' on page 5 undefined on input line 303.
+
+[5]
+
+LaTeX Warning: Citation 'liu2024kankolmogorovarnoldnetworks' on page 6 undefined on input line 308.
+
+
+LaTeX Warning: Citation 'sharma2025dynamicalgraphnetphysicsinformedgraph' on page 6 undefined on input line 313.
+
+
+Underfull \hbox (badness 1242) in paragraph at lines 312--314
+[]\T1/ptm/m/n/10 (+20) Sparsity may be en-cour-aged by reg-u-larly prun-ing low-weighted edges ev-ery few epochs.
+ []
+
+
+Underfull \hbox (badness 1057) in paragraph at lines 312--314
+\T1/ptm/m/n/10 (+20) to learn be-fore be-ing pruned. An-other ex-ten-sion is to in-cor-po-rate phys-i-cal struc-ture di-
+ []
+
+
+Underfull \hbox (badness 1648) in paragraph at lines 312--314
+\T1/ptm/m/n/10 (+20) rectly into the loss func-tion. Physics-informed GNNs such as Dynami-CAL Graph-Net
+ []
+
+
+LaTeX Warning: Reference `fig:message-network-small' on page 6 undefined on input line 317.
+
+
+LaTeX Warning: Reference `fig:node-update-network-small' on page 6 undefined on input line 317.
+
+
+LaTeX Warning: Citation 'liu2024kan20kolmogorovarnoldnetworks' on page 6 undefined on input line 317.
+
+
+LaTeX Warning: Reference `fig:cross-section-small-rel-pos' on page 6 undefined on input line 319.
+
+
+LaTeX Warning: Reference `fig:different_force_losses' on page 6 undefined on input line 325.
+
+
+Underfull \vbox (badness 5091) has occurred while \output is active []
+
+ [6]
+
+LaTeX Warning: Citation 'DEBOOR197250' on page 7 undefined on input line 327.
+
+
+LaTeX Warning: Reference `sub@fig:diff_hooke_msg' on page 7 undefined on input line 329.
+
+
+LaTeX Warning: Citation 'liu2024kankolmogorovarnoldnetworks' on page 7 undefined on input line 335.
+
+
+LaTeX Warning: Citation 'liu2024kan20kolmogorovarnoldnetworks' on page 7 undefined on input line 335.
+
+
+LaTeX Warning: Citation 'arroyo2025vanishinggradientsoversmoothingoversquashing' on page 7 undefined on input line 337.
+
+[7]
+
+LaTeX Warning: Empty bibliography on input line 349.
+
+LaTeX Font Info:    Trying to load font information for TS1+ptm on input line 361.
+(C:\Users\docto\AppData\Local\Programs\MiKTeX\tex/latex/psnfss\ts1ptm.fd
 File: ts1ptm.fd 2001/06/04 font definitions for TS1/ptm.
-) [8]
-<figures/no_regularization_loss.png, id=41, 570.4512pt x 352.1958pt>
-<figures/l1_1e-4_loss.png, id=43, 570.4512pt x 352.1958pt>
-<figures/l1_1e-3_loss.png, id=44, 570.4512pt x 352.1958pt>
-<figures/entropy_1e-4_loss.png, id=45, 570.4512pt x 352.1958pt>
-<figures/entropy_1e-3_loss.png, id=46, 570.4512pt x 352.1958pt>
-<figures/combined_1e-4_loss.png, id=47, 570.4512pt x 352.1958pt>
-<figures/combined_1e-3_loss.png, id=48, 570.4512pt x 352.1958pt>
-<figures/combined_1e-1_loss.png, id=49, 570.4512pt x 352.1958pt>
-<figures/combined_1e1_loss.png, id=50, 570.4512pt x 352.1958pt>
-<figures/combined_1e2_loss.png, id=51, 570.4512pt x 352.1958pt>
+)
+<figures/reg/no_regularization_loss.png, id=36, 570.4512pt x 352.1958pt>
+<figures/reg/l1_1e-4_loss.png, id=38, 570.4512pt x 352.1958pt>
+<figures/reg/l1_1e-3_loss.png, id=39, 570.4512pt x 352.1958pt>
+
+Underfull \vbox (badness 4582) has occurred while \output is active []
+
+ [8]
+<figures/reg/entropy_1e-4_loss.png, id=43, 570.4512pt x 352.1958pt>
+<figures/reg/entropy_1e-3_loss.png, id=44, 570.4512pt x 352.1958pt>
+<figures/reg/combined_1e-4_loss.png, id=45, 570.4512pt x 352.1958pt>
+<figures/reg/combined_1e-3_loss.png, id=46, 570.4512pt x 352.1958pt>
+<figures/reg/combined_1e-1_loss.png, id=47, 570.4512pt x 352.1958pt>
+<figures/reg/combined_1e1_loss.png, id=48, 570.4512pt x 352.1958pt>
+<figures/reg/combined_1e2_loss.png, id=49, 570.4512pt x 352.1958pt>
 
 Underfull \vbox (badness 10000) has occurred while \output is active []
 
  [9]
-<figures/sparse_init_loss.png, id=55, 569.4876pt x 352.1958pt>
-<figures/baseline/gnn_loss.png, id=56, 570.4512pt x 352.1958pt>
+<figures/reg/sparse_init_loss.png, id=53, 569.4876pt x 352.1958pt>
+<figures/reg/com1e2_node_network.png, id=54, 2370.2151pt x 1275.3246pt>
+<figures/reg/control_node_network.png, id=55, 2370.2151pt x 1275.3246pt>
+)
+Runaway argument?
+{Node network with no regularization\label {fig:control_node} \end {s\ETC.
+! File ended while scanning use of \caption@xdblarg.
+<inserted text> 
+                \par 
+<*> ...itHub/3body-gkan/project_report/project.tex
+                                                  
+I suspect you have forgotten a `}', causing me
+to read past where you wanted me to stop.
+I'll try to recover; but if the error is serious,
+you'd better type `E' or `X' now and fix your file.
 
-Underfull \vbox (badness 10000) has occurred while \output is active []
+! Emergency stop.
+<*> ...itHub/3body-gkan/project_report/project.tex
+                                                  
+*** (job aborted, no legal \end found)
 
- [10]
-<figures/small/kan_loss.png, id=60, 570.4512pt x 352.1958pt>
-<figures/small_rel_pos/kan_loss.png, id=61, 570.4512pt x 352.1958pt>
-<figures/small_rel_pos_dsq/kan_loss.png, id=62, 570.4512pt x 352.1958pt>
-<figures/small_rel_pos_idc/kan_loss.png, id=63, 570.4512pt x 352.1958pt>
-<figures/small/kan_msg_network.png, id=64, 2813.712pt x 2181.3495pt>
-<figures/small_rel_pos/kan_msg_network.png, id=65, 2530.4136pt x 1730.8665pt>
-<figures/small_rel_pos_dsq/kan_msg_network.png, id=66, 2530.4136pt x 1730.8665pt>
-<figures/small_rel_pos_idc/kan_msg_network.png, id=67, 2530.4136pt x 1730.8665pt>
-
-Underfull \vbox (badness 10000) has occurred while \output is active []
-
- [11]
-<figures/small/kan_node_network.png, id=72, 2086.9167pt x 803.1606pt>
-<figures/small_rel_pos/kan_node_network.png, id=73, 2086.9167pt x 803.1606pt>
-<figures/small_rel_pos_dsq/kan_node_network.png, id=74, 2086.9167pt x 803.1606pt>
-<figures/small_rel_pos_idc/kan_node_network.png, id=75, 2086.9167pt x 803.1606pt>
-<figures/small_rel_pos/msg_kan_responses.png, id=76, 2421.045pt x 416.2752pt>
-<figures/small_rel_pos/node_kan_responses.png, id=77, 1408.7832pt x 415.7934pt>
- [12]
-<figures/different_function_losses/min_gravity_loss.png, id=81, 570.4512pt x 352.1958pt>
-<figures/different_function_losses/min_linear_gravity_loss.png, id=82, 570.4512pt x 352.1958pt>
-<figures/different_function_losses/min_hooke_loss.png, id=83, 570.4512pt x 352.1958pt>
-<figures/different_function_losses/min_nice_loss.png, id=84, 570.4512pt x 352.1958pt>
-
-Underfull \vbox (badness 10000) has occurred while \output is active []
-
- [13]
-<figures/different_function_kans/min_gravity_sparse/kan_msg_network.png, id=89, 2813.712pt x 2181.3495pt>
-<figures/different_function_kans/min_hooke_sparse/kan_msg_network.png, id=90, 2813.712pt x 2181.3495pt>
-<figures/different_function_kans/min_nice_sparse/kan_msg_network.png, id=91, 2813.712pt x 2181.3495pt>
-<figures/different_function_kans/min_gravity_sparse/kan_node_network.png, id=92, 2086.9167pt x 803.1606pt>
-<figures/different_function_kans/min_hooke_sparse/kan_node_network.png, id=93, 2086.9167pt x 803.1606pt>
-<figures/different_function_kans/min_nice_sparse/kan_node_network.png, id=94, 2086.9167pt x 803.1606pt>
-
-Underfull \vbox (badness 10000) has occurred while \output is active []
-
- [14] [15] (project.aux)
- ***********
-LaTeX2e <2023-06-01> patch level 1
-L3 programming layer <2023-08-29>
- ***********
-Package logreq Info: Writing requests to 'project.run.xml'.
-\openout1 = `project.run.xml'.
-
- ) 
+ 
 Here is how much of TeX's memory you used:
- 25625 strings out of 475248
- 469558 string characters out of 5757814
- 1944801 words of memory out of 5000000
- 46614 multiletter control sequences out of 15000+600000
- 604386 words of font info for 206 fonts, out of 8000000 for 9000
+ 25288 strings out of 475248
+ 456453 string characters out of 5757814
+ 1941801 words of memory out of 5000000
+ 46313 multiletter control sequences out of 15000+600000
+ 599921 words of font info for 192 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
- 72i,12n,81p,1199b,1772s stack positions out of 10000i,1000n,20000p,200000b,200000s
- <C:\Users\docto\AppData\Local\MiKTeX\fonts/pk/ljfour/jknappen/ec/dpi600\ectt0900.pk> <C:\Users\docto\AppData\Local\MiKTeX\fonts/pk/ljfour/jknappen/ec/dpi600\ectt1000.pk><C:/Users/docto/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmex10.pfb><C:/Users/docto/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmmi10.pfb><C:/Users/docto/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmmi5.pfb><C:/Users/docto/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmmi7.pfb><C:/Users/docto/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmr10.pfb><C:/Users/docto/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmr5.pfb><C:/Users/docto/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmr7.pfb><C:/Users/docto/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmsy10.pfb><C:/Users/docto/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmsy7.pfb><C:/Users/docto/AppData/Local/Programs/MiKTeX/fonts/type1/urw/helvetic/uhvr8a.pfb><C:/Users/docto/AppData/Local/Programs/MiKTeX/fonts/type1/urw/times/utmb8a.pfb><C:/Users/docto/AppData/Local/Programs/MiKTeX/fonts/type1/urw/times/utmr8a.pfb><C:/Users/docto/AppData/Local/Programs/MiKTeX/fonts/type1/urw/times/utmri8a.pfb>
-Output written on project.pdf (15 pages, 218539 bytes).
-PDF statistics:
- 226 PDF objects out of 1000 (max. 8388607)
- 0 named destinations out of 1000 (max. 500000)
- 49845 words of extra memory for PDF output out of 51595 (max. 10000000)
-
+ 72i,10n,81p,1201b,1173s stack positions out of 10000i,1000n,20000p,200000b,200000s
+!  ==> Fatal error occurred, no output PDF file produced!
