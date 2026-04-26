@@ -123,7 +123,7 @@ We follow the baseline GNN architecture from \cite{cranmer2020discoveringsymboli
 
 \subsection{GKAN Architecture}
 
-Our GKAN replaces the MLP components of the baseline GCN with KAN layers. Specifically, the message MLP is replaced with a KAN message network and the node update MLP with a KAN node network. Each KAN edge learns a univariate B-spline function with a fixed grid size of \texttt{G} and spline order \texttt{k}, giving it significantly more interpretable structure than a standard linear layer followed by an activation.
+Our GKAN replaces the MLP components of the baseline GCN with KAN layers. Specifically, the message MLP is replaced with a KAN message network and the node update MLP with a KAN node network. Each KAN edge learns a univariate B-spline function with a fixed grid size of \texttt{G} and spline order \texttt{k}, giving it significantly more interpretable structure than a MLP layer followed by an activation.
 
 We expect the node KAN to learn how to aggregate messages into a final acceleration vector, while the edge KANs learn the pairwise interaction functions. We hypothesize that regularization will encourage sparsity and interpretability, and that smaller KAN architectures may still perform well if they capture the right inductive biases.
 
@@ -212,9 +212,7 @@ a_{\text{hooke}} = G \sum_{j \neq i} \frac{s_{j} - s_{i}}{m_i}, \quad
 a_{\text{nice}} = G \sum_{j \neq i} \exp(\|s_j - s_i\|^2) \frac{s_j - s_i}{m_i}
 \]
 
-$a_{\text{lin}}$ is a linear gravity function that has a $1/r$ fall-off instead of $1/r^2$. $a_{\text{hooke}}$ is a Hooke's law function that has a linear relationship with distance. $a_{\text{nice}}$ is an arbitrary function with a nice gradient.
-
-We also ran similar regularization experiments on the different force functions to see if the same patterns hold.
+$a_{\text{lin}}$ is a linear gravity function that has a $1/r$ fall-off instead of $1/r^2$. $a_{\text{hooke}}$ is a Hooke's law function that has a linear relationship with distance. $a_{\text{nice}}$ is an arbitrary function with a nice gradient. We also ran similar regularization experiments on the different force functions to see if the same patterns hold.
 
 \section{Results and Discussion}
 
@@ -309,13 +307,13 @@ The unique property of the GKAN is that it is possible to perform symbolic regre
     \end{tabular}
     \label{tab:results-different-force}
 \end{table}
-The relative training and validation loss decreases the GKAN models on 10 epochs of training are in Table \ref{tab:results-different-force}. In terms of reguarlization results, we see the same patterns with little difference in sparsity. With the only exception being Hooke's law, which has a significantly more sparse network (see Figure \ref{fig:different_force_msg_models} in the appendix).
+The relative training and validation loss decreases the GKAN models on 10 epochs of training are in Table \ref{tab:results-different-force}. In terms of reguarlization results, we see the same patterns with little difference in sparsity. With the only exception being Hooke's law, which has a notably more sparse network (Figure \ref{fig:different_force_msg_models}).
 
-We observe a clear trend: GKANs train more effectively on smoother, better-conditioned force laws. Across all four functions, both training and validation loss reductions increase as the target interaction becomes less singular and more regular.
+We observe a clear trend: GKANs train more effectively on smoother, better-conditioned force laws. Both training and validation loss reductions increase as the target interaction becomes less singular.
 
 Gravity performs worst, with training loss decreasing by less than $7\%$ over 10 epochs. This is unsurprising: the $1/r^2$ dependence introduces near-singular behavior at small separations, which is difficult for B-spline edges to represent efficiently, as their piecewise polynomial basis approximates smooth functions well but struggles with sharp or unbounded derivatives~\parencite{DEBOOR197250}. Replacing this with the $1/r$ linear gravity law already yields a substantial improvement, with training loss dropping by $\sim 31\%$, suggesting that reducing the degree of singularity meaningfully aids optimization.
 
-Hooke's law improves further still, achieving a $\sim 60\%$ training loss reduction. Because the interaction is linear in displacement with bounded derivatives, the model requires less functional composition and fewer active spline regions to represent it accurately. This is also reflected in the regularization results, where Hooke's law (Figure~\ref{sub@fig:diff_hooke_msg}) is the only force function that produces a noticeably sparser network. The ``nice'' force function, despite being nonlinear, achieves comparable relative loss reductions ($\sim 45\%$ on validation) and maintains the lowest absolute losses throughout training---likely because its smooth exponential profile avoids the distance-magnitude and reciprocal-scaling terms that make gravity challenging.
+Hooke's law improves further still, achieving a $\sim 60\%$ training loss reduction. Because the interaction is linear in displacement with bounded derivatives, the model requires less functional composition and fewer active spline regions to represent it accurately. This is also reflected in the regularization results, where Hooke's law (Figure~\ref{sub@fig:diff_hooke_msg}) is the only force function that produces a noticeably sparser network. The ``nice'' force function, despite being nonlinear, achieves comparable relative loss reductions ($\sim 45\%$ on validation) and maintains the lowest absolute losses---likely because its exponential profile avoids the distance-magnitude and reciprocal-scaling terms that make gravity challenging.
 
 In combination, these results suggest that GKAN optimization is sensitive to the analytic structure of the target force law. Interpretability and sparsity also benefit from smoother targets: simpler force laws not only converge faster, but compress more naturally into compact GKAN representations.
 
