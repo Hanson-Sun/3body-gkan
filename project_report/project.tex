@@ -1,5 +1,5 @@
-% \documentclass[draft]{article}
-\documentclass{article}
+\documentclass[draft]{article}
+% \documentclass{article}
 % AG: Exceeds compile timeout on Overleaf due to figures.
 
 \usepackage{project_440_550}
@@ -335,22 +335,12 @@ In combination, these results suggest that GKAN optimization is sensitive to the
 
 \subsection{KAN't Optimize}
 
+Beyond interpretability, a persistent challenge in our experiments was optimization. GKANs were consistently harder to train than MLP-based GNN baselines: loss decreased slowly, converged to worse minima, and was sensitive to initialization. This was surprising given that \cite{liu2024kankolmogorovarnoldnetworks} and \cite{liu2024kan20kolmogorovarnoldnetworks} demonstrate effective KAN training on gravitational systems --- however, their setting trains a single KAN directly on force inputs and outputs, without the added complexity of message passing.
 
+We suspect message passing is the key differentiator. Errors in learned edge functions propagate across the graph, amplifying the gradient instability that spline-based functions already exhibit. This is consistent with known pathologies in deep GNNs such as oversmoothing and oversquashing \parencite{arroyo2025vanishinggradientsoversmoothingoversquashing}. We tested Adam, L-BFGS, warmup schedules, and alternating optimization, but none consistently improved training, suggesting that this difficulty may be intrinsic to the GKAN architecture in message-passing settings.
 
-\hs{shorten rewrite and clean up this section}
-
-Beyond interpretability, a major challenge in our experiments was optimization. Although GKANs are expressive in principle, they were consistently harder to train than comparable MLP-based GNN baselines. Loss often decreased slowly, converged to worse minima, or was highly sensitive to initialization and optimizer choice. We hypothesize this is mainly due to two factors: (1) optimization difficulty of spline-based edge functions, and (2) interaction with message passing leading to irregular gradients.
-
-
-The poor results throughout the regularization experiments were surprising, since both the \cite{liu2024kankolmogorovarnoldnetworks} and \cite{liu2024kan20kolmogorovarnoldnetworks} papers show training examples with good performance on 3D gravity. However, their approach only trains a single KAN directly on the features and force outputs, without the additional complexity of message passing. We suspect the discremancy may be due to the following factors:
-
-
-\paragraph{Interaction with message passing.}
-Message passing may further amplify gradient issues that we identified previously, since errors in learned edge functions propagate across the graph. Prior work has identified oversmoothing, oversquashing, and gradient degradation in deeper GNNs \parencite{arroyo2025vanishinggradientsoversmoothingoversquashing}. Our results are consistent with this behavior. We tested Adam, L-BFGS, warmup schedules, and alternating optimization, but none consistently improved training. This suggests that optimization may be intrinsically challenging for GKANs in message-passing settings.
-
-\hs{might move this into reguarlization discussion, since it may be more related to learning sparse representations}
-\paragraph{Physically-informed loss function.}
-A common approach to improving learning in dynamical systems is to incorporate physical structure directly into the loss function. In particular, Hamiltonian and Lagrangian graph neural networks enforce conservation laws by parameterizing or constraining the system dynamics through a Hamiltonian function. More recent physics-informed GNNs extend this idea by explicitly enforcing conservation of linear and angular momentum through equivariant message passing \parencite{sharma2025dynamicalgraphnetphysicsinformedgraph}. In our setting, such constraints could reduce the effective hypothesis space of the model and encourage solutions consistent with known mechanics, potentially improving both optimization stability and long-term rollout accuracy in GKANs.
+\hs{might move to regularization section}
+A natural extension is to incorporate physical structure directly into the loss function. Physics-informed GNNs such as Dynami-CAL GraphNet \parencite{sharma2025dynamicalgraphnetphysicsinformedgraph} enforce conservation of linear and angular momentum through equivariant message passing, effectively constraining the hypothesis space to physically consistent solutions. In our setting, such constraints could encourage sparser, more interpretable representations while also improving optimization stability and long-term rollout accuracy.
 
 \section{Conclusion}
 
@@ -373,7 +363,7 @@ So KAN it learn? Kind of.
 
 \subsection{Code and Experiments}
 
-All of our code and experiments are available at \url{https://github.com/Hanson-Sun/3body-gkan} (not Jupyter notebooks thanksfully). The repository includes the training and evaluation code for all models, as well as all the information to reproduce our experiments. Specific experiment configurations can be found in the \texttt{experiments.yaml} file.
+All of our code and experiments are available at \url{https://github.com/Hanson-Sun/3body-gkan} (not Jupyter notebooks thankfully). The repository includes the training and evaluation code for all models, as well as all the information to reproduce our experiments. Specific experiment configurations can be found in the \texttt{experiments.yaml} file.
 
 There are several additional features that we implemented but did not have time to test fully and include in our report. These include:
 \begin{itemize}
