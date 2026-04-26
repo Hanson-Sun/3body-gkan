@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.25 (MiKTeX 23.9) (preloaded format=pdflatex 2024.9.5)  25 APR 2026 23:59
+This is pdfTeX, Version 3.141592653-2.6-1.40.25 (MiKTeX 23.9) (preloaded format=pdflatex 2024.9.5)  26 APR 2026 00:07
 entering extended mode
  \write18 enabled.
  %&-line parsing enabled.
@@ -885,15 +885,8 @@ Package microtype Info: Loading generic protrusion settings for font family
  [1
 
 
-{C:/Users/docto/AppData/Local/MiKTeX/fonts/map/pdftex/pdftex.map}{C:/Users/docto/AppData/Local/Programs/MiKTeX/fonts/enc/dvips/base/8r.enc}] [2]
-
-LaTeX Warning: `h' float specifier changed to `ht'.
-
-[3] [4] [5]
-Underfull \vbox (badness 10000) has occurred while \output is active []
-
- [6] [7]
-LaTeX Font Info:    Trying to load font information for TS1+ptm on input line 350.
+{C:/Users/docto/AppData/Local/MiKTeX/fonts/map/pdftex/pdftex.map}{C:/Users/docto/AppData/Local/Programs/MiKTeX/fonts/enc/dvips/base/8r.enc}] [2] [3] [4] [5] [6]
+LaTeX Font Info:    Trying to load font information for TS1+ptm on input line 315.
  (C:\Users\docto\AppData\Local\Programs\MiKTeX\tex/latex/psnfss\ts1ptm.fd
 File: ts1ptm.fd 2001/06/04 font definitions for TS1/ptm.
 )
@@ -903,71 +896,71 @@ LaTeX Warning: `h' float specifier changed to `ht'.
 
 Underfull \vbox (badness 1558) has occurred while \output is active []
 
+ [7]
+<figures/reg/no_regularization_loss.png, id=36, 570.4512pt x 352.1958pt>
+<figures/reg/l1_1e-4_loss.png, id=38, 570.4512pt x 352.1958pt>
+<figures/reg/l1_1e-3_loss.png, id=39, 570.4512pt x 352.1958pt>
+<figures/reg/entropy_1e-4_loss.png, id=40, 570.4512pt x 352.1958pt>
+<figures/reg/entropy_1e-3_loss.png, id=41, 570.4512pt x 352.1958pt>
+<figures/reg/combined_1e-4_loss.png, id=42, 570.4512pt x 352.1958pt>
+<figures/reg/combined_1e-3_loss.png, id=43, 570.4512pt x 352.1958pt>
+<figures/reg/combined_1e-1_loss.png, id=44, 570.4512pt x 352.1958pt>
+<figures/reg/combined_1e1_loss.png, id=45, 570.4512pt x 352.1958pt>
+<figures/reg/combined_1e2_loss.png, id=46, 570.4512pt x 352.1958pt>
  [8]
-<figures/reg/no_regularization_loss.png, id=39, 570.4512pt x 352.1958pt>
-<figures/reg/l1_1e-4_loss.png, id=41, 570.4512pt x 352.1958pt>
-<figures/reg/l1_1e-3_loss.png, id=42, 570.4512pt x 352.1958pt>
-<figures/reg/entropy_1e-4_loss.png, id=43, 570.4512pt x 352.1958pt>
-<figures/reg/entropy_1e-3_loss.png, id=44, 570.4512pt x 352.1958pt>
-<figures/reg/combined_1e-4_loss.png, id=45, 570.4512pt x 352.1958pt>
-<figures/reg/combined_1e-3_loss.png, id=46, 570.4512pt x 352.1958pt>
-<figures/reg/combined_1e-1_loss.png, id=47, 570.4512pt x 352.1958pt>
-<figures/reg/combined_1e1_loss.png, id=48, 570.4512pt x 352.1958pt>
-<figures/reg/combined_1e2_loss.png, id=49, 570.4512pt x 352.1958pt>
+<figures/reg/sparse_init_loss.png, id=54, 569.4876pt x 352.1958pt>
+<figures/reg/com1e2_node_network.png, id=55, 2370.2151pt x 1275.3246pt>
+<figures/reg/control_node_network.png, id=56, 2370.2151pt x 1275.3246pt>
+<figures/reg/control_msg_network.png, id=57, 2632.5552pt x 1730.8665pt>
+
+Underfull \vbox (badness 10000) has occurred while \output is active []
+
  [9]
-<figures/reg/sparse_init_loss.png, id=53, 569.4876pt x 352.1958pt>
-<figures/reg/com1e2_node_network.png, id=54, 2370.2151pt x 1275.3246pt>
-<figures/reg/control_node_network.png, id=55, 2370.2151pt x 1275.3246pt>
-<figures/reg/control_msg_network.png, id=56, 2632.5552pt x 1730.8665pt>
+<figures/baseline/gnn_loss.png, id=61, 570.4512pt x 352.1958pt>
+<figures/small/kan_loss.png, id=62, 570.4512pt x 352.1958pt>
+<figures/small_rel_pos/kan_loss.png, id=63, 570.4512pt x 352.1958pt>
+<figures/small_rel_pos_dsq/kan_loss.png, id=64, 570.4512pt x 352.1958pt>
+<figures/small_rel_pos_idc/kan_loss.png, id=65, 570.4512pt x 352.1958pt>
 
 Underfull \vbox (badness 10000) has occurred while \output is active []
 
  [10]
-<figures/baseline/gnn_loss.png, id=60, 570.4512pt x 352.1958pt>
-<figures/small/kan_loss.png, id=61, 570.4512pt x 352.1958pt>
-<figures/small_rel_pos/kan_loss.png, id=62, 570.4512pt x 352.1958pt>
-<figures/small_rel_pos_dsq/kan_loss.png, id=63, 570.4512pt x 352.1958pt>
-<figures/small_rel_pos_idc/kan_loss.png, id=64, 570.4512pt x 352.1958pt>
+<figures/small/kan_msg_network.png, id=69, 2813.712pt x 2181.3495pt>
+<figures/small_rel_pos/kan_msg_network.png, id=70, 2530.4136pt x 1730.8665pt>
+<figures/small_rel_pos_dsq/kan_msg_network.png, id=71, 2530.4136pt x 1730.8665pt>
+<figures/small_rel_pos_idc/kan_msg_network.png, id=72, 2530.4136pt x 1730.8665pt>
+<figures/small/kan_node_network.png, id=73, 2086.9167pt x 803.1606pt>
+<figures/small_rel_pos/kan_node_network.png, id=74, 2086.9167pt x 803.1606pt>
+<figures/small_rel_pos_dsq/kan_node_network.png, id=75, 2086.9167pt x 803.1606pt>
+<figures/small_rel_pos_idc/kan_node_network.png, id=76, 2086.9167pt x 803.1606pt>
 
 Underfull \vbox (badness 10000) has occurred while \output is active []
 
  [11]
-<figures/small/kan_msg_network.png, id=71, 2813.712pt x 2181.3495pt>
-<figures/small_rel_pos/kan_msg_network.png, id=72, 2530.4136pt x 1730.8665pt>
-<figures/small_rel_pos_dsq/kan_msg_network.png, id=73, 2530.4136pt x 1730.8665pt>
-<figures/small_rel_pos_idc/kan_msg_network.png, id=74, 2530.4136pt x 1730.8665pt>
-<figures/small/kan_node_network.png, id=75, 2086.9167pt x 803.1606pt>
-<figures/small_rel_pos/kan_node_network.png, id=76, 2086.9167pt x 803.1606pt>
-<figures/small_rel_pos_dsq/kan_node_network.png, id=77, 2086.9167pt x 803.1606pt>
-<figures/small_rel_pos_idc/kan_node_network.png, id=78, 2086.9167pt x 803.1606pt>
+<figures/small_rel_pos/msg_kan_responses.png, id=81, 2421.045pt x 416.2752pt>
+<figures/small_rel_pos/node_kan_responses.png, id=82, 1408.7832pt x 415.7934pt>
 
 Underfull \vbox (badness 10000) has occurred while \output is active []
 
  [12]
-<figures/small_rel_pos/msg_kan_responses.png, id=83, 2421.045pt x 416.2752pt>
-<figures/small_rel_pos/node_kan_responses.png, id=84, 1408.7832pt x 415.7934pt>
+<figures/different_function_losses/min_gravity_loss.png, id=86, 570.4512pt x 352.1958pt>
+<figures/different_function_losses/min_linear_gravity_loss.png, id=87, 570.4512pt x 352.1958pt>
+<figures/different_function_losses/min_hooke_loss.png, id=88, 570.4512pt x 352.1958pt>
+<figures/different_function_losses/min_nice_loss.png, id=89, 570.4512pt x 352.1958pt>
 
 Underfull \vbox (badness 10000) has occurred while \output is active []
 
  [13]
-<figures/different_function_losses/min_gravity_loss.png, id=89, 570.4512pt x 352.1958pt>
-<figures/different_function_losses/min_linear_gravity_loss.png, id=90, 570.4512pt x 352.1958pt>
-<figures/different_function_losses/min_hooke_loss.png, id=91, 570.4512pt x 352.1958pt>
-<figures/different_function_losses/min_nice_loss.png, id=92, 570.4512pt x 352.1958pt>
+<figures/different_function_kans/min_gravity_sparse/kan_msg_network.png, id=94, 2813.712pt x 2181.3495pt>
+<figures/different_function_kans/min_hooke_sparse/kan_msg_network.png, id=95, 2813.712pt x 2181.3495pt>
+<figures/different_function_kans/min_nice_sparse/kan_msg_network.png, id=96, 2813.712pt x 2181.3495pt>
+<figures/different_function_kans/min_gravity_sparse/kan_node_network.png, id=97, 2086.9167pt x 803.1606pt>
+<figures/different_function_kans/min_hooke_sparse/kan_node_network.png, id=98, 2086.9167pt x 803.1606pt>
+<figures/different_function_kans/min_nice_sparse/kan_node_network.png, id=99, 2086.9167pt x 803.1606pt>
 
 Underfull \vbox (badness 10000) has occurred while \output is active []
 
- [14]
-<figures/different_function_kans/min_gravity_sparse/kan_msg_network.png, id=96, 2813.712pt x 2181.3495pt>
-<figures/different_function_kans/min_hooke_sparse/kan_msg_network.png, id=97, 2813.712pt x 2181.3495pt>
-<figures/different_function_kans/min_nice_sparse/kan_msg_network.png, id=98, 2813.712pt x 2181.3495pt>
-<figures/different_function_kans/min_gravity_sparse/kan_node_network.png, id=99, 2086.9167pt x 803.1606pt>
-<figures/different_function_kans/min_hooke_sparse/kan_node_network.png, id=100, 2086.9167pt x 803.1606pt>
-<figures/different_function_kans/min_nice_sparse/kan_node_network.png, id=101, 2086.9167pt x 803.1606pt>
-
-Underfull \vbox (badness 10000) has occurred while \output is active []
-
- [15] [16] (project.aux)
+ [14] [15] (project.aux)
  ***********
 LaTeX2e <2023-06-01> patch level 1
 L3 programming layer <2023-08-29>
@@ -988,15 +981,15 @@ Package logreq Info: Writing requests to 'project.run.xml'.
 Here is how much of TeX's memory you used:
  25680 strings out of 475248
  471223 string characters out of 5757814
- 1944801 words of memory out of 5000000
+ 1946801 words of memory out of 5000000
  46667 multiletter control sequences out of 15000+600000
  607238 words of font info for 214 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
  72i,12n,81p,1203b,1778s stack positions out of 10000i,1000n,20000p,200000b,200000s
- <C:\Users\docto\AppData\Local\MiKTeX\fonts/pk/ljfour/jknappen/ec/dpi600\ectt0900.pk> <C:\Users\docto\AppData\Local\MiKTeX\fonts/pk/ljfour/jknappen/ec/dpi600\ectt1000.pk><C:/Users/docto/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmex10.pfb><C:/Users/docto/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmmi10.pfb><C:/Users/docto/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmmi7.pfb><C:/Users/docto/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmr10.pfb><C:/Users/docto/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmr6.pfb><C:/Users/docto/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmr7.pfb><C:/Users/docto/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmr9.pfb><C:/Users/docto/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmsy10.pfb><C:/Users/docto/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmsy7.pfb><C:/Users/docto/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmsy9.pfb><C:/Users/docto/AppData/Local/Programs/MiKTeX/fonts/type1/urw/helvetic/uhvr8a.pfb><C:/Users/docto/AppData/Local/Programs/MiKTeX/fonts/type1/urw/times/utmb8a.pfb><C:/Users/docto/AppData/Local/Programs/MiKTeX/fonts/type1/urw/times/utmr8a.pfb><C:/Users/docto/AppData/Local/Programs/MiKTeX/fonts/type1/urw/times/utmri8a.pfb>
-Output written on project.pdf (16 pages, 226646 bytes).
+ <C:\Users\docto\AppData\Local\MiKTeX\fonts/pk/ljfour/jknappen/ec/dpi600\ectt0900.pk> <C:\Users\docto\AppData\Local\MiKTeX\fonts/pk/ljfour/jknappen/ec/dpi600\ectt1000.pk><C:/Users/docto/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmex10.pfb><C:/Users/docto/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmmi10.pfb><C:/Users/docto/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmmi7.pfb><C:/Users/docto/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmr10.pfb><C:/Users/docto/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmr6.pfb><C:/Users/docto/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmr7.pfb><C:/Users/docto/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmr9.pfb><C:/Users/docto/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmsy10.pfb><C:/Users/docto/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmsy6.pfb><C:/Users/docto/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmsy7.pfb><C:/Users/docto/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmsy9.pfb><C:/Users/docto/AppData/Local/Programs/MiKTeX/fonts/type1/urw/helvetic/uhvr8a.pfb><C:/Users/docto/AppData/Local/Programs/MiKTeX/fonts/type1/urw/times/utmb8a.pfb><C:/Users/docto/AppData/Local/Programs/MiKTeX/fonts/type1/urw/times/utmr8a.pfb><C:/Users/docto/AppData/Local/Programs/MiKTeX/fonts/type1/urw/times/utmri8a.pfb>
+Output written on project.pdf (15 pages, 234995 bytes).
 PDF statistics:
- 237 PDF objects out of 1000 (max. 8388607)
+ 239 PDF objects out of 1000 (max. 8388607)
  0 named destinations out of 1000 (max. 500000)
  50884 words of extra memory for PDF output out of 51595 (max. 10000000)
 
