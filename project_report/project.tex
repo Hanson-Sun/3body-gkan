@@ -116,8 +116,6 @@ with additional force laws for generalization tests. Each example consists of in
 
 Our experiments address four questions: whether GKANs match GNN performance at comparable parameter counts; whether sparse regularization improves interpretability; whether physically motivated minimal architectures are sufficient; and whether these trends generalize across force laws.
 
-We expect the node KAN to learn how to aggregate messages into a final acceleration vector, while the edge KANs learn the pairwise interaction functions. We hypothesize that regularization will encourage sparsity and interpretability, and that smaller KAN architectures may still perform well if they capture the right inductive biases.
-
 \subsection{Baseline GNN}
 
 We follow the baseline GCN architecture, a node MLP of $(110 \to 300 \to 300 \to 2)$ and a message MLP of $(10 \to 300 \to 300 \to 300 \to 100)$. Note that we compute the loss as the \textit{mean} over individual samples rather than the \textit{sum}. The model is trained without regularization using an L2 loss, optimized with Adam at a learning rate of $1e{-3}$.
@@ -125,6 +123,8 @@ We follow the baseline GCN architecture, a node MLP of $(110 \to 300 \to 300 \to
 \subsection{GKAN Architecture}
 
 Our GKAN replaces the MLP components of the baseline GCN with KAN layers. Specifically, the message MLP is replaced with a KAN message network and the node update MLP with a KAN node network. Each KAN edge learns a univariate B-spline function with a fixed grid size of \texttt{G} and spline order \texttt{k}, giving it significantly more interpretable structure than a standard linear layer followed by an activation.
+
+We expect the node KAN to learn how to aggregate messages into a final acceleration vector, while the edge KANs learn the pairwise interaction functions. We hypothesize that regularization will encourage sparsity and interpretability, and that smaller KAN architectures may still perform well if they capture the right inductive biases.
 
 \subsection{Regularization}
 Sparsification can be achieved in KAN layers through L1 regularization of weights, as in traditional MLP layers, though an additional entropy regularizer is often needed to make sufficiently sparse KANs \cite{liu2024kankolmogorovarnoldnetworks}. This suite of experiments serves to both validate regularization patterns found in traditional KANs, as well as find ideal regularization hyperparameters to encourage sparse and interpretable networks. To do so, we run a sweep through different magnitudes of L1 regularization, entropy regularization, and both combined, comparing the models to each other, as well as a control with no regularization. Doing so helps identify the efficacy of different regularizations in creating sparser models. Additionally, a model utilizing sparse initialization is also trained, which forces the networks to be sparse before training
