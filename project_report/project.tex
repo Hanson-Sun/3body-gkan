@@ -296,7 +296,7 @@ experiment name & init train loss & final train loss & init val loss & final val
 \label{tab:results-different-force}
 
 \end{table}
-In terms of reguarlization results, we see the same patterns with little difference in sparsity. With the only exception with hooke's law, which has a significantly more sparse network (see figure \ref{fig:different_force_msg_models} in the appendix).
+In terms of reguarlization results, we see the same patterns with little difference in sparsity. With the only exception with Hooke's law, which has a significantly more sparse network (see figure \ref{fig:different_force_msg_models} in the appendix).
 
 \section{Discussion}
 \subsection{Regularization}
@@ -324,7 +324,7 @@ The results in Table~\ref{tab:results-different-force} reveal a clear trend: GKA
 
 Gravity performs worst, with training loss decreasing by less than $7\%$ over 10 epochs. This is unsurprising: the $1/r^2$ dependence introduces near-singular behavior at small separations, which is difficult for B-spline edges to represent efficiently, as their piecewise polynomial basis approximates smooth functions well but struggles with sharp or unbounded derivatives~\parencite{DEBOOR197250}. Replacing this with the $1/r$ linear gravity law already yields a substantial improvement, with training loss dropping by $\sim 31\%$, suggesting that reducing the degree of singularity meaningfully aids optimization.
 
-Hooke's law improves further still, achieving a $\sim 60\%$ training loss reduction. Because the interaction is linear in displacement with bounded derivatives, the model requires less functional composition and fewer active spline regions to represent it accurately. This is also reflected in the regularization results, where Hooke's law is the only force function that produces a noticeably sparser network. The ``nice'' force function, despite being nonlinear, achieves comparable relative loss reductions ($\sim 45\%$ on validation) and maintains the lowest absolute losses throughout training---likely because its smooth exponential profile avoids the distance-magnitude and reciprocal-scaling terms that make gravity challenging.
+Hooke's law improves further still, achieving a $\sim 60\%$ training loss reduction. Because the interaction is linear in displacement with bounded derivatives, the model requires less functional composition and fewer active spline regions to represent it accurately. This is also reflected in the regularization results, where Hooke's law (figure~\ref{sub@fig:diff_hooke_msg}) is the only force function that produces a noticeably sparser network. The ``nice'' force function, despite being nonlinear, achieves comparable relative loss reductions ($\sim 45\%$ on validation) and maintains the lowest absolute losses throughout training---likely because its smooth exponential profile avoids the distance-magnitude and reciprocal-scaling terms that make gravity challenging.
 
 In combination, these results suggest that GKAN optimization is sensitive to the analytic structure of the target force law. Interpretability and sparsity also benefit from smoother targets: simpler force laws not only converge faster, but compress more naturally into compact GKAN representations.
 
