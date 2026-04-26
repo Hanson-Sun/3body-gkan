@@ -26,12 +26,12 @@ Ideally have GPU accelerated pytorch or else this will be slow af to train...
 - [x] convert trajectory data into graph format for GNN
 - [x] GNN baseline implementation and training
 - [x] Graph KAN implementation and training
-- [ ] Implement sparse initialization for the KAN layers
-- [ ] Add multiply layer to KAN architecture (copy MultKan from pykan)
-- [ ] design experiments to compare generalization performance of GNN vs Graph KAN
-  - [ ] Test some feature engineering approaches
-  - [ ] Try with minimal model complexity
-  - [ ] Try with more complex model and see if sparsity works
-  - [ ] Look at some approaches from KAN 2.0 paper
-- [ ] interpretability analysis of learned functions
+- [x] Implement sparse initialization for the KAN layers
+- [x] Add multiply layer to KAN architecture (copy MultKan from pykan)
+- [x] design experiments to compare generalization performance of GNN vs Graph KAN
+  - [x] Test some feature engineering approaches
+  - [x] Try with minimal model complexity
+  - [x] Try with more complex model and see if sparsity works
+  - [x] Look at some approaches from KAN 2.0 paper
+- [x] interpretability analysis of learned functions
 

@@ -362,7 +362,7 @@ So KAN it learn? Kind of.
 
 \newpage
 
-\printbibliography
+
 
 \appendix
 
@@ -373,11 +373,87 @@ So KAN it learn? Kind of.
 
 \subsection{Code and Experiments}
 
-\subsection{Rollouts and trajectory visualizations}
+All of our code and experiments are available at \url{https://github.com/Hanson-Sun/3body-gkan} (not Jupyter notebooks thanksfully). The repository includes the training and evaluation code for all models, as well as all the information to reproduce our experiments. Specific experiment configurations can be found in the \texttt{experiments.yaml} file.
 
-\subsection{Model visualizations}
+There are several additional features that we implemented but did not have time to test fully and include in our report. These include:
+\begin{itemize}
+    \item importance score based pruning of final models to help visualization
+    \item MultKan support, which is a variation of KAN that includes multiplication nodes in addition to addition and function composition.
+    \item Reguarlization schedules that increase regularization magnitudes over the course of training to encourage learning first, then sparsity.
+    \item Incomplete support for Hamiltonian GNNs.
+    \item Large scale GKAN experiments with ~500k parameters. 
+\end{itemize}
 
-\subsection{Model training curves}
+\hs{maybe put some rollout videos in here via link, would be cool}
+
+\subsection{Additional Visualizations and Results}
+
+This section will hold any addition figures, plots, and visualizations related to the experiments that we could not fit.
+
+\subsubsection{Different Force Functions}
+
+\begin{figure}[htbp]
+    \centering
+    \begin{subfigure}[b]{0.4\textwidth}
+        \includegraphics[width=\textwidth]{figures/different_function_losses/min_gravity_loss.png}\caption{Normal gravity, no min-separation}\label{fig:diff_gravity_loss}
+    \end{subfigure}
+
+    \begin{subfigure}[b]{0.4\textwidth}
+        \includegraphics[width=\textwidth]{figures/different_function_losses/min_linear_gravity_loss.png}\caption{Linear gravity}\label{fig:diff_linear_loss}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[b]{0.4\textwidth}
+        \includegraphics[width=\textwidth]{figures/different_function_losses/min_hooke_loss.png}\caption{Hooke's law}\label{fig:diff_hooke_loss}
+    \end{subfigure}
+    
+    \vspace{1em} % Spacing between rows
+    
+    \begin{subfigure}[b]{0.4\textwidth}
+        \includegraphics[width=\textwidth]{figures/different_function_losses/min_nice_loss.png}\caption{Nice force}\label{fig:diff_nice_loss}
+    \end{subfigure}
+    
+    \caption{Training and validation loss over 10 epochs for different force functions. All trained without regularization. }
+    \label{fig:different_force_losses}
+\end{figure}
+
+\begin{figure}[htbp]
+    \centering
+    \begin{subfigure}[b]{0.4\textwidth}
+        \includegraphics[width=\textwidth]{figures/different_function_kans/min_gravity_sparse/kan_msg_network.png}\caption{Normal gravity message network}\label{fig:diff_gravity_msg}
+    \end{subfigure}
+
+    \begin{subfigure}[b]{0.4\textwidth}
+        \includegraphics[width=\textwidth]{figures/different_function_kans/min_hooke_sparse/kan_msg_network.png}\caption{Hooke's law message network}\label{fig:diff_hooke_msg}
+    \end{subfigure}
+
+
+    \begin{subfigure}[b]{0.4\textwidth}
+        \includegraphics[width=\textwidth]{figures/different_function_kans/min_nice_sparse/kan_msg_network.png}\caption{Nice force message network}\label{fig:diff_nice_msg}
+    \end{subfigure}
+
+    
+    \caption{Message network visualizations for different force functions. Trained with regularization for 50 epochs.}
+    \label{fig:different_force_msg_models}
+\end{figure}
+
+\begin{figure}[htbp]
+    \centering
+    \begin{subfigure}[b]{0.4\textwidth}
+        \includegraphics[width=\textwidth]{figures/different_function_kans/min_gravity_sparse/kan_node_network.png}\caption{Normal gravity node network}\label{fig:diff_gravity_node}
+    \end{subfigure}
+
+    \begin{subfigure}[b]{0.4\textwidth}
+        \includegraphics[width=\textwidth]{figures/different_function_kans/min_hooke_sparse/kan_node_network.png}\caption{Hooke's law node network}\label{fig:diff_hooke_node}
+    \end{subfigure}
+
+    \begin{subfigure}[b]{0.4\textwidth}
+        \includegraphics[width=\textwidth]{figures/different_function_kans/min_nice_sparse/kan_node_network.png}\caption{Nice force node network}\label{fig:diff_nice_node}
+    \end{subfigure}
+
+    \caption{Node network visualizations for different force functions. Trained with regularization for 50 epochs.}
+    \label{fig:different_force_node_models}
+\end{figure}
+
 
 
 \newpage
@@ -561,6 +637,8 @@ So KAN it learn? Kind of.
 \end{figure}
 
 \newpage
+
+\printbibliography
 
 \section{What goes in the report}
 Part of your grade is based on the contribution of your project:
