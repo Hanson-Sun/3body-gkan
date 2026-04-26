@@ -189,7 +189,7 @@ The baseline GNN model achieves a training loss of $1.783 \times 10^{-2}$ and a 
 \subsection{Regularization}
 Unregularized training loss and validation loss for each combination of L1-norm and entropy regularizations in Table \ref{tab:regularization} display marginal differences between values. The largest gap in validation losses between two of the models is $0.08\times 10^{-1}$, comparing the control ($0$ L1-norm, $0$ entropy) to the maximal regularization ($1\times 10^{2}$ L1-norm, $1\times 10^{2}$ entropy). The sparse initialization is the only model to not follow this trend, with training loss $3.95\times 10^{-1}$ and validation loss $3.57\times 10^{-1}$.
 
-None of the networks produced by each model are interpretable through visual inspection, even with $1.0\times 10^{-2}$ regularization, which did not have a significantly sparser network compared to the control. Node and message networks are available in the appendix (Figure \ref{fig:reg_nets}).
+None of the networks produced by each model are interpretable through visual inspection, even with $1.0\times 10^{2}$ regularization, which did not have a significantly sparser network compared to the control. Node and message networks are available in the appendix (Figure \ref{fig:reg_nets}).
 
 \begin{table}
     \centering
