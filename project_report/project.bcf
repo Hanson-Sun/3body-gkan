@@ -2371,17 +2371,18 @@
     <bcf:citekey order="7" intorder="1">Koenig_2024</bcf:citekey>
     <bcf:citekey order="8" intorder="1">cappi2025unveilingactualperformanceneuralbased</bcf:citekey>
     <bcf:citekey order="9" intorder="1">cranmer2020discoveringsymbolicmodelsdeep</bcf:citekey>
-    <bcf:citekey order="10" intorder="1">liu2024kankolmogorovarnoldnetworks</bcf:citekey>
+    <bcf:citekey order="10" intorder="1">cranmer2020discoveringsymbolicmodelsdeep</bcf:citekey>
     <bcf:citekey order="11" intorder="1">liu2024kankolmogorovarnoldnetworks</bcf:citekey>
-    <bcf:citekey order="12" intorder="1">cranmer2020discoveringsymbolicmodelsdeep</bcf:citekey>
-    <bcf:citekey order="13" intorder="1">liu2024kankolmogorovarnoldnetworks</bcf:citekey>
-    <bcf:citekey order="14" intorder="1">liu2024kan20kolmogorovarnoldnetworks</bcf:citekey>
+    <bcf:citekey order="12" intorder="1">liu2024kankolmogorovarnoldnetworks</bcf:citekey>
+    <bcf:citekey order="13" intorder="1">cranmer2020discoveringsymbolicmodelsdeep</bcf:citekey>
+    <bcf:citekey order="14" intorder="1">liu2024kankolmogorovarnoldnetworks</bcf:citekey>
     <bcf:citekey order="15" intorder="1">liu2024kan20kolmogorovarnoldnetworks</bcf:citekey>
-    <bcf:citekey order="16" intorder="1">DEBOOR197250</bcf:citekey>
-    <bcf:citekey order="17" intorder="1">liu2024kankolmogorovarnoldnetworks</bcf:citekey>
-    <bcf:citekey order="18" intorder="1">liu2024kan20kolmogorovarnoldnetworks</bcf:citekey>
-    <bcf:citekey order="19" intorder="1">arroyo2025vanishinggradientsoversmoothingoversquashing</bcf:citekey>
-    <bcf:citekey order="20" intorder="1">sharma2025dynamicalgraphnetphysicsinformedgraph</bcf:citekey>
+    <bcf:citekey order="16" intorder="1">liu2024kan20kolmogorovarnoldnetworks</bcf:citekey>
+    <bcf:citekey order="17" intorder="1">DEBOOR197250</bcf:citekey>
+    <bcf:citekey order="18" intorder="1">liu2024kankolmogorovarnoldnetworks</bcf:citekey>
+    <bcf:citekey order="19" intorder="1">liu2024kan20kolmogorovarnoldnetworks</bcf:citekey>
+    <bcf:citekey order="20" intorder="1">arroyo2025vanishinggradientsoversmoothingoversquashing</bcf:citekey>
+    <bcf:citekey order="21" intorder="1">sharma2025dynamicalgraphnetphysicsinformedgraph</bcf:citekey>
   </bcf:section>
   <!-- SORTING TEMPLATES -->
   <bcf:sortingtemplate name="nyt">
