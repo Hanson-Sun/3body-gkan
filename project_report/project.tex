@@ -133,7 +133,7 @@ Each GKAN network uses a node network of 3 layers $(7 \to 8 \to 2)$, a message n
 \ek{I don't know if we should mention sparse init} \hs{ig we dont have to}
 \subsection{How small KAN we get?}
 
-The Kolmogorov-Arnold (KA) representation theorem states that any multivariate function can be decomposed into a finite number of univariate functions, combined via addition and function composition \parencite{liu2024kankolmogorovarnoldnetworks}
+The Kolmogorov-Arnold (KA) representation theorem states that any continuous multivariate function can be decomposed into a finite number of univariate functions and addition operations \parencite{liu2024kankolmogorovarnoldnetworks}.
 
 \[
 f(x_{1 \ldots n}) = \sum_{i = 0}^{2n} \Phi_{i} \left( \sum_{j = 1}^{n} \phi_{i, j}(x_{j}) \right)
@@ -143,7 +143,7 @@ This suggests the existence of models with significantly fewer parameters that c
 
 To design a smaller model, we work backwards from a proposed ``feasible route'' of function compositions and additions that yields the desired force law. In other words, we set layer widths and depths based on the number of arithmetic steps needed to decompose the desired force law into univariate functions by hand. We then observe whether the model is capable of recovering the desired force law by ``undoing'' our decomposition.
 
-To illustrate this process, Figure \ref{fig:feasible-route-small} is one example of a feasible route. In this example, the message network consists of 4 layers ($10 \to 6 \to 3 \to 4 \to 2$) because the acceleration vector can be computed in 4 arithmetic steps; the node update network consists of just 1 layer ($7 \to 2$) because it only needs to aggregate acceleration vectors from the messages. \ag{I suppose we should explain the other 3 experiments in an appendix.}
+To illustrate this process, Figure \ref{fig:feasible-route-small} is one example of a feasible route. In this example, the message network consists of 4 layers ($10 \to 6 \to 3 \to 4 \to 2$) because the acceleration vector can be computed in 4 arithmetic steps; the node update network consists of just 1 layer ($7 \to 2$) because it only needs to aggregate acceleration vectors from the messages.
 
 \begin{figure}[h]
 
@@ -172,7 +172,7 @@ input & $m_{i}$, $s_{x,i}$, $s_{y,i}$, $v_{x,i}$, $v_{y,i}$, $m_{j}$, $s_{x,j}$,
 \hline
 output & $a_{x,i} = h_{4,1}$, $a_{y,i} = h_{4,2}$ \\
 \end{tabular}
-\caption{A feasible route. \ag{Need a better way to present this.} \hs{might be the best we can do}}
+\caption{The feasible route for \texttt{small}.}
 \label{fig:feasible-route-small}
 
 \end{figure}
@@ -313,15 +313,11 @@ From \cite{liu2024kankolmogorovarnoldnetworks}, we expected that indivdually L1-
 
 \subsection{How small KAN we get?}
 
-\ag{Could do interpretability analysis. Pass synthetic inputs through the network to see the relationships empirically (sanity check). Then try symbolic regression per-layer and analytically composing them to see if it recovers the force law?}
+Looking at the visualized networks in Figures \ref{fig:message-network-small}--\ref{fig:node-update-network-small}, it seems that the \texttt{small} model with no feature engineering did not learn as effectively. The message and node update networks are dense, which suggests that the model did not learn to ignore features such as velocity which are not relevant to the desired force law. The introduction of computed features (obtensibly) acts as a  sufficiently strong inductive bias---the models with feature engineering have sparser networks which emphasize the relevant mass- and displacement-related features. In conjunction with the improvement in the training and validation loss, this supports the idea that computed features can increase the expressive power of a model despite adding no new information \parencite{liu2024kan20kolmogorovarnoldnetworks}.
 
-\hs{we can point out some of the interesting ``sparse'' patterns and how the network ``learns'' to ignore certain features}
+The utility of the GKAN in terms of interpretability is still unclear. A cross-section visualization (perturbing one input at a time) of the \texttt{small\_rel\_pos} model as shown in Figure \ref{fig:cross-section-small-rel-pos} indicates that the model learned approximately correct mathematical relationships overall. However, this type of analysis is equally possible with traditional GNN architectures.
 
-\ag{The following is outdated.} Looking at the visualizations, it seems that the models without any augmentation did not learn as effectively. The message and node update networks are both quite dense, which suggests that they did not learn to ignore distractors such as velocity. By augmenting the dataset with \texttt{rel\_pos}, we introduce an inductive bias that is apparently sufficient to ``push'' the model in the right direction, and interestingly, we can start to see sparsity in the networks. Refer to the visualizations for \texttt{minimal} and \texttt{minimal\_rel\_pos} to see this effect in action. \hs{link to KAN 2.0 paper}
-
-I have no idea what mathematical relationships it actually learned. \texttt{/shrug} \hs{show image}
-
-\hs{plots and rollouts? maybe keep in appendix}
+The unique property of the GKAN is that it is possible to perform symbolic regression per-layer, then compose the symbolic expressions analytically. Unfortunately, in our case, while the overall result was reasonable, the smaller models did not learn the exact per-layer transformations we had hoped for (as outlined in our feasible routes). This is not surprising---there may be an infinite number of valid decompositions for any given function---but it complicates interpretability, as the size of the symbolic expression increases exponentially with network depth. Ultimately, we were not able to produce interpretable symbolic expressions for the learned force laws.
 
 \subsection{Different force functions}
 
@@ -557,6 +553,107 @@ So KAN it learn? Kind of.
 
 \caption{The smaller models.}
 \label{fig:node-update-network-small}
+
+\end{figure}
+
+% feasible routes
+\begin{figure}[htbp]
+
+\centering
+\begin{tabular}{c|l}
+input & $m_{i}$, $s_{x,i}$, $s_{y,i}$, $v_{x,i}$, $v_{y,i}$, $m_{j}$, $s_{x,j}$, $s_{y,j}$, $v_{x,j}$, $v_{y,j}$, $\Delta x$, $\Delta y$ \\
+\hline
+\multirow{5}{*}{1} & $h_{1,1} = \Delta x^{2} + \Delta y^{2} \propto \|r\|^{2}$ \\
+& $h_{1,2} = m_{j} + \Delta x$ \\
+& $h_{1,3} = m_{j} - \Delta x$ \\
+& $h_{1,4} = m_{j} + \Delta y$ \\
+& $h_{1,5} = m_{j} - \Delta y$ \\
+\hline
+\multirow{4}{*}{2} & $h_{2, 1} = h_{1,1}^{-1.5} + h_{1,2}^{2} - h_{1,3}^{2} \propto \|r\|^{-3} + m_{j} \Delta x$ \\
+& $h_{2, 2} = h_{1,1}^{-1.5} - h_{1,2}^{2} + h_{1,3}^{2} \propto \|r\|^{-3} - m_{j} \Delta x$ \\
+& $h_{2, 3} = h_{1,1}^{-1.5} + h_{1,4}^{2} - h_{1,5}^{2} \propto \|r\|^{-3} + m_{j} \Delta y$ \\
+& $h_{2, 4} = h_{1,1}^{-1.5} - h_{1,4}^{2} + h_{1,5}^{2} \propto \|r\|^{-3} - m_{j} \Delta y$ \\
+\hline
+\multirow{2}{*}{3} & $h_{3,1} = h_{2,1}^{2} - h_{2,2}^{2} \propto \|r\|^{-3} m_{j} \Delta x$ \\
+& $h_{3,2} = h_{2,3}^{2} - h_{2,4}^{2} \propto \|r\|^{-3} m_{j} \Delta y$ \\
+\hline
+output & $a_{x,i} = h_{3,1}$, $a_{y,i} = h_{3,2}$ \\
+\end{tabular}
+\caption{The feasible route for \texttt{small\_rel\_pos}.}
+\label{fig:feasible-route-small-rel-pos}
+
+\end{figure}
+
+\begin{figure}[htbp]
+
+\centering
+\begin{tabular}{c|l}
+input & $m_{i}$, $s_{x,i}$, $s_{y,i}$, $v_{x,i}$, $v_{y,i}$, $m_{j}$, $s_{x,j}$, $s_{y,j}$, $v_{x,j}$, $v_{y,j}$, $\Delta x$, $\Delta y$, $\|r\|^{2}$ \\
+\hline
+\multirow{5}{*}{1} & $h_{1,1} = \|r\|^{2}$ \\
+& $h_{1,2} = m_{j} + \Delta x$ \\
+& $h_{1,3} = m_{j} - \Delta x$ \\
+& $h_{1,4} = m_{j} + \Delta y$ \\
+& $h_{1,5} = m_{j} - \Delta y$ \\
+\hline
+\multirow{4}{*}{2} & $h_{2, 1} = h_{1,1}^{-1.5} + h_{1,2}^{2} - h_{1,3}^{2} \propto \|r\|^{-3} + m_{j} \Delta x$ \\
+& $h_{2, 2} = h_{1,1}^{-1.5} - h_{1,2}^{2} + h_{1,3}^{2} \propto \|r\|^{-3} - m_{j} \Delta x$ \\
+& $h_{2, 3} = h_{1,1}^{-1.5} + h_{1,4}^{2} - h_{1,5}^{2} \propto \|r\|^{-3} + m_{j} \Delta y$ \\
+& $h_{2, 4} = h_{1,1}^{-1.5} - h_{1,4}^{2} + h_{1,5}^{2} \propto \|r\|^{-3} - m_{j} \Delta y$ \\
+\hline
+\multirow{2}{*}{3} & $h_{3,1} = h_{2,1}^{2} - h_{2,2}^{2} \propto \|r\|^{-3} m_{j} \Delta x$ \\
+& $h_{3,2} = h_{2,3}^{2} - h_{2,4}^{2} \propto \|r\|^{-3} m_{j} \Delta y$ \\
+\hline
+output & $a_{x,i} = h_{3,1}$, $a_{y,i} = h_{3,2}$ \\
+\end{tabular}
+\caption{The feasible route for \texttt{small\_rel\_dsq}.}
+\label{fig:feasible-route-small-rel-dsq}
+
+\end{figure}
+
+\begin{figure}[htbp]
+
+\centering
+\begin{tabular}{c|l}
+input & $m_{i}$, $s_{x,i}$, $s_{y,i}$, $v_{x,i}$, $v_{y,i}$, $m_{j}$, $s_{x,j}$, $s_{y,j}$, $v_{x,j}$, $v_{y,j}$, $\Delta x$, $\Delta y$, $\|r\|^{-3}$ \\
+\hline
+\multirow{4}{*}{1} & $h_{1,1} = m_{j} + \|r\|^{-3}$ \\
+& $h_{1,2} = m_{j} - \|r\|^{-3}$ \\
+& $h_{1,3} = \Delta x$ \\
+& $h_{1,4} = \Delta y$ \\
+\hline
+\multirow{4}{*}{2} & $h_{2, 1} = h_{1,1}^{2} - h_{1,2}^{2} + h_{1,3} \propto m_{j} \|r\|^{-3} + \Delta x$ \\
+& $h_{2, 2} = h_{1,1}^{2} - h_{1,2}^{2} - h_{1,3} \propto m_{j} \|r\|^{-3} - \Delta x$ \\
+& $h_{2, 3} = h_{1,1}^{2} - h_{1,2}^{2} + h_{1,4} \propto m_{j} \|r\|^{-3} + \Delta y$ \\
+& $h_{2, 4} = h_{1,1}^{2} - h_{1,2}^{2} - h_{1,4} \propto m_{j} \|r\|^{-3} - \Delta y$ \\
+\hline
+\multirow{2}{*}{3} & $h_{3,1} = h_{2,1}^{2} - h_{2,2}^{2} \propto m_{j} \|r\|^{-3} \Delta x$ \\
+& $h_{3,2} = h_{2,3}^{2} - h_{2,4}^{2} \propto m_{j} \|r\|^{-3} \Delta y$ \\
+\hline
+output & $a_{x,i} = h_{3,1}$, $a_{y,i} = h_{3,2}$ \\
+\end{tabular}
+\caption{The feasible route for \texttt{small\_rel\_idc}.}
+\label{fig:feasible-route-small-rel-idc}
+
+\end{figure}
+
+% cross-sections
+\begin{figure}[htbp]
+
+\centering
+
+\begin{subfigure}{0.5\textwidth}
+\includegraphics[width=\textwidth]{figures/small_rel_pos/msg_kan_responses.png}
+\caption{message network}
+\end{subfigure}
+
+\begin{subfigure}{0.5\textwidth}
+\includegraphics[width=\textwidth]{figures/small_rel_pos/node_kan_responses.png}
+\caption{node update network}
+\end{subfigure}
+
+\caption{The cross-section for \texttt{small\_rel\_pos}.}
+\label{fig:cross-section-small-rel-pos}
 
 \end{figure}
 
