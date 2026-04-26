@@ -23,6 +23,7 @@
 \usepackage{xcolor}         % colors
 \usepackage{hyperref}       % hyperlinks
 \usepackage{url}            % simple URL typesetting
+\usepackage{amsmath}
 
 \usepackage{multirow}
 
@@ -111,18 +112,12 @@ We evaluate GKANs on synthetic $n$-body simulation data generated with a leapfro
 \end{equation}
 with additional force laws for generalization tests. Each example consists of initial positions, velocities, and masses, with targets given by the future trajectories.
 
-\hs{we need to provide the formulas of the force laws we used somewhere, maybe in appendix}
-\hs{we also should provide baseline specification somewhere, ie how many layers, width, etc}
-
-We compare two models: a graph convolutional network baseline following \cite{cranmer2020discoveringsymbolicmodelsdeep}, and a GKAN that replaces selected MLP components with KAN layers. Both models are trained on the same data, with the same loss and optimization setup, to keep the comparison fair.
+We compare two models: a GCN baseline following \cite{cranmer2020discoveringsymbolicmodelsdeep}, and a GKAN that replaces selected MLP components with KAN layers. Both models are trained on the same data, with the same loss and optimization setup, to keep the comparison fair.
 
 We evaluate models using trajectory prediction error on held-out simulations. We also examine interpretability through sparsity, visual structure of learned edge functions, and how easily the model can reflect physically meaningful relationships.
 
-We organize our experiments around a few questions: whether GKANs can match GNN performance at similar parameter counts, whether sparse regularization makes learned functions easier to interpret, whether smaller KAN-style architectures are sufficient, whether physically motivated feature engineering helps, and whether the same trends hold under different force laws such as Hooke's law.
+We organize our experiments around a few questions: whether GKANs can match GNN performance at similar parameter counts, whether sparse regularization makes learned functions easier to interpret, whether smaller KAN-style architectures are sufficient, whether physically motivated feature engineering helps, and whether the same trends generalize under different force laws.
 
-\hs{will probably skip multkans, dont think i got anything useful there. can include if theres space}
-
-\hs{state what we expect to learn}
 We expect the node KAN to learn how to aggregate messages into a final acceleration vector, while the edge KANs learn the pairwise interaction functions. We hypothesize that regularization will encourage sparsity and interpretability, and that smaller KAN architectures may still perform well if they capture the right inductive biases.
 
 \subsection{Baseline GNN}
@@ -134,10 +129,10 @@ Sparsification can be achieved in KAN layers through L1 regularization of weight
 
 Each GKAN network uses a node network of 3 layers $(7 \to 8 \to 2)$, a message network of 4 layers $(10 \to 12 \to 12 \to 2)$, and is trained over 50 epochs. Once all models are trained, they are compared in both training loss, validation loss against a test set, as well as visually compared for how sparse the networks are. The ideal regularization approach is determined by which hyperparameters provide a relatively sparse and interpretable network without sacrificing performance on the validation set.
 
-\ek{I don't know if we should mention sparse init}
+\ek{I don't know if we should mention sparse init} \hs{ig we dont have to}
 \subsection{How small KAN we get?}
 
-The Kolmogorov-Arnold (KA) representation theorem states that any multivariate function can be decomposed into a finite number of univariate functions, combined via addition and function composition. \ag{Who do I cite here? K and A from the 50s? Also, re-stating this stuff isn't actually that useful...}
+The Kolmogorov-Arnold (KA) representation theorem states that any multivariate function can be decomposed into a finite number of univariate functions, combined via addition and function composition \parencite{liu2024kankolmogorovarnoldnetworks}
 
 \[
 f(x_{1 \ldots n}) = \sum_{i = 0}^{2n} \Phi_{i} \left( \sum_{j = 1}^{n} \phi_{i, j}(x_{j}) \right)
@@ -176,7 +171,7 @@ input & $m_{i}$, $s_{x,i}$, $s_{y,i}$, $v_{x,i}$, $v_{y,i}$, $m_{j}$, $s_{x,j}$,
 \hline
 output & $a_{x,i} = h_{4,1}$, $a_{y,i} = h_{4,2}$ \\
 \end{tabular}
-\caption{A feasible route. \ag{Need a better way to present this.}}
+\caption{A feasible route. \ag{Need a better way to present this.} \hs{might be the best we can do}}
 \label{fig:feasible-route-small}
 
 \end{figure}
@@ -205,8 +200,20 @@ experiment name & message network & parameters & computed features \\
 
 The node update network always consists of 1 layer ($7 \to 2$). The models are all trained for 50 epochs on the same dataset, which consists of 200 training trajectories and 20 validation trajectories. For exact details on the data generation process and training regime, as well as an outline of the feasible route for each model, refer to the appendices. \ag{Use a ref here.}
 
+\section{Different Force Functions}
+
+Utilizing the derived minimal model above, we also test the GKAN's ability to learn different force functions. In particular, we replace the gravitational force with the following three force functions
+\begin{align*}
+  a_{\text{lin}}   &= G \sum_{j \neq i} m_{j} \frac{s_{j} - s_{i}}{\|s_{j} - s_{i}\|^{2}}, \quad
+  a_{\text{hooke}} &= G \sum_{j \neq i} \frac{s_{j} - s_{i}}{m_i}, \quad
+  a_{\text{nice}}  &= G \sum_{j \neq i} \frac{e^{\|s_j - s_i\|^2}}{m_i}(s_j - s_i)
+\end{align*}
+
+$a_{\text{lin}}$ is a linear gravity function that has a $1/r$ fall off instead of $1/r^2$. $a_{\text{hooke}}$ is a Hooke's law function that has a linear relationship with distance. $a_{\text{nice}}$ is an arbitrary function with a nice gradient.
+
+We also also use ran similar regularization experiments on the different force functions to see if the same patterns hold. 
+
 \section{Results}
-\hs{maybe have one big table summarizing losses for different configs (include maximal model somehow?)}
 
 \subsection{Baseline GNN}
 The baseline GNN model achieves a training loss of $1.783 \times 10^{-2}$ and a validation loss of $1.289 \times 10^{-2}$ after 50 epochs. This serves as a reference point for evaluating the performance of the GKAN models.
@@ -270,11 +277,36 @@ Furthermore, by introducing simple computed features such as $\Delta x$ and $\De
 
 \ag{Include loss plots and rollouts here?}
 
+\subsection{Different force functions}
+
+The relative training and validation loss decreases the GKAN models on 10 epochs of training are in Table \ref{tab:results-different-force}
+
+\begin{table}[h]
+
+\centering
+\caption{Losses of different force functions. Gravity is trained with no min-separation constraint for fair comparison.}
+\begin{tabular}{l|l|l|l|l}
+\hline
+experiment name & init train loss & final train loss & init val loss & final val loss\\
+\hline
+\texttt{Gravity} & $2.571 \times 10^{0}$ & $2.396 \times 10^{0}$ & $2.143 \times 10^{0}$ & $1.952 \times 10^{0}$\\
+\texttt{Linear} & $1.883 \times 10^{0}$ & $1.301 \times 10^{0}$ & $1.250 \times 10^{0}$ & $0.764 \times 10^{0}$\\
+\texttt{Hooke} & $0.752 \times 10^{0}$ & $0.300 \times 10^{0}$ & $0.225 \times 10^{0}$ & $0.141 \times 10^{0}$\\
+\texttt{Nice} & $7.015 \times 10^{-2}$ & $3.878 \times 10^{-2}$ & $3.721 \times 10^{-2}$ & $2.11\times 10^{-2}$\\
+\hline
+\end{tabular}
+\label{tab:results-different-force}
+
+\end{table}
+In terms of reguarlization results, we see the same patterns with little difference in sparsity. With the only exception with hooke's law, which has a significantly more sparse network
+\hs{insert image here}
+
 \section{Discussion}
 \subsection{Regularization}
-It was expected that the L1-norm and entropy regularizations alone would be insufficient, though even combined---as outlined in \cite{liu2024kankolmogorovarnoldnetworks} to be a better approach---results are disappointing. The differences between losses in the experiments is easily explained as noise, and none of the regularization techniques encouraged sparse networks. This may be explained by:
+From \cite{liu2024kankolmogorovarnoldnetworks}, we expected that indivdually L1-norm and entropy would be insufficient. However, contrary to our expectations, even the combined regularization did not produce significantly sparser networks or better validation losses. The differences between losses in the experiments is easily explained as noise, and none of the regularization techniques encouraged sparse networks. This may be explained by:
 \begin{enumerate}
-    \item The gravitational $n$-body problem requiring dense networks to accurately represent the dynamic system. Though  \cite{liu2024kan20kolmogorovarnoldnetworks} provide an example of a symbolic KAN modeling gravitational force between two bodies in a small, interpretable network, indicating that the gravitational interactions do not require dense networks in the ideal case. \ek{I HATE THIS I HATE THIS THIS}
+    \item The gravitational $n$-body problem requiring dense networks to accurately represent the dynamic system. Though  \cite{liu2024kan20kolmogorovarnoldnetworks} provide an example of a symbolic KAN modeling gravitational force between two bodies in a small, interpretable network, indicating that the gravitational interactions do not require dense networks in the ideal case. \ek{I HATE THIS I HATE THIS THIS} \hs{i dont like this reason, it contradicts the section with minimal models, i propose the following reason instead}
+    \item Learning the sparse representation of the gravitational $n$-body is difficult. Uses a regular L1 loss on the difference in output accelerations may not be sufficient the model to learn ``physically'' important structure (eg. energy conservation, symmetries, etc.) that would encourage sparsity. \hs{We can link this to physically informed loss that i talk about in difficulty learning.}
     \item Constant regularization does not allow for balance between learning and sparsity. The experiments did not increase regularization magnitudes over the learning period, which may have done a better job of letting the model optimize for accurate predictions first, then learn a sparse representation after.
 \end{enumerate}
 
@@ -282,53 +314,42 @@ It was expected that the L1-norm and entropy regularizations alone would be insu
 
 \ag{Could do interpretability analysis. Pass synthetic inputs through the network to see the relationships empirically (sanity check). Then try symbolic regression per-layer and analytically composing them to see if it recovers the force law?}
 
-\ag{The following is outdated.} Looking at the visualizations, it seems that the models without any augmentation did not learn as effectively. The message and node update networks are both quite dense, which suggests that they did not learn to ignore distractors such as velocity. By augmenting the dataset with \texttt{rel\_pos}, we introduce an inductive bias that is apparently sufficient to ``push'' the model in the right direction, and interestingly, we can start to see sparsity in the networks. Refer to the visualizations for \texttt{minimal} and \texttt{minimal\_rel\_pos} to see this effect in action. \hs{link to KAN 2.0 paper}
-
-I have no idea what mathematical relationships it actually learned. \texttt{/shrug} \hs{show image}
-
-\hs{plots and rollouts? maybe keep in appendix}
-
-\subsection{How small KAN we get?}
-
-\ag{Could do interpretability analysis. Pass synthetic inputs through the network to see the relationships empirically (sanity check). Then try symbolic regression per-layer and analytically composing them to see if it recovers the force law?}
+\hs{we can point out some of the interesting ``sparse'' patterns and how the network ``learns'' to ignore certain features}
 
 \ag{The following is outdated.} Looking at the visualizations, it seems that the models without any augmentation did not learn as effectively. The message and node update networks are both quite dense, which suggests that they did not learn to ignore distractors such as velocity. By augmenting the dataset with \texttt{rel\_pos}, we introduce an inductive bias that is apparently sufficient to ``push'' the model in the right direction, and interestingly, we can start to see sparsity in the networks. Refer to the visualizations for \texttt{minimal} and \texttt{minimal\_rel\_pos} to see this effect in action. \hs{link to KAN 2.0 paper}
 
 I have no idea what mathematical relationships it actually learned. \texttt{/shrug} \hs{show image}
 
 \hs{plots and rollouts? maybe keep in appendix}
+
+\subsection{Different force functions}
+
+The results in Table~\ref{tab:results-different-force} reveal a clear trend: GKANs train more effectively on smoother, better-conditioned force laws. Across all four functions, both training and validation loss reductions increase as the target interaction becomes less singular and more regular.
+
+Gravity performs worst, with training loss decreasing by less than $7\%$ over 10 epochs. This is unsurprising: the $1/r^2$ dependence introduces near-singular behavior at small separations, which is difficult for B-spline edges to represent efficiently, as their piecewise polynomial basis approximates smooth functions well but struggles with sharp or unbounded derivatives~\parencite{DEBOOR197250}. Replacing this with the $1/r$ linear gravity law already yields a substantial improvement, with training loss dropping by $\sim 31\%$, suggesting that reducing the degree of singularity meaningfully aids optimization.
+
+Hooke's law improves further still, achieving a $\sim 60\%$ training loss reduction. Because the interaction is linear in displacement with bounded derivatives, the model requires less functional composition and fewer active spline regions to represent it accurately. This is also reflected in the regularization results, where Hooke's law is the only force function that produces a noticeably sparser network. The ``nice'' force function, despite being nonlinear, achieves comparable relative loss reductions ($\sim 45\%$ on validation) and maintains the lowest absolute losses throughout training---likely because its smooth exponential profile avoids the distance-magnitude and reciprocal-scaling terms that make gravity challenging.
+
+In combination, these results suggest that GKAN optimization is sensitive to the analytic structure of the target force law. Interpretability and sparsity also benefit from smoother targets: simpler force laws not only converge faster, but compress more naturally into compact GKAN representations.
 
 \subsection{KAN't Optimize}
 
-% Overall, our results suggest that the main bottleneck for GKANs in this setting may not be representational power, but trainability. Better optimization and stronger physical inductive biases may be necessary before the interpretability advantages of KAN-based graph models can be fully realized.
-
-% discuss difficulties with learning usng GKANs (tests with differently conditioned problems, min separation distance in data, poor loss landscape, L2 vs L1 losses)
-
-% dicuss things we tried (L-BFGS, Adam, hybrid opitmization, alternating optimization (nothing works)). Why is this different from KAN paper (they use L-BFGS)
-
-% discuss challenges of using message passing architecture (could this be adding irregularity to loss landscape? preventing convergence and proper learning)
-
-% discuss infeasiblility for certain asymptotic functions for spline edges, discuss potential tricks with grid updates etc. 
-
 \ag{discuss future improvements like pruning low-weighted edges every few epochs} \hs{should be in regularization section.}
+
+\hs{shorten rewrite and clean up this section}
 
 Beyond interpretability, a major challenge in our experiments was optimization. Although GKANs are expressive in principle, they were consistently harder to train than comparable MLP-based GNN baselines. Loss often decreased slowly, converged to worse minima, or was highly sensitive to initialization and optimizer choice. We hypothesize this is mainly due to two factors: (1) optimization difficulty of spline-based edge functions, and (2) interaction with message passing leading to irregular gradients.
 
-\paragraph{Optimization difficulty of spline-based edge functions.}
-Each KAN edge learns a nonlinear spline, so the model must learn both the function value and its local gradient behavior. Flat spline regions can suppress gradients, while steep regions can create unstable updates. This becomes more difficult when many KAN layers are composed.
 
-For gravity, the learned interaction also involves inverse-distance terms, which are asymptotic and poorly conditioned for spline approximation. This likely made optimization especially difficult. In support of this, enforcing a minimum separation distance between bodies noticeably improved training, whereas unconstrained runs reduced loss by less than $5\%$. Moreover, replacing gravity with the better-conditioned Hooke's law produced much larger loss decreases of roughly $90\%$.
+The poor results throughout the regularization experiments were surprising, since both the \cite{liu2024kankolmogorovarnoldnetworks} and \cite{liu2024kan20kolmogorovarnoldnetworks} papers show training examples with good performance on 3D gravity. However, their approach only trains a single KAN directly on the features and force outputs, without the additional complexity of message passing. We suspect the discremancy may be due to the following factors:
+
 
 \paragraph{Interaction with message passing.}
-Message passing may further amplify these issues, since errors in learned edge functions propagate across the graph. Prior work has identified oversmoothing, oversquashing, and gradient degradation in deeper GNNs \parencite{arroyo2025vanishinggradientsoversmoothingoversquashing}. Our results are consistent with this behavior. We tested Adam, L-BFGS, warmup schedules, and alternating optimization, but none consistently improved training. This suggests that optimization may be intrinsically challenging for GKANs in message-passing settings.
+Message passing may further amplify gradient issues that we identified previously, since errors in learned edge functions propagate across the graph. Prior work has identified oversmoothing, oversquashing, and gradient degradation in deeper GNNs \parencite{arroyo2025vanishinggradientsoversmoothingoversquashing}. Our results are consistent with this behavior. We tested Adam, L-BFGS, warmup schedules, and alternating optimization, but none consistently improved training. This suggests that optimization may be intrinsically challenging for GKANs in message-passing settings.
 
-\hs{discuss potential for physically informed loss function (e.g., incorporating conservation laws or physical constraints into the loss function, hamiltonian loss functions, etc). This may partially explain poor learning results over all}
-
+\hs{might move this into reguarlization discussion, since it may be more related to learning sparse representations}
 \paragraph{Physically-informed loss function.}
 A common approach to improving learning in dynamical systems is to incorporate physical structure directly into the loss function. In particular, Hamiltonian and Lagrangian graph neural networks enforce conservation laws by parameterizing or constraining the system dynamics through a Hamiltonian function. More recent physics-informed GNNs extend this idea by explicitly enforcing conservation of linear and angular momentum through equivariant message passing \parencite{sharma2025dynamicalgraphnetphysicsinformedgraph}. In our setting, such constraints could reduce the effective hypothesis space of the model and encourage solutions consistent with known mechanics, potentially improving both optimization stability and long-term rollout accuracy in GKANs.
-
-\hs{adaptive grid updates i guess? dont think this would matter that much tbh}
-
 
 \section{Conclusion}
 
@@ -342,10 +363,16 @@ A common approach to improving learning in dynamical systems is to incorporate p
 \hs{we need to add github links, rollout, charts, images}
 
 
-
 \section{Supplementary material} \label{app:info}
 
-This stuff doesn't count towards your page limit.
+\subsection{Code and Experiments}
+
+\subsection{Rollouts and trajectory visualizations}
+
+\subsection{Model visualizations}
+
+\subsection{Model training curves}
+
 
 \newpage
 \section{Loss Plots}
@@ -471,31 +498,30 @@ This stuff doesn't count towards your page limit.
 % message network
 \begin{figure}[htbp]
 
-\centering
+  \centering
 
-\begin{subfigure}{0.5\textwidth}
-\includegraphics[width=\textwidth]{figures/small/kan_msg_network.png}
-\caption{\texttt{small}}
-\end{subfigure}
+  \begin{subfigure}{0.5\textwidth}
+  \includegraphics[width=\textwidth]{figures/small/kan_msg_network.png}
+  \caption{\texttt{small}}
+  \end{subfigure}
 
-\begin{subfigure}{0.5\textwidth}
-\includegraphics[width=\textwidth]{figures/small_rel_pos/kan_msg_network.png}
-\caption{\texttt{small\_rel\_pos}}
-\end{subfigure}
+  \begin{subfigure}{0.5\textwidth}
+  \includegraphics[width=\textwidth]{figures/small_rel_pos/kan_msg_network.png}
+  \caption{\texttt{small\_rel\_pos}}
+  \end{subfigure}
 
-\begin{subfigure}{0.5\textwidth}
-\includegraphics[width=\textwidth]{figures/small_rel_pos_dsq/kan_msg_network.png}
-\caption{\texttt{small\_rel\_dsq}}
-\end{subfigure}
+  \begin{subfigure}{0.5\textwidth}
+  \includegraphics[width=\textwidth]{figures/small_rel_pos_dsq/kan_msg_network.png}
+  \caption{\texttt{small\_rel\_dsq}}
+  \end{subfigure}
 
-\begin{subfigure}{0.5\textwidth}
-\includegraphics[width=\textwidth]{figures/small_rel_pos_idc/kan_msg_network.png}
-\caption{\texttt{small\_rel\_idc}}
-\end{subfigure}
+  \begin{subfigure}{0.5\textwidth}
+  \includegraphics[width=\textwidth]{figures/small_rel_pos_idc/kan_msg_network.png}
+  \caption{\texttt{small\_rel\_idc}}
+  \end{subfigure}
 
-\caption{The smaller models.}
-\label{fig:message-network-small}
-
+  \caption{The smaller models.}
+  \label{fig:message-network-small}
 \end{figure}
 
 % node update network

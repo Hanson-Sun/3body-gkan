@@ -220,6 +220,45 @@
       \verb https://arxiv.org/abs/2006.11287
       \endverb
     \endentry
+    \entry{DEBOOR197250}{article}{}
+      \name{author}{1}{}{%
+        {{un=0,uniquepart=base,hash=1c25c4f9f56efcbd6b225570393f472a}{%
+           family={{de Boor}},
+           familyi={d\bibinitperiod},
+           given={Carl},
+           giveni={C\bibinitperiod},
+           givenun=0}}%
+      }
+      \strng{namehash}{1c25c4f9f56efcbd6b225570393f472a}
+      \strng{fullhash}{1c25c4f9f56efcbd6b225570393f472a}
+      \strng{bibnamehash}{1c25c4f9f56efcbd6b225570393f472a}
+      \strng{authorbibnamehash}{1c25c4f9f56efcbd6b225570393f472a}
+      \strng{authornamehash}{1c25c4f9f56efcbd6b225570393f472a}
+      \strng{authorfullhash}{1c25c4f9f56efcbd6b225570393f472a}
+      \field{sortinit}{d}
+      \field{sortinithash}{6f385f66841fb5e82009dc833c761848}
+      \field{extradatescope}{labelyear}
+      \field{labeldatesource}{}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{issn}{0021-9045}
+      \field{journaltitle}{Journal of Approximation Theory}
+      \field{number}{1}
+      \field{title}{On calculating with B-splines}
+      \field{volume}{6}
+      \field{year}{1972}
+      \field{pages}{50\bibrangedash 62}
+      \range{pages}{13}
+      \verb{doi}
+      \verb https://doi.org/10.1016/0021-9045(72)90080-9
+      \endverb
+      \verb{urlraw}
+      \verb https://www.sciencedirect.com/science/article/pii/0021904572900809
+      \endverb
+      \verb{url}
+      \verb https://www.sciencedirect.com/science/article/pii/0021904572900809
+      \endverb
+    \endentry
     \entry{Koenig_2024}{article}{}
       \name{author}{3}{}{%
         {{un=0,uniquepart=base,hash=e0608342b01c38ab3a54abd983fd0543}{%
@@ -517,7 +556,6 @@
       \endverb
     \endentry
   \enddatalist
-  \missing{cite}
   \missing{ml-is-fun}
   \missing{transformers}
 \endrefsection
