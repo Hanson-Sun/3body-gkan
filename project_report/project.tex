@@ -112,13 +112,9 @@ We evaluate GKANs on synthetic $n$-body simulation data generated with a leapfro
 \begin{equation}
   a_{i} = G \sum_{j \neq i} m_{j} \frac{r_{j} - r_{i}}{\|r_{j} - r_{i}\|^{3}}
 \end{equation}
-with additional force laws for generalization tests. Each example consists of initial positions, velocities, and masses, with targets given by the future trajectories.
+with additional force laws for generalization tests. Each example consists of initial positions, velocities, and masses, with targets given by future trajectories. We compare a GCN baseline following \cite{cranmer2020discoveringsymbolicmodelsdeep} against a GKAN that replaces selected MLP components with KAN layers, trained on identical data with the same loss and optimizer. We evaluate both predictive performance on held-out simulations and interpretability through network sparsity and visualization of learned edge functions.
 
-We compare two models: a GCN baseline following \cite{cranmer2020discoveringsymbolicmodelsdeep}, and a GKAN that replaces selected MLP components with KAN layers. Both models are trained on the same data, with the same loss and optimization setup, to keep the comparison fair.
-
-We evaluate models using trajectory prediction error on held-out simulations. We also examine interpretability through sparsity, visual structure of learned edge functions, and how easily the model can reflect physically meaningful relationships.
-
-We organize our experiments around a few questions: whether GKANs can match GNN performance at similar parameter counts, whether sparse regularization makes learned functions easier to interpret, whether smaller KAN-style architectures are sufficient, whether physically motivated feature engineering helps, and whether the same trends generalize under different force laws.
+Our experiments address four questions: whether GKANs match GNN performance at comparable parameter counts; whether sparse regularization improves interpretability; whether physically motivated minimal architectures are sufficient; and whether these trends generalize across force laws.
 
 We expect the node KAN to learn how to aggregate messages into a final acceleration vector, while the edge KANs learn the pairwise interaction functions. We hypothesize that regularization will encourage sparsity and interpretability, and that smaller KAN architectures may still perform well if they capture the right inductive biases.
 
