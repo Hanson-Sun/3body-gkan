@@ -1,9 +1,9 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.25 (MiKTeX 23.9) (preloaded format=pdflatex 2024.9.5)  26 APR 2026 00:11
+This is pdfTeX, Version 3.141592653-2.6-1.40.25 (MiKTeX 23.9) (preloaded format=pdflatex 2024.9.5)  26 APR 2026 00:16
 entering extended mode
- \write18 enabled.
+ restricted \write18 enabled.
  %&-line parsing enabled.
-**c:/Users/docto/Documents/GitHub/3body-gkan/project_report/project.tex
-(c:/Users/docto/Documents/GitHub/3body-gkan/project_report/project.tex
+**./project.tex
+(project.tex
 LaTeX2e <2023-06-01> patch level 1
 L3 programming layer <2023-08-29>
 (C:\Users\docto\AppData\Local\Programs\MiKTeX\tex/latex/base\article.cls
@@ -22,26 +22,34 @@ File: size10.clo 2023/05/17 v1.4n Standard LaTeX file (size option)
 \abovecaptionskip=\skip48
 \belowcaptionskip=\skip49
 \bibindent=\dimen140
-) (project_440_550.sty
+)
+(project_440_550.sty
 
 LaTeX Warning: You have requested package `project_440_550',
                but the package provides `project_440_540'.
 
-Package: project_440_540 2023/03/31 NeurIPS 2023 submission/camera-ready style file
+Package: project_440_540 2023/03/31 NeurIPS 2023 submission/camera-ready style 
+file
 (C:\Users\docto\AppData\Local\Programs\MiKTeX\tex/latex/environ\environ.sty
 Package: environ 2014/05/04 v0.3 A new way to define environments
- (C:\Users\docto\AppData\Local\Programs\MiKTeX\tex/latex/trimspaces\trimspaces.sty
+
+(C:\Users\docto\AppData\Local\Programs\MiKTeX\tex/latex/trimspaces\trimspaces.s
+ty
 Package: trimspaces 2009/09/17 v1.1 Trim spaces around a token list
 )
 \@envbody=\toks17
-) (C:\Users\docto\AppData\Local\Programs\MiKTeX\tex/latex/geometry\geometry.sty
+)
+(C:\Users\docto\AppData\Local\Programs\MiKTeX\tex/latex/geometry\geometry.sty
 Package: geometry 2020/01/02 v5.9 Page Geometry
- (C:\Users\docto\AppData\Local\Programs\MiKTeX\tex/latex/graphics\keyval.sty
+
+(C:\Users\docto\AppData\Local\Programs\MiKTeX\tex/latex/graphics\keyval.sty
 Package: keyval 2022/05/29 v1.15 key=value parser (DPC)
 \KV@toks@=\toks18
-) (C:\Users\docto\AppData\Local\Programs\MiKTeX\tex/generic/iftex\ifvtex.sty
+)
+(C:\Users\docto\AppData\Local\Programs\MiKTeX\tex/generic/iftex\ifvtex.sty
 Package: ifvtex 2019/10/25 v1.7 ifvtex legacy package. Use iftex instead.
- (C:\Users\docto\AppData\Local\Programs\MiKTeX\tex/generic/iftex\iftex.sty
+
+(C:\Users\docto\AppData\Local\Programs\MiKTeX\tex/generic/iftex\iftex.sty
 Package: iftex 2022/02/03 v1.0f TeX engine tests
 ))
 \Gm@cnth=\count193
@@ -56,19 +64,23 @@ Package: iftex 2022/02/03 v1.0f TeX engine tests
 \Gm@layouthoffset=\dimen147
 \Gm@layoutvoffset=\dimen148
 \Gm@dimlist=\toks19
- (C:\Users\docto\AppData\Local\Programs\MiKTeX\tex/latex/geometry\geometry.cfg))
+
+(C:\Users\docto\AppData\Local\Programs\MiKTeX\tex/latex/geometry\geometry.cfg))
 \@neuripsabovecaptionskip=\skip50
 \@neuripsbelowcaptionskip=\skip51
- (C:\Users\docto\AppData\Local\Programs\MiKTeX\tex/latex/lineno\lineno.sty
+(C:\Users\docto\AppData\Local\Programs\MiKTeX\tex/latex/lineno\lineno.sty
 Package: lineno 2023/05/20 line numbers on paragraphs v5.3
- (C:\Users\docto\AppData\Local\Programs\MiKTeX\tex/latex/etoolbox\etoolbox.sty
+
+(C:\Users\docto\AppData\Local\Programs\MiKTeX\tex/latex/etoolbox\etoolbox.sty
 Package: etoolbox 2020/10/05 v2.5k e-TeX tools for LaTeX (JAW)
 \etb@tempcnta=\count196
-) (C:\Users\docto\AppData\Local\Programs\MiKTeX\tex/latex/kvoptions\kvoptions.sty
+)
+(C:\Users\docto\AppData\Local\Programs\MiKTeX\tex/latex/kvoptions\kvoptions.sty
 Package: kvoptions 2022-06-15 v3.15 Key value format for package options (HO)
- (C:\Users\docto\AppData\Local\Programs\MiKTeX\tex/generic/ltxcmds\ltxcmds.sty
+(C:\Users\docto\AppData\Local\Programs\MiKTeX\tex/generic/ltxcmds\ltxcmds.sty
 Package: ltxcmds 2020-05-10 v1.25 LaTeX kernel commands for general use (HO)
-) (C:\Users\docto\AppData\Local\Programs\MiKTeX\tex/latex/kvsetkeys\kvsetkeys.sty
+)
+(C:\Users\docto\AppData\Local\Programs\MiKTeX\tex/latex/kvsetkeys\kvsetkeys.sty
 Package: kvsetkeys 2022-10-05 v1.19 Key value parser (HO)
 ))
 \linenopenalty=\count197
@@ -92,15 +104,19 @@ Package: inputenc 2021/02/14 v1.3d Input encoding file
 \inpenc@posthook=\toks22
 ) (C:\Users\docto\AppData\Local\Programs\MiKTeX\tex/latex/base\fontenc.sty
 Package: fontenc 2021/04/29 v2.0v Standard LaTeX package
-LaTeX Font Info:    Trying to load font information for T1+ptm on input line 112.
- (C:\Users\docto\AppData\Local\Programs\MiKTeX\tex/latex/psnfss\t1ptm.fd
+LaTeX Font Info:    Trying to load font information for T1+ptm on input line 11
+2.
+
+(C:\Users\docto\AppData\Local\Programs\MiKTeX\tex/latex/psnfss\t1ptm.fd
 File: t1ptm.fd 2001/06/04 font definitions for T1/ptm.
-)) (C:\Users\docto\AppData\Local\Programs\MiKTeX\tex/generic/babel\babel.sty
+))
+(C:\Users\docto\AppData\Local\Programs\MiKTeX\tex/generic/babel\babel.sty
 Package: babel 2023/08/29 v3.93 The Babel package
 \babel@savecnt=\count270
 \U@D=\dimen154
 \l@unhyphenated=\language79
- (C:\Users\docto\AppData\Local\Programs\MiKTeX\tex/generic/babel\txtbabel.def)
+
+(C:\Users\docto\AppData\Local\Programs\MiKTeX\tex/generic/babel\txtbabel.def)
 \bbl@readstream=\read2
 \bbl@dirlevel=\count271
 
@@ -108,10 +124,15 @@ Package: babel 2023/08/29 v3.93 The Babel package
 * Local config file bblopts.cfg used
 *
 (C:\Users\docto\AppData\Local\Programs\MiKTeX\tex/latex/arabi\bblopts.cfg
-File: bblopts.cfg 2005/09/08 v0.1 add Arabic and Farsi to "declared" options of babel
-) (C:\Users\docto\AppData\Local\Programs\MiKTeX\tex/latex/babel-english\USenglish.ldf
+File: bblopts.cfg 2005/09/08 v0.1 add Arabic and Farsi to "declared" options of
+ babel
+)
+(C:\Users\docto\AppData\Local\Programs\MiKTeX\tex/latex/babel-english\USenglish
+.ldf
 Language: USenglish 2017/06/06 v3.3r English support from the babel system
- (C:\Users\docto\AppData\Local\Programs\MiKTeX\tex/latex/babel-english\english.ldf
+
+(C:\Users\docto\AppData\Local\Programs\MiKTeX\tex/latex/babel-english\english.l
+df
 Language: english 2017/06/06 v3.3r English support from the babel system
 Package babel Info: Hyphen rules for 'canadian' set to \l@english
 (babel)             (\language0). Reported on input line 102.
@@ -119,10 +140,13 @@ Package babel Info: Hyphen rules for 'australian' set to \l@ukenglish
 (babel)             (\language73). Reported on input line 105.
 Package babel Info: Hyphen rules for 'newzealand' set to \l@ukenglish
 (babel)             (\language73). Reported on input line 108.
-))) (C:\Users\docto\AppData\Local\Programs\MiKTeX\tex/generic/babel/locale/en\babel-usenglish.tex
+)))
+(C:\Users\docto\AppData\Local\Programs\MiKTeX\tex/generic/babel/locale/en\babel
+-usenglish.tex
 Package babel Info: Importing font and identification data for USenglish
 (babel)             from babel-en-US.ini. Reported on input line 11.
-) (C:\Users\docto\AppData\Local\Programs\MiKTeX\tex/latex/csquotes\csquotes.sty
+)
+(C:\Users\docto\AppData\Local\Programs\MiKTeX\tex/latex/csquotes\csquotes.sty
 Package: csquotes 2024-04-04 v5.2o context-sensitive quotations (JAW)
 \csq@reset=\count272
 \csq@gtype=\count273
@@ -131,14 +155,17 @@ Package: csquotes 2024-04-04 v5.2o context-sensitive quotations (JAW)
 \csq@maxlvl=\count276
 \csq@tshold=\count277
 \csq@ltx@everypar=\toks23
- (C:\Users\docto\AppData\Local\Programs\MiKTeX\tex/latex/csquotes\csquotes.def
+
+(C:\Users\docto\AppData\Local\Programs\MiKTeX\tex/latex/csquotes\csquotes.def
 File: csquotes.def 2024-04-04 v5.2o csquotes generic definitions (JAW)
 )
 Package csquotes Info: Trying to load configuration file 'csquotes.cfg'...
 Package csquotes Info: ... configuration file loaded successfully.
- (C:\Users\docto\AppData\Local\Programs\MiKTeX\tex/latex/csquotes\csquotes.cfg
+
+(C:\Users\docto\AppData\Local\Programs\MiKTeX\tex/latex/csquotes\csquotes.cfg
 File: csquotes.cfg 
-)) (C:\Users\docto\AppData\Local\Programs\MiKTeX\tex/latex/booktabs\booktabs.sty
+)) (C:\Users\docto\AppData\Local\Programs\MiKTeX\tex/latex/booktabs\booktabs.st
+y
 Package: booktabs 2020/01/12 v1.61803398 Publication quality tables
 \heavyrulewidth=\dimen155
 \lightrulewidth=\dimen156
@@ -170,9 +197,11 @@ Package: nicefrac 1998/08/04 v0.9b Nice fractions
 \L@UnitsRaiseDisplaystyle=\skip52
 \L@UnitsRaiseTextstyle=\skip53
 \L@UnitsRaiseScriptstyle=\skip54
- (C:\Users\docto\AppData\Local\Programs\MiKTeX\tex/latex/base\ifthen.sty
+
+(C:\Users\docto\AppData\Local\Programs\MiKTeX\tex/latex/base\ifthen.sty
 Package: ifthen 2022/04/13 v1.1d Standard LaTeX ifthen package (DPC)
-)) (C:\Users\docto\AppData\Local\Programs\MiKTeX\tex/latex/microtype\microtype.sty
+))
+(C:\Users\docto\AppData\Local\Programs\MiKTeX\tex/latex/microtype\microtype.sty
 Package: microtype 2023/03/13 v3.1a Micro-typographical refinements (RS)
 \MT@toks=\toks25
 \MT@tempbox=\box52
@@ -185,24 +214,31 @@ LaTeX Info: Redefining \textls on input line 1368.
 \MT@outer@kern=\dimen168
 LaTeX Info: Redefining \textmicrotypecontext on input line 1988.
 \MT@listname@count=\count283
- (C:\Users\docto\AppData\Local\Programs\MiKTeX\tex/latex/microtype\microtype-pdftex.def
+
+(C:\Users\docto\AppData\Local\Programs\MiKTeX\tex/latex/microtype\microtype-pdf
+tex.def
 File: microtype-pdftex.def 2023/03/13 v3.1a Definitions specific to pdftex (RS)
+
 LaTeX Info: Redefining \lsstyle on input line 902.
 LaTeX Info: Redefining \lslig on input line 902.
 \MT@outer@space=\skip55
 )
 Package microtype Info: Loading configuration file microtype.cfg.
- (C:\Users\docto\AppData\Local\Programs\MiKTeX\tex/latex/microtype\microtype.cfg
+
+(C:\Users\docto\AppData\Local\Programs\MiKTeX\tex/latex/microtype\microtype.cfg
 File: microtype.cfg 2023/03/13 v3.1a microtype main configuration file (RS)
 )) (C:\Users\docto\AppData\Local\Programs\MiKTeX\tex/latex/xcolor\xcolor.sty
 Package: xcolor 2022/06/12 v2.14 LaTeX color extensions (UK)
- (C:\Users\docto\AppData\Local\Programs\MiKTeX\tex/latex/graphics-cfg\color.cfg
+
+(C:\Users\docto\AppData\Local\Programs\MiKTeX\tex/latex/graphics-cfg\color.cfg
 File: color.cfg 2016/01/02 v1.6 sample color configuration
 )
 Package xcolor Info: Driver file: pdftex.def on input line 227.
- (C:\Users\docto\AppData\Local\Programs\MiKTeX\tex/latex/graphics-def\pdftex.def
+
+(C:\Users\docto\AppData\Local\Programs\MiKTeX\tex/latex/graphics-def\pdftex.def
 File: pdftex.def 2022/09/22 v1.2b Graphics/color driver for pdftex
-) (C:\Users\docto\AppData\Local\Programs\MiKTeX\tex/latex/graphics\mathcolor.ltx)
+)
+(C:\Users\docto\AppData\Local\Programs\MiKTeX\tex/latex/graphics\mathcolor.ltx)
 Package xcolor Info: Model `cmy' substituted by `cmy0' on input line 1353.
 Package xcolor Info: Model `hsb' substituted by `rgb' on input line 1357.
 Package xcolor Info: Model `RGB' extended on input line 1369.
@@ -214,29 +250,45 @@ Package xcolor Info: Model `Gray' substituted by `gray' on input line 1375.
 Package xcolor Info: Model `wave' substituted by `hsb' on input line 1376.
 ) (C:\Users\docto\AppData\Local\Programs\MiKTeX\tex/latex/hyperref\hyperref.sty
 Package: hyperref 2023-07-08 v7.01b Hypertext links for LaTeX
- (C:\Users\docto\AppData\Local\Programs\MiKTeX\tex/generic/pdftexcmds\pdftexcmds.sty
-Package: pdftexcmds 2020-06-27 v0.33 Utility functions of pdfTeX for LuaTeX (HO)
- (C:\Users\docto\AppData\Local\Programs\MiKTeX\tex/generic/infwarerr\infwarerr.sty
+
+(C:\Users\docto\AppData\Local\Programs\MiKTeX\tex/generic/pdftexcmds\pdftexcmds
+.sty
+Package: pdftexcmds 2020-06-27 v0.33 Utility functions of pdfTeX for LuaTeX (HO
+)
+
+(C:\Users\docto\AppData\Local\Programs\MiKTeX\tex/generic/infwarerr\infwarerr.s
+ty
 Package: infwarerr 2019/12/03 v1.5 Providing info/warning/error messages (HO)
 )
 Package pdftexcmds Info: \pdf@primitive is available.
 Package pdftexcmds Info: \pdf@ifprimitive is available.
 Package pdftexcmds Info: \pdfdraftmode found.
-) (C:\Users\docto\AppData\Local\Programs\MiKTeX\tex/generic/kvdefinekeys\kvdefinekeys.sty
+)
+(C:\Users\docto\AppData\Local\Programs\MiKTeX\tex/generic/kvdefinekeys\kvdefine
+keys.sty
 Package: kvdefinekeys 2019-12-19 v1.6 Define keys (HO)
-) (C:\Users\docto\AppData\Local\Programs\MiKTeX\tex/generic/pdfescape\pdfescape.sty
+)
+(C:\Users\docto\AppData\Local\Programs\MiKTeX\tex/generic/pdfescape\pdfescape.s
+ty
 Package: pdfescape 2019/12/09 v1.15 Implements pdfTeX's escape features (HO)
 ) (C:\Users\docto\AppData\Local\Programs\MiKTeX\tex/latex/hycolor\hycolor.sty
 Package: hycolor 2020-01-27 v1.10 Color options for hyperref/bookmark (HO)
-) (C:\Users\docto\AppData\Local\Programs\MiKTeX\tex/latex/letltxmacro\letltxmacro.sty
+)
+(C:\Users\docto\AppData\Local\Programs\MiKTeX\tex/latex/letltxmacro\letltxmacro
+.sty
 Package: letltxmacro 2019/12/03 v1.6 Let assignment for LaTeX macros (HO)
-) (C:\Users\docto\AppData\Local\Programs\MiKTeX\tex/latex/auxhook\auxhook.sty
+)
+(C:\Users\docto\AppData\Local\Programs\MiKTeX\tex/latex/auxhook\auxhook.sty
 Package: auxhook 2019-12-17 v1.6 Hooks for auxiliary files (HO)
-) (C:\Users\docto\AppData\Local\Programs\MiKTeX\tex/latex/hyperref\nameref.sty
+)
+(C:\Users\docto\AppData\Local\Programs\MiKTeX\tex/latex/hyperref\nameref.sty
 Package: nameref 2023-08-07 v2.53 Cross-referencing by name of section
- (C:\Users\docto\AppData\Local\Programs\MiKTeX\tex/latex/refcount\refcount.sty
+
+(C:\Users\docto\AppData\Local\Programs\MiKTeX\tex/latex/refcount\refcount.sty
 Package: refcount 2019/12/15 v3.6 Data extraction from label references (HO)
-) (C:\Users\docto\AppData\Local\Programs\MiKTeX\tex/generic/gettitlestring\gettitlestring.sty
+)
+(C:\Users\docto\AppData\Local\Programs\MiKTeX\tex/generic/gettitlestring\gettit
+lestring.sty
 Package: gettitlestring 2019/12/15 v1.6 Cleanup title references (HO)
 )
 \c@section@level=\count284
@@ -244,15 +296,18 @@ Package: gettitlestring 2019/12/15 v1.6 Cleanup title references (HO)
 \@linkdim=\dimen169
 \Hy@linkcounter=\count285
 \Hy@pagecounter=\count286
- (C:\Users\docto\AppData\Local\Programs\MiKTeX\tex/latex/hyperref\pd1enc.def
+
+(C:\Users\docto\AppData\Local\Programs\MiKTeX\tex/latex/hyperref\pd1enc.def
 File: pd1enc.def 2023-07-08 v7.01b Hyperref: PDFDocEncoding definition (HO)
 Now handling font encoding PD1 ...
 ... no UTF-8 mapping file for font encoding PD1
-) (C:\Users\docto\AppData\Local\Programs\MiKTeX\tex/generic/intcalc\intcalc.sty
+)
+(C:\Users\docto\AppData\Local\Programs\MiKTeX\tex/generic/intcalc\intcalc.sty
 Package: intcalc 2019/12/15 v1.3 Expandable calculations with integers (HO)
 )
 \Hy@SavedSpaceFactor=\count287
- (C:\Users\docto\AppData\Local\Programs\MiKTeX\tex/latex/hyperref\puenc.def
+
+(C:\Users\docto\AppData\Local\Programs\MiKTeX\tex/latex/hyperref\puenc.def
 File: puenc.def 2023-07-08 v7.01b Hyperref: PDF Unicode definition (HO)
 Now handling font encoding PU ...
 ... no UTF-8 mapping file for font encoding PU
@@ -265,16 +320,21 @@ Package hyperref Info: Backreferencing OFF on input line 4187.
 Package hyperref Info: Implicit mode ON; LaTeX internals redefined.
 Package hyperref Info: Bookmarks ON on input line 4434.
 \c@Hy@tempcnt=\count288
- (C:\Users\docto\AppData\Local\Programs\MiKTeX\tex/latex/url\url.sty
+
+(C:\Users\docto\AppData\Local\Programs\MiKTeX\tex/latex/url\url.sty
 \Urlmuskip=\muskip16
 Package: url 2013/09/16  ver 3.4  Verb mode for urls, etc.
 )
 LaTeX Info: Redefining \url on input line 4772.
 \XeTeXLinkMargin=\dimen170
- (C:\Users\docto\AppData\Local\Programs\MiKTeX\tex/generic/bitset\bitset.sty
+
+(C:\Users\docto\AppData\Local\Programs\MiKTeX\tex/generic/bitset\bitset.sty
 Package: bitset 2019/12/09 v1.3 Handle bit-vector datatype (HO)
- (C:\Users\docto\AppData\Local\Programs\MiKTeX\tex/generic/bigintcalc\bigintcalc.sty
-Package: bigintcalc 2019/12/15 v1.5 Expandable calculations on big integers (HO)
+
+(C:\Users\docto\AppData\Local\Programs\MiKTeX\tex/generic/bigintcalc\bigintcalc
+.sty
+Package: bigintcalc 2019/12/15 v1.5 Expandable calculations on big integers (HO
+)
 ))
 \Fld@menulength=\count289
 \Field@Width=\dimen171
@@ -286,7 +346,8 @@ Package hyperref Info: backreferencing OFF on input line 6066.
 Package hyperref Info: Link coloring OFF on input line 6071.
 Package hyperref Info: Link coloring with OCG OFF on input line 6076.
 Package hyperref Info: PDF/A mode OFF on input line 6081.
- (C:\Users\docto\AppData\Local\Programs\MiKTeX\tex/latex/base\atbegshi-ltx.sty
+
+(C:\Users\docto\AppData\Local\Programs\MiKTeX\tex/latex/base\atbegshi-ltx.sty
 Package: atbegshi-ltx 2021/01/10 v1.0c Emulation of the original atbegshi
 package with kernel methods
 )
@@ -295,37 +356,48 @@ package with kernel methods
 \c@Hfootnote=\count292
 )
 Package hyperref Info: Driver (autodetected): hpdftex.
- (C:\Users\docto\AppData\Local\Programs\MiKTeX\tex/latex/hyperref\hpdftex.def
+(C:\Users\docto\AppData\Local\Programs\MiKTeX\tex/latex/hyperref\hpdftex.def
 File: hpdftex.def 2023-07-08 v7.01b Hyperref driver for pdfTeX
- (C:\Users\docto\AppData\Local\Programs\MiKTeX\tex/latex/base\atveryend-ltx.sty
-Package: atveryend-ltx 2020/08/19 v1.0a Emulation of the original atveryend package
+
+(C:\Users\docto\AppData\Local\Programs\MiKTeX\tex/latex/base\atveryend-ltx.sty
+Package: atveryend-ltx 2020/08/19 v1.0a Emulation of the original atveryend pac
+kage
 with kernel methods
 )
 \Fld@listcount=\count293
 \c@bookmark@seq@number=\count294
- (C:\Users\docto\AppData\Local\Programs\MiKTeX\tex/latex/rerunfilecheck\rerunfilecheck.sty
+
+(C:\Users\docto\AppData\Local\Programs\MiKTeX\tex/latex/rerunfilecheck\rerunfil
+echeck.sty
 Package: rerunfilecheck 2022-07-10 v1.10 Rerun checks for auxiliary files (HO)
- (C:\Users\docto\AppData\Local\Programs\MiKTeX\tex/generic/uniquecounter\uniquecounter.sty
+
+(C:\Users\docto\AppData\Local\Programs\MiKTeX\tex/generic/uniquecounter\uniquec
+ounter.sty
 Package: uniquecounter 2019/12/15 v1.4 Provide unlimited unique counter (HO)
 )
-Package uniquecounter Info: New unique counter `rerunfilecheck' on input line 285.
+Package uniquecounter Info: New unique counter `rerunfilecheck' on input line 2
+85.
 )
 \Hy@SectionHShift=\skip56
-) (C:\Users\docto\AppData\Local\Programs\MiKTeX\tex/latex/amsmath\amsmath.sty
+)
+(C:\Users\docto\AppData\Local\Programs\MiKTeX\tex/latex/amsmath\amsmath.sty
 Package: amsmath 2023/05/13 v2.17o AMS math features
 \@mathmargin=\skip57
 
 For additional information on amsmath, use the `?' option.
 (C:\Users\docto\AppData\Local\Programs\MiKTeX\tex/latex/amsmath\amstext.sty
 Package: amstext 2021/08/26 v2.01 AMS text
- (C:\Users\docto\AppData\Local\Programs\MiKTeX\tex/latex/amsmath\amsgen.sty
+
+(C:\Users\docto\AppData\Local\Programs\MiKTeX\tex/latex/amsmath\amsgen.sty
 File: amsgen.sty 1999/11/30 v2.0 generic functions
 \@emptytoks=\toks27
 \ex@=\dimen173
-)) (C:\Users\docto\AppData\Local\Programs\MiKTeX\tex/latex/amsmath\amsbsy.sty
+))
+(C:\Users\docto\AppData\Local\Programs\MiKTeX\tex/latex/amsmath\amsbsy.sty
 Package: amsbsy 1999/11/29 v1.2d Bold Symbols
 \pmbraise@=\dimen174
-) (C:\Users\docto\AppData\Local\Programs\MiKTeX\tex/latex/amsmath\amsopn.sty
+)
+(C:\Users\docto\AppData\Local\Programs\MiKTeX\tex/latex/amsmath\amsopn.sty
 Package: amsopn 2022/04/08 v2.04 operator names
 )
 \inf@bad=\count295
@@ -377,24 +449,29 @@ LaTeX Info: Redefining \[ on input line 2953.
 LaTeX Info: Redefining \] on input line 2954.
 )
 \linenoamsmath@ams@eqpen=\count307
- (C:\Users\docto\AppData\Local\Programs\MiKTeX\tex/latex/float\float.sty
+
+(C:\Users\docto\AppData\Local\Programs\MiKTeX\tex/latex/float\float.sty
 Package: float 2001/11/08 v1.3d Float enhancements (AL)
 \c@float@type=\count308
 \float@exts=\toks32
 \float@box=\box55
 \@float@everytoks=\toks33
 \@floatcapt=\box56
-) (C:\Users\docto\AppData\Local\Programs\MiKTeX\tex/latex/multirow\multirow.sty
+)
+(C:\Users\docto\AppData\Local\Programs\MiKTeX\tex/latex/multirow\multirow.sty
 Package: multirow 2024/11/12 v2.9 Span multiple rows of a table
 \multirow@colwidth=\skip60
 \multirow@cntb=\count309
 \multirow@dima=\skip61
 \bigstrutjot=\dimen182
-) (C:\Users\docto\AppData\Local\Programs\MiKTeX\tex/latex/caption\subcaption.sty
+)
+(C:\Users\docto\AppData\Local\Programs\MiKTeX\tex/latex/caption\subcaption.sty
 Package: subcaption 2023/07/28 v1.6b Sub-captions (AR)
- (C:\Users\docto\AppData\Local\Programs\MiKTeX\tex/latex/caption\caption.sty
+
+(C:\Users\docto\AppData\Local\Programs\MiKTeX\tex/latex/caption\caption.sty
 Package: caption 2023/08/05 v3.6o Customizing captions (AR)
- (C:\Users\docto\AppData\Local\Programs\MiKTeX\tex/latex/caption\caption3.sty
+
+(C:\Users\docto\AppData\Local\Programs\MiKTeX\tex/latex/caption\caption3.sty
 Package: caption3 2023/07/31 v2.4d caption3 kernel (AR)
 \caption@tempdima=\dimen183
 \captionmargin=\dimen184
@@ -417,23 +494,30 @@ Package caption Info: New subtype `subtable' on input line 238.
 \c@subtable=\count313
 ) (C:\Users\docto\AppData\Local\Programs\MiKTeX\tex/latex/graphics\graphicx.sty
 Package: graphicx 2021/09/16 v1.2d Enhanced LaTeX Graphics (DPC,SPQR)
- (C:\Users\docto\AppData\Local\Programs\MiKTeX\tex/latex/graphics\graphics.sty
+
+(C:\Users\docto\AppData\Local\Programs\MiKTeX\tex/latex/graphics\graphics.sty
 Package: graphics 2022/03/10 v1.4e Standard LaTeX Graphics (DPC,SPQR)
- (C:\Users\docto\AppData\Local\Programs\MiKTeX\tex/latex/graphics\trig.sty
+
+(C:\Users\docto\AppData\Local\Programs\MiKTeX\tex/latex/graphics\trig.sty
 Package: trig 2021/08/11 v1.11 sin cos tan (DPC)
-) (C:\Users\docto\AppData\Local\Programs\MiKTeX\tex/latex/graphics-cfg\graphics.cfg
+)
+(C:\Users\docto\AppData\Local\Programs\MiKTeX\tex/latex/graphics-cfg\graphics.c
+fg
 File: graphics.cfg 2016/06/04 v1.11 sample graphics configuration
 )
 Package graphics Info: Driver file: pdftex.def on input line 107.
 )
 \Gin@req@height=\dimen191
 \Gin@req@width=\dimen192
-) (C:\Users\docto\AppData\Local\Programs\MiKTeX\tex/latex/biblatex\biblatex.sty
+)
+(C:\Users\docto\AppData\Local\Programs\MiKTeX\tex/latex/biblatex\biblatex.sty
 Package: biblatex 2023/03/05 v3.19 programmable bibliographies (PK/MW)
- (C:\Users\docto\AppData\Local\Programs\MiKTeX\tex/latex/logreq\logreq.sty
+
+(C:\Users\docto\AppData\Local\Programs\MiKTeX\tex/latex/logreq\logreq.sty
 Package: logreq 2010/08/04 v1.0 xml request logger
 \lrq@indent=\count314
- (C:\Users\docto\AppData\Local\Programs\MiKTeX\tex/latex/logreq\logreq.def
+
+(C:\Users\docto\AppData\Local\Programs\MiKTeX\tex/latex/logreq\logreq.def
 File: logreq.def 2010/08/04 v1.0 logreq spec v1.0
 ))
 \c@tabx@nest=\count315
@@ -495,7 +579,8 @@ File: logreq.def 2010/08/04 v1.0 logreq spec v1.0
 \c@mincompwidth=\count360
 Package biblatex Info: Trying to load biblatex default data model...
 Package biblatex Info: ... file 'blx-dm.def' found.
- (C:\Users\docto\AppData\Local\Programs\MiKTeX\tex/latex/biblatex\blx-dm.def
+
+(C:\Users\docto\AppData\Local\Programs\MiKTeX\tex/latex/biblatex\blx-dm.def
 File: blx-dm.def 2023/03/05 v3.19 biblatex localization (PK/MW)
 )
 Package biblatex Info: Trying to load biblatex style data model...
@@ -586,7 +671,8 @@ Package biblatex Info: ... file 'biblatex-dm.cfg' not found.
 \localshorteditorwidth=\skip83
 Package biblatex Info: Trying to load compatibility code...
 Package biblatex Info: ... file 'blx-compat.def' found.
- (C:\Users\docto\AppData\Local\Programs\MiKTeX\tex/latex/biblatex\blx-compat.def
+
+(C:\Users\docto\AppData\Local\Programs\MiKTeX\tex/latex/biblatex\blx-compat.def
 File: blx-compat.def 2023/03/05 v3.19 biblatex compatibility (PK/MW)
 )
 Package biblatex Info: Trying to load generic definitions...
@@ -609,24 +695,32 @@ File: biblatex.def 2023/03/05 v3.19 biblatex compatibility (PK/MW)
 )
 Package biblatex Info: Trying to load natbib compatibility...
 Package biblatex Info: ... file 'blx-natbib.def' found.
- (C:\Users\docto\AppData\Local\Programs\MiKTeX\tex/latex/biblatex\blx-natbib.def
+
+(C:\Users\docto\AppData\Local\Programs\MiKTeX\tex/latex/biblatex\blx-natbib.def
 File: blx-natbib.def 2023/03/05 v3.19 biblatex compatibility (PK/MW)
-Package biblatex Info: Delimiter 'nameyeardelim' in context '' already defined, overwriting.
+Package biblatex Info: Delimiter 'nameyeardelim' in context '' already defined,
+ overwriting.
 )
 Package biblatex Info: Trying to load bibliography style 'authoryear'...
 Package biblatex Info: ... file 'authoryear.bbx' found.
- (C:\Users\docto\AppData\Local\Programs\MiKTeX\tex/latex/biblatex/bbx\authoryear.bbx
+
+(C:\Users\docto\AppData\Local\Programs\MiKTeX\tex/latex/biblatex/bbx\authoryear
+.bbx
 File: authoryear.bbx 2023/03/05 v3.19 biblatex bibliography style (PK/MW)
 Package biblatex Info: Trying to load bibliography style 'standard'...
 Package biblatex Info: ... file 'standard.bbx' found.
- (C:\Users\docto\AppData\Local\Programs\MiKTeX\tex/latex/biblatex/bbx\standard.bbx
+
+(C:\Users\docto\AppData\Local\Programs\MiKTeX\tex/latex/biblatex/bbx\standard.b
+bx
 File: standard.bbx 2023/03/05 v3.19 biblatex bibliography style (PK/MW)
 \c@bbx:relatedcount=\count438
 \c@bbx:relatedtotal=\count439
 ))
 Package biblatex Info: Trying to load citation style 'authoryear'...
 Package biblatex Info: ... file 'authoryear.cbx' found.
- (C:\Users\docto\AppData\Local\Programs\MiKTeX\tex/latex/biblatex/cbx\authoryear.cbx
+
+(C:\Users\docto\AppData\Local\Programs\MiKTeX\tex/latex/biblatex/cbx\authoryear
+.cbx
 File: authoryear.cbx 2023/03/05 v3.19 biblatex citation style (PK/MW)
 Package biblatex Info: Redefining '\cite'.
 Package biblatex Info: Redefining '\parencite'.
@@ -638,14 +732,18 @@ Package biblatex Info: Redefining '\textcites'.
 )
 Package biblatex Info: Trying to load configuration file...
 Package biblatex Info: ... file 'biblatex.cfg' found.
- (C:\Users\docto\AppData\Local\Programs\MiKTeX\tex/latex/biblatex\biblatex.cfg
+
+(C:\Users\docto\AppData\Local\Programs\MiKTeX\tex/latex/biblatex\biblatex.cfg
 File: biblatex.cfg 
 )
 Package biblatex Info: Input encoding 'utf8' detected.
 Package biblatex Info: Document encoding is UTF8 ....
- (C:\Users\docto\AppData\Local\Programs\MiKTeX\tex/latex/l3kernel\expl3.sty
+
+(C:\Users\docto\AppData\Local\Programs\MiKTeX\tex/latex/l3kernel\expl3.sty
 Package: expl3 2023-08-29 L3 programming layer (loader) 
- (C:\Users\docto\AppData\Local\Programs\MiKTeX\tex/latex/l3backend\l3backend-pdftex.def
+
+(C:\Users\docto\AppData\Local\Programs\MiKTeX\tex/latex/l3backend\l3backend-pdf
+tex.def
 File: l3backend-pdftex.def 2023-04-19 L3 backend support: PDF output (pdfTeX)
 \l__color_backend_stack_int=\count440
 \l__pdf_internal_box=\box57
@@ -654,13 +752,19 @@ Package biblatex Info: ... and expl3
 (biblatex)             2023-08-29 L3 programming layer (loader) 
 (biblatex)             is new enough (at least 2020/04/06),
 (biblatex)             setting 'casechanger=expl3'.
- (C:\Users\docto\AppData\Local\Programs\MiKTeX\tex/latex/biblatex\blx-case-expl3.sty (C:\Users\docto\AppData\Local\Programs\MiKTeX\tex/latex/l3packages/xparse\xparse.sty
+
+(C:\Users\docto\AppData\Local\Programs\MiKTeX\tex/latex/biblatex\blx-case-expl3
+.sty
+(C:\Users\docto\AppData\Local\Programs\MiKTeX\tex/latex/l3packages/xparse\xpars
+e.sty
 Package: xparse 2023-08-29 L3 Experimental document command parser
 )
 Package: blx-case-expl3 2023/03/05 v3.19 expl3 case changing code for biblatex
 ))
-Package biblatex Info: Delimiter 'nameyeardelim' in context '' already defined, overwriting on input line 40.
- (C:\Users\docto\AppData\Local\Programs\MiKTeX\tex/latex/cleveref\cleveref.sty
+Package biblatex Info: Delimiter 'nameyeardelim' in context '' already defined,
+ overwriting on input line 40.
+
+(C:\Users\docto\AppData\Local\Programs\MiKTeX\tex/latex/cleveref\cleveref.sty
 Package: cleveref 2018/03/27 v0.21.4 Intelligent cross-referencing
 Package cleveref Info: `hyperref' support loaded on input line 2370.
 LaTeX Info: Redefining \cref on input line 2370.
@@ -673,15 +777,18 @@ LaTeX Info: Redefining \cpagerefrange on input line 2370.
 LaTeX Info: Redefining \Cpagerefrange on input line 2370.
 LaTeX Info: Redefining \labelcref on input line 2370.
 LaTeX Info: Redefining \labelcpageref on input line 2370.
-Package cleveref Info: always capitalise cross-reference names on input line 7830.
-Package cleveref Info: always capitalise cross-reference names on input line 7852.
+Package cleveref Info: always capitalise cross-reference names on input line 78
+30.
+Package cleveref Info: always capitalise cross-reference names on input line 78
+52.
 Package cleveref Info: no abbreviation of names on input line 7852.
 )
 Package csquotes Info: Checking for multilingual support...
 Package csquotes Info: ... found 'babel' package.
 Package csquotes Info: Adjusting default style.
 Package csquotes Info: Redefining alias 'default' -> 'USenglish'.
- (project.aux)
+
+(project.aux)
 \openout1 = `project.aux'.
 
 LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 80.
@@ -787,7 +894,9 @@ Package microtype Info: No adjustment of interword spacing.
 Package microtype Info: No adjustment of character kerning.
 (C:\Users\docto\AppData\Local\Programs\MiKTeX\tex/latex/microtype\mt-ptm.cfg
 File: mt-ptm.cfg 2006/04/20 v1.7 microtype config. file: Times (RS)
-) (C:\Users\docto\AppData\Local\Programs\MiKTeX\tex/context/base/mkii\supp-pdf.mkii
+)
+(C:\Users\docto\AppData\Local\Programs\MiKTeX\tex/context/base/mkii\supp-pdf.mk
+ii
 [Loading MPS to PDF converter (version 2006.09.02).]
 \scratchcounter=\count441
 \scratchdimen=\dimen193
@@ -800,16 +909,23 @@ File: mt-ptm.cfg 2006/04/20 v1.7 microtype config. file: Times (RS)
 \MPnumerator=\count445
 \makeMPintoPDFobject=\count446
 \everyMPtoPDFconversion=\toks35
-) (C:\Users\docto\AppData\Local\Programs\MiKTeX\tex/latex/epstopdf-pkg\epstopdf-base.sty
+)
+(C:\Users\docto\AppData\Local\Programs\MiKTeX\tex/latex/epstopdf-pkg\epstopdf-b
+ase.sty
 Package: epstopdf-base 2020-01-24 v2.11 Base part for package epstopdf
- (C:\Users\docto\AppData\Local\Programs\MiKTeX\tex/latex/grfext\grfext.sty
+
+(C:\Users\docto\AppData\Local\Programs\MiKTeX\tex/latex/grfext\grfext.sty
 Package: grfext 2019/12/03 v1.3 Manage graphics extensions (HO)
 )
-Package epstopdf-base Info: Redefining graphics rule for `.eps' on input line 485.
+Package epstopdf-base Info: Redefining graphics rule for `.eps' on input line 4
+85.
 Package grfext Info: Graphics extension search list:
-(grfext)             [.pdf,.png,.jpg,.mps,.jpeg,.jbig2,.jb2,.PDF,.PNG,.JPG,.JPEG,.JBIG2,.JB2,.eps]
+(grfext)             [.pdf,.png,.jpg,.mps,.jpeg,.jbig2,.jb2,.PDF,.PNG,.JPG,.JPE
+G,.JBIG2,.JB2,.eps]
 (grfext)             \AppendGraphicsExtensions on input line 504.
- (C:\Users\docto\AppData\Local\Programs\MiKTeX\tex/latex/00miktex\epstopdf-sys.cfg
+
+(C:\Users\docto\AppData\Local\Programs\MiKTeX\tex/latex/00miktex\epstopdf-sys.c
+fg
 File: epstopdf-sys.cfg 2021/03/18 v2.0 Configuration of epstopdf for MiKTeX
 ))
 Package hyperref Info: Link coloring OFF on input line 80.
@@ -821,24 +937,34 @@ Package caption Info: Begin \AtBeginDocument code.
 Package caption Info: End \AtBeginDocument code.
 Package biblatex Info: Trying to load language 'USenglish'...
 Package biblatex Info: ... file 'USenglish.lbx' found.
- (C:\Users\docto\AppData\Local\Programs\MiKTeX\tex/latex/biblatex/lbx\USenglish.lbx
+
+(C:\Users\docto\AppData\Local\Programs\MiKTeX\tex/latex/biblatex/lbx\USenglish.
+lbx
 File: USenglish.lbx 2023/03/05 v3.19 biblatex localization (PK/MW)
 Package biblatex Info: Trying to load language 'american'...
 Package biblatex Info: ... file 'american.lbx' found.
- (C:\Users\docto\AppData\Local\Programs\MiKTeX\tex/latex/biblatex/lbx\american.lbx
+
+(C:\Users\docto\AppData\Local\Programs\MiKTeX\tex/latex/biblatex/lbx\american.l
+bx
 File: american.lbx 2023/03/05 v3.19 biblatex localization (PK/MW)
 Package biblatex Info: Trying to load language 'english'...
 Package biblatex Info: ... file 'english.lbx' found.
- (C:\Users\docto\AppData\Local\Programs\MiKTeX\tex/latex/biblatex/lbx\english.lbx
+
+(C:\Users\docto\AppData\Local\Programs\MiKTeX\tex/latex/biblatex/lbx\english.lb
+x
 File: english.lbx 2023/03/05 v3.19 biblatex localization (PK/MW)
 ))
 Package biblatex Info: Trying to load language 'american'...
 Package biblatex Info: ... file 'american.lbx' found.
- (C:\Users\docto\AppData\Local\Programs\MiKTeX\tex/latex/biblatex/lbx\american.lbx
+
+(C:\Users\docto\AppData\Local\Programs\MiKTeX\tex/latex/biblatex/lbx\american.l
+bx
 File: american.lbx 2023/03/05 v3.19 biblatex localization (PK/MW)
 Package biblatex Info: Trying to load language 'english'...
 Package biblatex Info: ... file 'english.lbx' found.
- (C:\Users\docto\AppData\Local\Programs\MiKTeX\tex/latex/biblatex/lbx\english.lbx
+
+(C:\Users\docto\AppData\Local\Programs\MiKTeX\tex/latex/biblatex/lbx\english.lb
+x
 File: english.lbx 2023/03/05 v3.19 biblatex localization (PK/MW)
 )))
 Package biblatex Info: Input encoding 'utf8' detected.
@@ -851,43 +977,60 @@ Package biblatex Info: ... file 'project.bbl' found.
  (project.bbl)
 Package biblatex Info: Reference section=0 on input line 80.
 Package biblatex Info: Reference segment=0 on input line 80.
- (C:\Users\docto\AppData\Local\Programs\MiKTeX\tex/latex/microtype\mt-cmr.cfg
-File: mt-cmr.cfg 2013/05/19 v2.2 microtype config. file: Computer Modern Roman (RS)
+
+(C:\Users\docto\AppData\Local\Programs\MiKTeX\tex/latex/microtype\mt-cmr.cfg
+File: mt-cmr.cfg 2013/05/19 v2.2 microtype config. file: Computer Modern Roman 
+(RS)
 )
 LaTeX Font Info:    Trying to load font information for U+msa on input line 82.
- (C:\Users\docto\AppData\Local\Programs\MiKTeX\tex/latex/amsfonts\umsa.fd
+
+
+(C:\Users\docto\AppData\Local\Programs\MiKTeX\tex/latex/amsfonts\umsa.fd
 File: umsa.fd 2013/01/14 v3.01 AMS symbols A
-) (C:\Users\docto\AppData\Local\Programs\MiKTeX\tex/latex/microtype\mt-msa.cfg
+)
+(C:\Users\docto\AppData\Local\Programs\MiKTeX\tex/latex/microtype\mt-msa.cfg
 File: mt-msa.cfg 2006/02/04 v1.1 microtype config. file: AMS symbols (a) (RS)
 )
 LaTeX Font Info:    Trying to load font information for U+msb on input line 82.
- (C:\Users\docto\AppData\Local\Programs\MiKTeX\tex/latex/amsfonts\umsb.fd
+
+
+(C:\Users\docto\AppData\Local\Programs\MiKTeX\tex/latex/amsfonts\umsb.fd
 File: umsb.fd 2013/01/14 v3.01 AMS symbols B
-) (C:\Users\docto\AppData\Local\Programs\MiKTeX\tex/latex/microtype\mt-msb.cfg
+)
+(C:\Users\docto\AppData\Local\Programs\MiKTeX\tex/latex/microtype\mt-msb.cfg
 File: mt-msb.cfg 2005/06/01 v1.0 microtype config. file: AMS symbols (b) (RS)
 )
-LaTeX Font Info:    Trying to load font information for T1+cmtt on input line 82.
- (C:\Users\docto\AppData\Local\Programs\MiKTeX\tex/latex/base\t1cmtt.fd
+LaTeX Font Info:    Trying to load font information for T1+cmtt on input line 8
+2.
+
+(C:\Users\docto\AppData\Local\Programs\MiKTeX\tex/latex/base\t1cmtt.fd
 File: t1cmtt.fd 2023/04/13 v2.5m Standard LaTeX font definitions
 )
 Package microtype Info: Loading generic protrusion settings for font family
 (microtype)             `cmtt' (encoding: T1).
 (microtype)             For optimal results, create family-specific settings.
 (microtype)             See the microtype manual for details.
-LaTeX Font Info:    Trying to load font information for T1+phv on input line 86.
- (C:\Users\docto\AppData\Local\Programs\MiKTeX\tex/latex/psnfss\t1phv.fd
+LaTeX Font Info:    Trying to load font information for T1+phv on input line 86
+.
+
+(C:\Users\docto\AppData\Local\Programs\MiKTeX\tex/latex/psnfss\t1phv.fd
 File: t1phv.fd 2020/03/25 scalable font definitions for T1/phv.
 )
 Package microtype Info: Loading generic protrusion settings for font family
 (microtype)             `phv' (encoding: T1).
 (microtype)             For optimal results, create family-specific settings.
 (microtype)             See the microtype manual for details.
- [1
+
+[1
 
 
-{C:/Users/docto/AppData/Local/MiKTeX/fonts/map/pdftex/pdftex.map}{C:/Users/docto/AppData/Local/Programs/MiKTeX/fonts/enc/dvips/base/8r.enc}] [2] [3] [4] [5] [6]
-LaTeX Font Info:    Trying to load font information for TS1+ptm on input line 315.
- (C:\Users\docto\AppData\Local\Programs\MiKTeX\tex/latex/psnfss\ts1ptm.fd
+{C:/Users/docto/AppData/Local/MiKTeX/fonts/map/pdftex/pdftex.map}{C:/Users/doct
+o/AppData/Local/Programs/MiKTeX/fonts/enc/dvips/base/8r.enc}] [2] [3]
+[4] [5] [6]
+LaTeX Font Info:    Trying to load font information for TS1+ptm on input line 3
+15.
+
+(C:\Users\docto\AppData\Local\Programs\MiKTeX\tex/latex/psnfss\ts1ptm.fd
 File: ts1ptm.fd 2001/06/04 font definitions for TS1/ptm.
 )
 
@@ -900,7 +1043,8 @@ Underfull \vbox (badness 1558) has occurred while \output is active []
 <figures/reg/no_regularization_loss.png, id=219, 570.4512pt x 352.1958pt>
 File: figures/reg/no_regularization_loss.png Graphic file (type png)
 <use figures/reg/no_regularization_loss.png>
-Package pdftex.def Info: figures/reg/no_regularization_loss.png  used on input line 351.
+Package pdftex.def Info: figures/reg/no_regularization_loss.png  used on input 
+line 351.
 (pdftex.def)             Requested size: 158.99156pt x 98.16272pt.
 <figures/reg/l1_1e-4_loss.png, id=221, 570.4512pt x 352.1958pt>
 File: figures/reg/l1_1e-4_loss.png Graphic file (type png)
@@ -915,71 +1059,89 @@ Package pdftex.def Info: figures/reg/l1_1e-3_loss.png  used on input line 363.
 <figures/reg/entropy_1e-4_loss.png, id=223, 570.4512pt x 352.1958pt>
 File: figures/reg/entropy_1e-4_loss.png Graphic file (type png)
 <use figures/reg/entropy_1e-4_loss.png>
-Package pdftex.def Info: figures/reg/entropy_1e-4_loss.png  used on input line 372.
+Package pdftex.def Info: figures/reg/entropy_1e-4_loss.png  used on input line 
+372.
 (pdftex.def)             Requested size: 158.99156pt x 98.16272pt.
 <figures/reg/entropy_1e-3_loss.png, id=224, 570.4512pt x 352.1958pt>
 File: figures/reg/entropy_1e-3_loss.png Graphic file (type png)
 <use figures/reg/entropy_1e-3_loss.png>
-Package pdftex.def Info: figures/reg/entropy_1e-3_loss.png  used on input line 376.
+Package pdftex.def Info: figures/reg/entropy_1e-3_loss.png  used on input line 
+376.
 (pdftex.def)             Requested size: 158.99156pt x 98.16272pt.
 <figures/reg/combined_1e-4_loss.png, id=225, 570.4512pt x 352.1958pt>
 File: figures/reg/combined_1e-4_loss.png Graphic file (type png)
 <use figures/reg/combined_1e-4_loss.png>
-Package pdftex.def Info: figures/reg/combined_1e-4_loss.png  used on input line 385.
+Package pdftex.def Info: figures/reg/combined_1e-4_loss.png  used on input line
+ 385.
 (pdftex.def)             Requested size: 158.99156pt x 98.16272pt.
 <figures/reg/combined_1e-3_loss.png, id=226, 570.4512pt x 352.1958pt>
 File: figures/reg/combined_1e-3_loss.png Graphic file (type png)
 <use figures/reg/combined_1e-3_loss.png>
-Package pdftex.def Info: figures/reg/combined_1e-3_loss.png  used on input line 389.
+Package pdftex.def Info: figures/reg/combined_1e-3_loss.png  used on input line
+ 389.
 (pdftex.def)             Requested size: 158.99156pt x 98.16272pt.
 <figures/reg/combined_1e-1_loss.png, id=227, 570.4512pt x 352.1958pt>
 File: figures/reg/combined_1e-1_loss.png Graphic file (type png)
 <use figures/reg/combined_1e-1_loss.png>
-Package pdftex.def Info: figures/reg/combined_1e-1_loss.png  used on input line 395.
+Package pdftex.def Info: figures/reg/combined_1e-1_loss.png  used on input line
+ 395.
 (pdftex.def)             Requested size: 158.99156pt x 98.16272pt.
 <figures/reg/combined_1e1_loss.png, id=228, 570.4512pt x 352.1958pt>
 File: figures/reg/combined_1e1_loss.png Graphic file (type png)
 <use figures/reg/combined_1e1_loss.png>
-Package pdftex.def Info: figures/reg/combined_1e1_loss.png  used on input line 399.
+Package pdftex.def Info: figures/reg/combined_1e1_loss.png  used on input line 
+399.
 (pdftex.def)             Requested size: 158.99156pt x 98.16272pt.
 <figures/reg/combined_1e2_loss.png, id=229, 570.4512pt x 352.1958pt>
 File: figures/reg/combined_1e2_loss.png Graphic file (type png)
 <use figures/reg/combined_1e2_loss.png>
-Package pdftex.def Info: figures/reg/combined_1e2_loss.png  used on input line 405.
+Package pdftex.def Info: figures/reg/combined_1e2_loss.png  used on input line 
+405.
 (pdftex.def)             Requested size: 158.99156pt x 98.16272pt.
- [8 <./figures/reg/no_regularization_loss.png> <./figures/reg/l1_1e-4_loss.png> <./figures/reg/l1_1e-3_loss.png> <./figures/reg/entropy_1e-4_loss.png> <./figures/reg/entropy_1e-3_loss.png>]
+
+[8 <./figures/reg/no_regularization_loss.png> <./figures/reg/l1_1e-4_loss.png> 
+<./figures/reg/l1_1e-3_loss.png> <./figures/reg/entropy_1e-4_loss.png> <./figur
+es/reg/entropy_1e-3_loss.png>]
 <figures/reg/sparse_init_loss.png, id=246, 569.4876pt x 352.1958pt>
 File: figures/reg/sparse_init_loss.png Graphic file (type png)
 <use figures/reg/sparse_init_loss.png>
-Package pdftex.def Info: figures/reg/sparse_init_loss.png  used on input line 413.
+Package pdftex.def Info: figures/reg/sparse_init_loss.png  used on input line 4
+13.
 (pdftex.def)             Requested size: 158.99156pt x 98.32394pt.
 <figures/reg/com1e2_node_network.png, id=247, 2370.2151pt x 1275.3246pt>
 File: figures/reg/com1e2_node_network.png Graphic file (type png)
 <use figures/reg/com1e2_node_network.png>
-Package pdftex.def Info: figures/reg/com1e2_node_network.png  used on input line 421.
+Package pdftex.def Info: figures/reg/com1e2_node_network.png  used on input lin
+e 421.
 (pdftex.def)             Requested size: 158.99156pt x 85.54555pt.
 File: figures/reg/com1e2_node_network.png Graphic file (type png)
 <use figures/reg/com1e2_node_network.png>
-Package pdftex.def Info: figures/reg/com1e2_node_network.png  used on input line 425.
+Package pdftex.def Info: figures/reg/com1e2_node_network.png  used on input lin
+e 425.
 (pdftex.def)             Requested size: 158.99156pt x 85.54555pt.
 <figures/reg/control_node_network.png, id=248, 2370.2151pt x 1275.3246pt>
 File: figures/reg/control_node_network.png Graphic file (type png)
 <use figures/reg/control_node_network.png>
-Package pdftex.def Info: figures/reg/control_node_network.png  used on input line 429.
+Package pdftex.def Info: figures/reg/control_node_network.png  used on input li
+ne 429.
 (pdftex.def)             Requested size: 158.99156pt x 85.54555pt.
 <figures/reg/control_msg_network.png, id=249, 2632.5552pt x 1730.8665pt>
 File: figures/reg/control_msg_network.png Graphic file (type png)
 <use figures/reg/control_msg_network.png>
-Package pdftex.def Info: figures/reg/control_msg_network.png  used on input line 433.
+Package pdftex.def Info: figures/reg/control_msg_network.png  used on input lin
+e 433.
 (pdftex.def)             Requested size: 158.99156pt x 104.53418pt.
 
 Underfull \vbox (badness 10000) has occurred while \output is active []
 
- [9 <./figures/reg/combined_1e-4_loss.png> <./figures/reg/combined_1e-3_loss.png> <./figures/reg/combined_1e-1_loss.png> <./figures/reg/combined_1e1_loss.png> <./figures/reg/combined_1e2_loss.png> <./figures/reg/sparse_init_loss.png>]
+ [9 <./figures/reg/combined_1e-4_loss.png> <./figures/reg/combined_1e-3_loss.pn
+g> <./figures/reg/combined_1e-1_loss.png> <./figures/reg/combined_1e1_loss.png>
+ <./figures/reg/combined_1e2_loss.png> <./figures/reg/sparse_init_loss.png>]
 <figures/baseline/gnn_loss.png, id=262, 570.4512pt x 352.1958pt>
 File: figures/baseline/gnn_loss.png Graphic file (type png)
 <use figures/baseline/gnn_loss.png>
 Package pdftex.def Info: figures/baseline/gnn_loss.png  used on input line 445.
+
 (pdftex.def)             Requested size: 158.99156pt x 98.16272pt.
 <figures/small/kan_loss.png, id=263, 570.4512pt x 352.1958pt>
 File: figures/small/kan_loss.png Graphic file (type png)
@@ -989,114 +1151,243 @@ Package pdftex.def Info: figures/small/kan_loss.png  used on input line 453.
 <figures/small_rel_pos/kan_loss.png, id=264, 570.4512pt x 352.1958pt>
 File: figures/small_rel_pos/kan_loss.png Graphic file (type png)
 <use figures/small_rel_pos/kan_loss.png>
-Package pdftex.def Info: figures/small_rel_pos/kan_loss.png  used on input line 458.
+Package pdftex.def Info: figures/small_rel_pos/kan_loss.png  used on input line
+ 458.
 (pdftex.def)             Requested size: 158.99156pt x 98.16272pt.
 <figures/small_rel_pos_dsq/kan_loss.png, id=265, 570.4512pt x 352.1958pt>
 File: figures/small_rel_pos_dsq/kan_loss.png Graphic file (type png)
 <use figures/small_rel_pos_dsq/kan_loss.png>
-Package pdftex.def Info: figures/small_rel_pos_dsq/kan_loss.png  used on input line 463.
+Package pdftex.def Info: figures/small_rel_pos_dsq/kan_loss.png  used on input 
+line 463.
 (pdftex.def)             Requested size: 158.99156pt x 98.16272pt.
 <figures/small_rel_pos_idc/kan_loss.png, id=266, 570.4512pt x 352.1958pt>
 File: figures/small_rel_pos_idc/kan_loss.png Graphic file (type png)
 <use figures/small_rel_pos_idc/kan_loss.png>
-Package pdftex.def Info: figures/small_rel_pos_idc/kan_loss.png  used on input line 468.
+Package pdftex.def Info: figures/small_rel_pos_idc/kan_loss.png  used on input 
+line 468.
 (pdftex.def)             Requested size: 158.99156pt x 98.16272pt.
 
 Underfull \vbox (badness 10000) has occurred while \output is active []
 
- [10 <./figures/reg/com1e2_node_network.png> <./figures/reg/control_node_network.png> <./figures/reg/control_msg_network.png> <./figures/baseline/gnn_loss.png>]
+ [10 <./figures/reg/com1e2_node_network.png> <./figures/reg/control_node_networ
+k.png> <./figures/reg/control_msg_network.png> <./figures/baseline/gnn_loss.png
+>]
 <figures/small/kan_msg_network.png, id=276, 2813.712pt x 2181.3495pt>
 File: figures/small/kan_msg_network.png Graphic file (type png)
 <use figures/small/kan_msg_network.png>
-Package pdftex.def Info: figures/small/kan_msg_network.png  used on input line 478.
+Package pdftex.def Info: figures/small/kan_msg_network.png  used on input line 
+478.
 (pdftex.def)             Requested size: 158.99156pt x 123.25313pt.
 <figures/small_rel_pos/kan_msg_network.png, id=277, 2530.4136pt x 1730.8665pt>
 File: figures/small_rel_pos/kan_msg_network.png Graphic file (type png)
 <use figures/small_rel_pos/kan_msg_network.png>
-Package pdftex.def Info: figures/small_rel_pos/kan_msg_network.png  used on input line 483.
+Package pdftex.def Info: figures/small_rel_pos/kan_msg_network.png  used on inp
+ut line 483.
 (pdftex.def)             Requested size: 158.99156pt x 108.73352pt.
-<figures/small_rel_pos_dsq/kan_msg_network.png, id=278, 2530.4136pt x 1730.8665pt>
+<figures/small_rel_pos_dsq/kan_msg_network.png, id=278, 2530.4136pt x 1730.8665
+pt>
 File: figures/small_rel_pos_dsq/kan_msg_network.png Graphic file (type png)
 <use figures/small_rel_pos_dsq/kan_msg_network.png>
-Package pdftex.def Info: figures/small_rel_pos_dsq/kan_msg_network.png  used on input line 489.
+Package pdftex.def Info: figures/small_rel_pos_dsq/kan_msg_network.png  used on
+ input line 489.
 (pdftex.def)             Requested size: 158.99156pt x 108.73352pt.
-<figures/small_rel_pos_idc/kan_msg_network.png, id=279, 2530.4136pt x 1730.8665pt>
+<figures/small_rel_pos_idc/kan_msg_network.png, id=279, 2530.4136pt x 1730.8665
+pt>
 File: figures/small_rel_pos_idc/kan_msg_network.png Graphic file (type png)
 <use figures/small_rel_pos_idc/kan_msg_network.png>
-Package pdftex.def Info: figures/small_rel_pos_idc/kan_msg_network.png  used on input line 494.
+Package pdftex.def Info: figures/small_rel_pos_idc/kan_msg_network.png  used on
+ input line 494.
 (pdftex.def)             Requested size: 158.99156pt x 108.73352pt.
 <figures/small/kan_node_network.png, id=280, 2086.9167pt x 803.1606pt>
 File: figures/small/kan_node_network.png Graphic file (type png)
 <use figures/small/kan_node_network.png>
-Package pdftex.def Info: figures/small/kan_node_network.png  used on input line 504.
+Package pdftex.def Info: figures/small/kan_node_network.png  used on input line
+ 504.
 (pdftex.def)             Requested size: 158.99156pt x 61.17809pt.
 <figures/small_rel_pos/kan_node_network.png, id=281, 2086.9167pt x 803.1606pt>
 File: figures/small_rel_pos/kan_node_network.png Graphic file (type png)
 <use figures/small_rel_pos/kan_node_network.png>
-Package pdftex.def Info: figures/small_rel_pos/kan_node_network.png  used on input line 509.
+Package pdftex.def Info: figures/small_rel_pos/kan_node_network.png  used on in
+put line 509.
 (pdftex.def)             Requested size: 158.99156pt x 61.17809pt.
-<figures/small_rel_pos_dsq/kan_node_network.png, id=282, 2086.9167pt x 803.1606pt>
+<figures/small_rel_pos_dsq/kan_node_network.png, id=282, 2086.9167pt x 803.1606
+pt>
 File: figures/small_rel_pos_dsq/kan_node_network.png Graphic file (type png)
 <use figures/small_rel_pos_dsq/kan_node_network.png>
-Package pdftex.def Info: figures/small_rel_pos_dsq/kan_node_network.png  used on input line 515.
+Package pdftex.def Info: figures/small_rel_pos_dsq/kan_node_network.png  used o
+n input line 515.
 (pdftex.def)             Requested size: 158.99156pt x 61.17809pt.
-<figures/small_rel_pos_idc/kan_node_network.png, id=283, 2086.9167pt x 803.1606pt>
+<figures/small_rel_pos_idc/kan_node_network.png, id=283, 2086.9167pt x 803.1606
+pt>
 File: figures/small_rel_pos_idc/kan_node_network.png Graphic file (type png)
 <use figures/small_rel_pos_idc/kan_node_network.png>
-Package pdftex.def Info: figures/small_rel_pos_idc/kan_node_network.png  used on input line 520.
+Package pdftex.def Info: figures/small_rel_pos_idc/kan_node_network.png  used o
+n input line 520.
 (pdftex.def)             Requested size: 158.99156pt x 61.17809pt.
 
 Underfull \vbox (badness 10000) has occurred while \output is active []
 
- [11 <./figures/small/kan_loss.png> <./figures/small_rel_pos/kan_loss.png> <./figures/small_rel_pos_dsq/kan_loss.png> <./figures/small_rel_pos_idc/kan_loss.png> <./figures/small/kan_msg_network.png> <./figures/small_rel_pos/kan_msg_network.png> <./figures/small_rel_pos_dsq/kan_msg_network.png> <./figures/small_rel_pos_idc/kan_msg_network.png>]
+ [11 <./figures/small/kan_loss.png> <./figures/small_rel_pos/kan_loss.png> <./f
+igures/small_rel_pos_dsq/kan_loss.png> <./figures/small_rel_pos_idc/kan_loss.pn
+g> <./figures/small/kan_msg_network.png> <./figures/small_rel_pos/kan_msg_netwo
+rk.png> <./figures/small_rel_pos_dsq/kan_msg_network.png> <./figures/small_rel_
+pos_idc/kan_msg_network.png>]
 <figures/small_rel_pos/msg_kan_responses.png, id=298, 2421.045pt x 416.2752pt>
 File: figures/small_rel_pos/msg_kan_responses.png Graphic file (type png)
 <use figures/small_rel_pos/msg_kan_responses.png>
-Package pdftex.def Info: figures/small_rel_pos/msg_kan_responses.png  used on input line 530.
+Package pdftex.def Info: figures/small_rel_pos/msg_kan_responses.png  used on i
+nput line 530.
 (pdftex.def)             Requested size: 158.99156pt x 27.33195pt.
-<figures/small_rel_pos/node_kan_responses.png, id=299, 1408.7832pt x 415.7934pt>
+<figures/small_rel_pos/node_kan_responses.png, id=299, 1408.7832pt x 415.7934pt
+>
 File: figures/small_rel_pos/node_kan_responses.png Graphic file (type png)
 <use figures/small_rel_pos/node_kan_responses.png>
-Package pdftex.def Info: figures/small_rel_pos/node_kan_responses.png  used on input line 535.
+Package pdftex.def Info: figures/small_rel_pos/node_kan_responses.png  used on 
+input line 535.
 (pdftex.def)             Requested size: 158.99156pt x 46.92383pt.
 
 Underfull \vbox (badness 10000) has occurred while \output is active []
 
- [12 <./figures/small/kan_node_network.png> <./figures/small_rel_pos/kan_node_network.png> <./figures/small_rel_pos_dsq/kan_node_network.png> <./figures/small_rel_pos_idc/kan_node_network.png> <./figures/small_rel_pos/msg_kan_responses.png> <./figures/small_rel_pos/node_kan_responses.png>]
-<figures/different_function_losses/min_gravity_loss.png, id=310, 570.4512pt x 352.1958pt>
-File: figures/different_function_losses/min_gravity_loss.png Graphic file (type png)
+ [12 <./figures/small/kan_node_network.png> <./figures/small_rel_pos/kan_node_n
+etwork.png> <./figures/small_rel_pos_dsq/kan_node_network.png> <./figures/small
+_rel_pos_idc/kan_node_network.png> <./figures/small_rel_pos/msg_kan_responses.p
+ng> <./figures/small_rel_pos/node_kan_responses.png>]
+<figures/different_function_losses/min_gravity_loss.png, id=310, 570.4512pt x 3
+52.1958pt>
+File: figures/different_function_losses/min_gravity_loss.png Graphic file (type
+ png)
 <use figures/different_function_losses/min_gravity_loss.png>
-Package pdftex.def Info: figures/different_function_losses/min_gravity_loss.png  used on input line 662.
+Package pdftex.def Info: figures/different_function_losses/min_gravity_loss.png
+  used on input line 662.
 (pdftex.def)             Requested size: 158.99156pt x 98.16272pt.
-<figures/different_function_losses/min_linear_gravity_loss.png, id=311, 570.4512pt x 352.1958pt>
-File: figures/different_function_losses/min_linear_gravity_loss.png Graphic file (type png)
+<figures/different_function_losses/min_linear_gravity_loss.png, id=311, 570.451
+2pt x 352.1958pt>
+File: figures/different_function_losses/min_linear_gravity_loss.png Graphic fil
+e (type png)
 <use figures/different_function_losses/min_linear_gravity_loss.png>
-Package pdftex.def Info: figures/different_function_losses/min_linear_gravity_loss.png  used on input line 666.
+Package pdftex.def Info: figures/different_function_losses/min_linear_gravity_l
+oss.png  used on input line 666.
 (pdftex.def)             Requested size: 158.99156pt x 98.16272pt.
-<figures/different_function_losses/min_hooke_loss.png, id=312, 570.4512pt x 352.1958pt>
-File: figures/different_function_losses/min_hooke_loss.png Graphic file (type png)
+<figures/different_function_losses/min_hooke_loss.png, id=312, 570.4512pt x 352
+.1958pt>
+File: figures/different_function_losses/min_hooke_loss.png Graphic file (type p
+ng)
 <use figures/different_function_losses/min_hooke_loss.png>
-Package pdftex.def Info: figures/different_function_losses/min_hooke_loss.png  used on input line 670.
+Package pdftex.def Info: figures/different_function_losses/min_hooke_loss.png  
+used on input line 670.
 (pdftex.def)             Requested size: 158.99156pt x 98.16272pt.
-<figures/different_function_losses/min_nice_loss.png, id=313, 570.4512pt x 352.1958pt>
-File: figures/different_function_losses/min_nice_loss.png Graphic file (type png)
+<figures/different_function_losses/min_nice_loss.png, id=313, 570.4512pt x 352.
+1958pt>
+File: figures/different_function_losses/min_nice_loss.png Graphic file (type pn
+g)
 <use figures/different_function_losses/min_nice_loss.png>
-Package pdftex.def Info: figures/different_function_losses/min_nice_loss.png  used on input line 674.
+Package pdftex.def Info: figures/different_function_losses/min_nice_loss.png  u
+sed on input line 674.
 (pdftex.def)             Requested size: 158.99156pt x 98.16272pt.
 
 Underfull \vbox (badness 10000) has occurred while \output is active []
 
  [13]
-<figures/different_function_kans/min_gravity_sparse/kan_msg_network.png, id=320, 2813.712pt x 2181.3495pt>
-File: figures/different_function_kans/min_gravity_sparse/kan_msg_network.png Graphic file (type png)
+<figures/different_function_kans/min_gravity_sparse/kan_msg_network.png, id=320
+, 2813.712pt x 2181.3495pt>
+File: figures/different_function_kans/min_gravity_sparse/kan_msg_network.png Gr
+aphic file (type png)
 <use figures/different_function_kans/min_gravity_sparse/kan_msg_network.png>
-Package pdftex.def Info: figures/different_function_kans/min_gravity_sparse/kan_msg_network.png  used on input line 683.
+Package pdftex.def Info: figures/different_function_kans/min_gravity_sparse/kan
+_msg_network.png  used on input line 683.
 (pdftex.def)             Requested size: 158.99156pt x 123.25313pt.
-<figures/different_function_kans/min_hooke_sparse/kan_msg_network.png, id=321, 2813.712pt x 2181.3495pt>
-File: figures/different_function_kans/min_hooke_sparse/kan_msg_network.png Graphic file (type png)
+<figures/different_function_kans/min_hooke_sparse/kan_msg_network.png, id=321, 
+2813.712pt x 2181.3495pt>
+File: figures/different_function_kans/min_hooke_sparse/kan_msg_network.png Grap
+hic file (type png)
 <use figures/different_function_kans/min_hooke_sparse/kan_msg_network.png>
-Package pdftex.def Info: figures/different_function_kans/min_hooke_sparse/kan_msg_network.png  used on input line 687.
+Package pdftex.def Info: figures/different_function_kans/min_hooke_sparse/kan_m
+sg_network.png  used on input line 687.
 (pdftex.def)             Requested size: 158.99156pt x 123.25313pt.
-<figures/different_function_kans/min_nice_sparse/kan_msg_network.png, id=322, 2813.712pt x 2181.3495pt>
-File: figures/different_function_kans/min_nice_sparse/kan_msg_network.png Graphic file (type png)
-<use figures/diff
+<figures/different_function_kans/min_nice_sparse/kan_msg_network.png, id=322, 2
+813.712pt x 2181.3495pt>
+File: figures/different_function_kans/min_nice_sparse/kan_msg_network.png Graph
+ic file (type png)
+<use figures/different_function_kans/min_nice_sparse/kan_msg_network.png>
+Package pdftex.def Info: figures/different_function_kans/min_nice_sparse/kan_ms
+g_network.png  used on input line 691.
+(pdftex.def)             Requested size: 158.99156pt x 123.25313pt.
+<figures/different_function_kans/min_gravity_sparse/kan_node_network.png, id=32
+3, 2086.9167pt x 803.1606pt>
+File: figures/different_function_kans/min_gravity_sparse/kan_node_network.png G
+raphic file (type png)
+<use figures/different_function_kans/min_gravity_sparse/kan_node_network.png>
+Package pdftex.def Info: figures/different_function_kans/min_gravity_sparse/kan
+_node_network.png  used on input line 701.
+(pdftex.def)             Requested size: 158.99156pt x 61.17809pt.
+<figures/different_function_kans/min_hooke_sparse/kan_node_network.png, id=324,
+ 2086.9167pt x 803.1606pt>
+File: figures/different_function_kans/min_hooke_sparse/kan_node_network.png Gra
+phic file (type png)
+<use figures/different_function_kans/min_hooke_sparse/kan_node_network.png>
+Package pdftex.def Info: figures/different_function_kans/min_hooke_sparse/kan_n
+ode_network.png  used on input line 705.
+(pdftex.def)             Requested size: 158.99156pt x 61.17809pt.
+<figures/different_function_kans/min_nice_sparse/kan_node_network.png, id=325, 
+2086.9167pt x 803.1606pt>
+File: figures/different_function_kans/min_nice_sparse/kan_node_network.png Grap
+hic file (type png)
+<use figures/different_function_kans/min_nice_sparse/kan_node_network.png>
+Package pdftex.def Info: figures/different_function_kans/min_nice_sparse/kan_no
+de_network.png  used on input line 709.
+(pdftex.def)             Requested size: 158.99156pt x 61.17809pt.
+
+Underfull \vbox (badness 10000) has occurred while \output is active []
+
+ [14 <./figures/different_function_losses/min_gravity_loss.png> <./figures/diff
+erent_function_losses/min_linear_gravity_loss.png> <./figures/different_functio
+n_losses/min_hooke_loss.png> <./figures/different_function_losses/min_nice_loss
+.png> <./figures/different_function_kans/min_gravity_sparse/kan_msg_network.png
+> <./figures/different_function_kans/min_hooke_sparse/kan_msg_network.png> <./f
+igures/different_function_kans/min_nice_sparse/kan_msg_network.png>] [15 <./fig
+ures/different_function_kans/min_gravity_sparse/kan_node_network.png> <./figure
+s/different_function_kans/min_hooke_sparse/kan_node_network.png> <./figures/dif
+ferent_function_kans/min_nice_sparse/kan_node_network.png>] (project.aux)
+ ***********
+LaTeX2e <2023-06-01> patch level 1
+L3 programming layer <2023-08-29>
+ ***********
+Package rerunfilecheck Info: File `project.out' has not changed.
+(rerunfilecheck)             Checksum: 3F6273FF5923535FEE2FF7453C0C3370;3156.
+Package logreq Info: Writing requests to 'project.run.xml'.
+\openout1 = `project.run.xml'.
+
+ ) 
+Here is how much of TeX's memory you used:
+ 25817 strings out of 475248
+ 474581 string characters out of 5757814
+ 1946801 words of memory out of 5000000
+ 46732 multiletter control sequences out of 15000+600000
+ 607238 words of font info for 214 fonts, out of 8000000 for 9000
+ 1141 hyphenation exceptions out of 8191
+ 72i,12n,81p,1147b,1781s stack positions out of 10000i,1000n,20000p,200000b,200000s
+ <C:\Users\docto\AppData\Local\MiKTeX\fonts/pk/ljfour/jknappen/ec/dpi600\ectt
+0900.pk> <C:\Users\docto\AppData\Local\MiKTeX\fonts/pk/ljfour/jknappen/ec/dpi60
+0\ectt1000.pk><C:/Users/docto/AppData/Local/Programs/MiKTeX/fonts/type1/public/
+amsfonts/cm/cmex10.pfb><C:/Users/docto/AppData/Local/Programs/MiKTeX/fonts/type
+1/public/amsfonts/cm/cmmi10.pfb><C:/Users/docto/AppData/Local/Programs/MiKTeX/f
+onts/type1/public/amsfonts/cm/cmmi7.pfb><C:/Users/docto/AppData/Local/Programs/
+MiKTeX/fonts/type1/public/amsfonts/cm/cmr10.pfb><C:/Users/docto/AppData/Local/P
+rograms/MiKTeX/fonts/type1/public/amsfonts/cm/cmr6.pfb><C:/Users/docto/AppData/
+Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmr7.pfb><C:/Users/docto/A
+ppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmr9.pfb><C:/Users/
+docto/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmsy10.pfb><
+C:/Users/docto/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cms
+y6.pfb><C:/Users/docto/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfont
+s/cm/cmsy7.pfb><C:/Users/docto/AppData/Local/Programs/MiKTeX/fonts/type1/public
+/amsfonts/cm/cmsy9.pfb><C:/Users/docto/AppData/Local/Programs/MiKTeX/fonts/type
+1/urw/helvetic/uhvr8a.pfb><C:/Users/docto/AppData/Local/Programs/MiKTeX/fonts/t
+ype1/urw/times/utmb8a.pfb><C:/Users/docto/AppData/Local/Programs/MiKTeX/fonts/t
+ype1/urw/times/utmr8a.pfb><C:/Users/docto/AppData/Local/Programs/MiKTeX/fonts/t
+ype1/urw/times/utmri8a.pfb>
+Output written on project.pdf (15 pages, 27033427 bytes).
+PDF statistics:
+ 494 PDF objects out of 1000 (max. 8388607)
+ 69 named destinations out of 1000 (max. 500000)
+ 51052 words of extra memory for PDF output out of 51595 (max. 10000000)
+
