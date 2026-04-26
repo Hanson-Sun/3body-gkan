@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.25 (MiKTeX 23.9) (preloaded format=pdflatex 2024.9.5)  25 APR 2026 22:11
+This is pdfTeX, Version 3.141592653-2.6-1.40.25 (MiKTeX 23.9) (preloaded format=pdflatex 2024.9.5)  25 APR 2026 22:13
 entering extended mode
  \write18 enabled.
  %&-line parsing enabled.
@@ -942,50 +942,4 @@ Underfull \vbox (badness 10000) has occurred while \output is active []
 
  [11]
 <figures/small/kan_node_network.png, id=72, 2086.9167pt x 803.1606pt>
-<figures/small_rel_pos/kan_node_network.png, id=73, 2086.9167pt x 803.1606pt>
-<figures/small_rel_pos_dsq/kan_node_network.png, id=74, 2086.9167pt x 803.1606pt>
-<figures/small_rel_pos_idc/kan_node_network.png, id=75, 2086.9167pt x 803.1606pt>
-<figures/small_rel_pos/msg_kan_responses.png, id=76, 2421.045pt x 416.2752pt>
-<figures/small_rel_pos/node_kan_responses.png, id=77, 1408.7832pt x 415.7934pt>
- [12]
-<figures/different_function_losses/min_gravity_loss.png, id=81, 570.4512pt x 352.1958pt>
-<figures/different_function_losses/min_linear_gravity_loss.png, id=82, 570.4512pt x 352.1958pt>
-<figures/different_function_losses/min_hooke_loss.png, id=83, 570.4512pt x 352.1958pt>
-<figures/different_function_losses/min_nice_loss.png, id=84, 570.4512pt x 352.1958pt>
-
-Underfull \vbox (badness 10000) has occurred while \output is active []
-
- [13]
-<figures/different_function_kans/min_gravity_sparse/kan_msg_network.png, id=89, 2813.712pt x 2181.3495pt>
-<figures/different_function_kans/min_hooke_sparse/kan_msg_network.png, id=90, 2813.712pt x 2181.3495pt>
-<figures/different_function_kans/min_nice_sparse/kan_msg_network.png, id=91, 2813.712pt x 2181.3495pt>
-<figures/different_function_kans/min_gravity_sparse/kan_node_network.png, id=92, 2086.9167pt x 803.1606pt>
-<figures/different_function_kans/min_hooke_sparse/kan_node_network.png, id=93, 2086.9167pt x 803.1606pt>
-<figures/different_function_kans/min_nice_sparse/kan_node_network.png, id=94, 2086.9167pt x 803.1606pt>
-
-Underfull \vbox (badness 10000) has occurred while \output is active []
-
- [14] [15] (project.aux)
- ***********
-LaTeX2e <2023-06-01> patch level 1
-L3 programming layer <2023-08-29>
- ***********
-Package logreq Info: Writing requests to 'project.run.xml'.
-\openout1 = `project.run.xml'.
-
- ) 
-Here is how much of TeX's memory you used:
- 25618 strings out of 475248
- 469496 string characters out of 5757814
- 1944801 words of memory out of 5000000
- 46613 multiletter control sequences out of 15000+600000
- 604126 words of font info for 202 fonts, out of 8000000 for 9000
- 1141 hyphenation exceptions out of 8191
- 72i,12n,81p,1201b,1772s stack positions out of 10000i,1000n,20000p,200000b,200000s
- <C:\Users\docto\AppData\Local\MiKTeX\fonts/pk/ljfour/jknappen/ec/dpi600\ectt0900.pk> <C:\Users\docto\AppData\Local\MiKTeX\fonts/pk/ljfour/jknappen/ec/dpi600\ectt1000.pk><C:/Users/docto/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmex10.pfb><C:/Users/docto/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmmi10.pfb><C:/Users/docto/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmmi5.pfb><C:/Users/docto/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmmi7.pfb><C:/Users/docto/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmr10.pfb><C:/Users/docto/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmr5.pfb><C:/Users/docto/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmr7.pfb><C:/Users/docto/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmsy10.pfb><C:/Users/docto/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmsy7.pfb><C:/Users/docto/AppData/Local/Programs/MiKTeX/fonts/type1/urw/helvetic/uhvr8a.pfb><C:/Users/docto/AppData/Local/Programs/MiKTeX/fonts/type1/urw/times/utmb8a.pfb><C:/Users/docto/AppData/Local/Programs/MiKTeX/fonts/type1/urw/times/utmr8a.pfb><C:/Users/docto/AppData/Local/Programs/MiKTeX/fonts/type1/urw/times/utmri8a.pfb>
-Output written on project.pdf (15 pages, 218233 bytes).
-PDF statistics:
- 226 PDF objects out of 1000 (max. 8388607)
- 0 named destinations out of 1000 (max. 500000)
- 49845 words of extra memory for PDF output out of 51595 (max. 10000000)
-
+<figures/small_rel_pos/kan_no
