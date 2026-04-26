@@ -222,7 +222,7 @@ The baseline GNN model achieves a training loss of $1.783 \times 10^{-2}$ and a 
 \subsection{Regularization}
 Unregularized training loss and validation loss for each combination of L1-norm and entropy regularizations in Table \ref{tab:regularization} display marginal differences between values. The largest gap in validation losses between two of the models is $0.08\times 10^{-1}$, comparing the control ($0$ L1-norm, $0$ entropy) to the maximal regularization ($1\times 10^{2}$ L1-norm, $1\times 10^{2}$ entropy). The sparse initialization is the only model to not follow this trend, with training loss $3.95\times 10^{-1}$ and validation loss $3.57\times 10^{-1}$.
 
-None of the networks produced by each model are interpretable through visual inspection, even with $1.0\times 10^{2-2}$ regularization, which did not have a significantly sparser network compared to the control. Node and message networks are available in the appendix (Figure \ref{fig:reg_nets}).
+None of the networks produced by each model are interpretable through visual inspection, even with $1.0\times 10^{-2}$ regularization, which did not have a significantly sparser network compared to the control. Node and message networks are available in the appendix (Figure \ref{fig:reg_nets}).
 
 \begin{table}
     \centering
@@ -249,11 +249,9 @@ None of the networks produced by each model are interpretable through visual ins
     \end{tabular}
 \end{table}
 
-From \cite{liu2024kankolmogorovarnoldnetworks}, we expected that indivdually L1-norm and entropy would be insufficient. However, contrary to our expectations, even the combined regularization did not produce significantly sparser networks or better validation losses. The differences between losses in the experiments is easily explained as noise, and none of the regularization techniques encouraged sparse networks. This may be explained by:
+From \cite{liu2024kankolmogorovarnoldnetworks}, we expected that indivdually L1-norm and entropy would be insufficient. However, contrary to our expectations, even the combined regularization did not produce significantly sparser networks or better validation losses. The differences between losses in the experiments is easily explained as noise, and none of the regularization techniques encouraged sparse networks. 
 
-(1) Sparse Learning Difficulty. Learning the sparse representation of the gravitational $n$-body is difficult. Using L1 loss on the difference in output accelerations may not be sufficient the model to learn ``physically'' important structure (eg. energy conservation, symmetries, etc.) that would encourage sparsity.  We may find better performance by incorporating physical structure directly into the loss function. Physics-informed GNNs such as Dynami-CAL GraphNet \parencite{sharma2025dynamicalgraphnetphysicsinformedgraph} enforce conservation of linear and angular momentum through equivariant message passing, effectively constraining the hypothesis space to physically consistent solutions. In our setting, such constraints could encourage sparser, more interpretable representations while also improving optimization stability and long-term rollout accuracy.
-
-(2)Constant regularization. Constant regularization does not allow for balance between learning and sparsity. The experiments did not increase regularization magnitudes over the learning period, which may have done a better job of letting the model optimize for accurate predictions first, then learn a sparse representation after.
+This may be explained by sparse learning difficulty. Learning the sparse representation of the gravitational $n$-body is difficult. Using L1 loss on the difference in output accelerations may not be sufficient the model to learn ``physically'' important structure (eg. energy conservation, symmetries, etc.) that would encourage sparsity.  We may find better performance by incorporating physical structure directly into the loss function. Physics-informed GNNs such as Dynami-CAL GraphNet \parencite{sharma2025dynamicalgraphnetphysicsinformedgraph} enforce conservation of linear and angular momentum through equivariant message passing, effectively constraining the hypothesis space to physically consistent solutions. In our setting, such constraints could encourage sparser, more interpretable representations while also improving optimization stability and long-term rollout accuracy.
 
 \subsection{How small KAN we get?}
 
@@ -391,11 +389,11 @@ This section will hold any additional figures, plots, and visualizations related
 \begin{figure}[H]
     \centering
     \begin{subfigure}[b]{0.4\textwidth}
-        \includegraphics[width=\textwidth]{figures/reg/l1_1e-4_loss.png}\caption{L1-norm 1e-4}\label{fig:l1_1e-4}
+        \includegraphics[width=\textwidth]{figures/reg/l1_1e-4_loss.png}\caption{L1-norm $1 \times 10^{-4}$}\label{fig:l1_1e-4}
     \end{subfigure}
     \hfill
     \begin{subfigure}[b]{0.4\textwidth}
-        \includegraphics[width=\textwidth]{figures/reg/l1_1e-3_loss.png}\caption{L1-norm 1e-3}\label{fig:l1_1e-3}
+        \includegraphics[width=\textwidth]{figures/reg/l1_1e-3_loss.png}\caption{L1-norm $\times 10^{-3}$}\label{fig:l1_1e-3}
     \end{subfigure}
     \caption{Training and validation loss over 50 epochs for L1-norm regularization experiments.}
     \label{fig:l1_losses}
@@ -404,11 +402,11 @@ This section will hold any additional figures, plots, and visualizations related
 \begin{figure}[H]
     \centering
     \begin{subfigure}[b]{0.4\textwidth}
-        \includegraphics[width=\textwidth]{figures/reg/entropy_1e-4_loss.png}\caption{Entropy 1e-4}\label{fig:entropy_1e-4}
+        \includegraphics[width=\textwidth]{figures/reg/entropy_1e-4_loss.png}\caption{Entropy $1\times 10^{-4}$}\label{fig:entropy_1e-4}
     \end{subfigure}
     \hfill
     \begin{subfigure}[b]{0.4\textwidth}
-        \includegraphics[width=\textwidth]{figures/reg/entropy_1e-3_loss.png}\caption{Entropy 1e-3}\label{fig:entropy_1e-3}
+        \includegraphics[width=\textwidth]{figures/reg/entropy_1e-3_loss.png}\caption{Entropy $1\times 10^{-3}$}\label{fig:entropy_1e-3}
     \end{subfigure}
     \caption{Training and validation loss over 50 epochs for Entropy regularization experiments.}
     \label{fig:entropy_losses}
@@ -417,27 +415,27 @@ This section will hold any additional figures, plots, and visualizations related
 \begin{figure}[H]
     \centering
     \begin{subfigure}[b]{0.4\textwidth}
-        \includegraphics[width=\textwidth]{figures/reg/combined_1e-4_loss.png}\caption{L1-norm and Entropy 1e-4}\label{fig:comb_1e-4}
+        \includegraphics[width=\textwidth]{figures/reg/combined_1e-4_loss.png}\caption{L1-norm and Entropy $1\times 10^{-4}$}\label{fig:comb_1e-4}
     \end{subfigure}
     \hfill
     \begin{subfigure}[b]{0.4\textwidth}
-        \includegraphics[width=\textwidth]{figures/reg/combined_1e-3_loss.png}\caption{L1-norm and Entropy 1e-3}\label{fig:comb_1e-3}
+        \includegraphics[width=\textwidth]{figures/reg/combined_1e-3_loss.png}\caption{L1-norm and Entropy $1\times 10^{-3}$}\label{fig:comb_1e-3}
     \end{subfigure}
 
     \vspace{1em}
 
     \begin{subfigure}[b]{0.4\textwidth}
-        \includegraphics[width=\textwidth]{figures/reg/combined_1e-1_loss.png}\caption{L1-norm and Entropy 1e-1}\label{fig:comb_1e-1}
+        \includegraphics[width=\textwidth]{figures/reg/combined_1e-1_loss.png}\caption{L1-norm and Entropy $1\times 10^{-1}$}\label{fig:comb_1e-1}
     \end{subfigure}
     \hfill
     \begin{subfigure}[b]{0.4\textwidth}
-        \includegraphics[width=\textwidth]{figures/reg/combined_1e1_loss.png}\caption{L1-norm and Entropy 1e1}\label{fig:comb_1e1}
+        \includegraphics[width=\textwidth]{figures/reg/combined_1e1_loss.png}\caption{L1-norm and Entropy $1\times 10^{1}$}\label{fig:comb_1e1}
     \end{subfigure}
 
     \vspace{1em}
 
     \begin{subfigure}[b]{0.4\textwidth}
-        \includegraphics[width=\textwidth]{figures/reg/combined_1e2_loss.png}\caption{L1-norm and Entropy 1e2}\label{fig:comb_1e2}
+        \includegraphics[width=\textwidth]{figures/reg/combined_1e2_loss.png}\caption{L1-norm and Entropy $1\times 10^{2}$}\label{fig:comb_1e2}
     \end{subfigure}
     \caption{Training and validation loss over 50 epochs for combined L1-norm and Entropy regularization experiments.}
     \label{fig:combined_losses}
