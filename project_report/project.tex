@@ -89,7 +89,7 @@
 
 Many scientific systems can be modeled as interacting objects governed by underlying physical laws. A key goal in machine learning for science is not only to predict these systems accurately, but also to recover interpretable structure from the learned model.
 
-We study the $n$-body problem as a testbed for this goal. Given the initial states of several bodies, the task is to predict their future trajectories under pairwise forces. Prior work has shown that graph neural networks (GNNs) are a strong fit for this setting because they naturally represent objects as nodes and interactions as edges. In particular, \cite{cranmer2020discoveringsymbolicmodelsdeep} showed that a GNN trained on simulated $n$-body dynamics can be combined with symbolic regression to recover analytical force laws.
+We study the $n$-body problem as a testbed for this goal. Given the initial states of several bodies, the task is to predict their future trajectories under pairwise forces. Prior work has shown that graph neural networks (GNNs) are a strong fit because they naturally represent objects as nodes and interactions as edges. In particular, \cite{cranmer2020discoveringsymbolicmodelsdeep} showed that a GNN trained on simulated $n$-body dynamics can be combined with symbolic regression to recover analytical force laws.
 
 A limitation of this approach is that the GNN itself is not directly interpretable. The learned representation is still a black box, and symbolic regression is a separate post-hoc step. Recent work on Kolmogorov-Arnold Networks (KANs) suggests a possible alternative. KANs replace standard MLP-style node activations with learnable univariate functions on edges, which can make the learned model easier to inspect. \cite{liu2024kankolmogorovarnoldnetworks} showed that KANs can be effective while remaining more transparent than standard MLPs.
 
@@ -113,7 +113,7 @@ We evaluate GKANs on synthetic $n$-body simulation data generated with a leapfro
 a_{i} = G \sum_{j \neq i} m_{j} \frac{s_{j} - s_{i}}{\|s_{j} - s_{i}\|^{3}}
 \]
 
-with additional force laws for generalization tests. Each example consists of initial positions, velocities, and masses, with targets given by future trajectories. We compare a GNN baseline following \cite{cranmer2020discoveringsymbolicmodelsdeep} against a GKAN, trained on identical data with the same loss and optimizer. We evaluate both predictive performance on held-out simulations and interpretability through network sparsity and visualization of learned edge functions.
+with additional force laws for generalization tests. Each example consists of initial positions, velocities, and masses, with targets given by future trajectories. We compare a GNN baseline against a GKAN, trained on identical data, loss function, and optimizer. We evaluate both predictive performance on held-out simulations and interpretability through network sparsity and visualization of learned edge functions.
 
 Our experiments address four questions: whether GKANs match GNN performance at comparable parameter counts; whether sparse regularization improves interpretability; whether physically motivated minimal architectures are sufficient; and whether these trends generalize across force laws.
 
@@ -244,7 +244,7 @@ None of the networks produced by each model are interpretable through visual ins
 
     $1.0\times10^{-4}$ & $1.0\times10^{-4}$ & $1.24\times10^{-1}$ & $1.17\times10^{-1}$ \\
     $1.0\times10^{-3}$ & $1.0\times10^{-3}$ & $1.22\times10^{-1}$ & $1.17\times10^{-1}$ \\
-    $1.0\times10^{-1}$ & $1.0\times10^{-1}$ & $1.20\times10^{-1}$ & $1.18\times1^{-1}$ \\
+    $1.0\times10^{-1}$ & $1.0\times10^{-1}$ & $1.20\times10^{-1}$ & $1.18\times10^{-1}$ \\
     $1.0\times10^{1}$ & $1.0\times10^{1}$ & $1.25\times10^{-1}$ & $1.19\times10^{-1}$ \\
     $1.0\times10^{2}$ & $1.0\times10^{2}$ & $1.16\times10^{-1}$ & $1.12\times10^{-1}$ \\
     \hline
@@ -295,7 +295,7 @@ The unique property of the GKAN is that it is possible to perform symbolic regre
 
 \begin{table}
 \centering
-\caption{Losses of different force functions. Gravity is trained with no min-separation constraint for fair comparison. See figure \ref{fig:different_force_losses} for the loss plots.}
+\caption{Losses of different force functions. Gravity is trained with no min-separation constraint for fair comparison. See Figure \ref{fig:different_force_losses} for the loss plots.}
 \vspace{0.2em}
     \begin{tabular}{l|l|l|l|l}
     \hline
@@ -309,13 +309,13 @@ The unique property of the GKAN is that it is possible to perform symbolic regre
     \end{tabular}
     \label{tab:results-different-force}
 \end{table}
-The relative training and validation loss decreases the GKAN models on 10 epochs of training are in Table \ref{tab:results-different-force}. In terms of reguarlization results, we see the same patterns with little difference in sparsity. With the only exception being Hooke's law, which has a significantly more sparse network (see figure \ref{fig:different_force_msg_models} in the appendix).
+The relative training and validation loss decreases the GKAN models on 10 epochs of training are in Table \ref{tab:results-different-force}. In terms of reguarlization results, we see the same patterns with little difference in sparsity. With the only exception being Hooke's law, which has a significantly more sparse network (see Figure \ref{fig:different_force_msg_models} in the appendix).
 
 We observe a clear trend: GKANs train more effectively on smoother, better-conditioned force laws. Across all four functions, both training and validation loss reductions increase as the target interaction becomes less singular and more regular.
 
 Gravity performs worst, with training loss decreasing by less than $7\%$ over 10 epochs. This is unsurprising: the $1/r^2$ dependence introduces near-singular behavior at small separations, which is difficult for B-spline edges to represent efficiently, as their piecewise polynomial basis approximates smooth functions well but struggles with sharp or unbounded derivatives~\parencite{DEBOOR197250}. Replacing this with the $1/r$ linear gravity law already yields a substantial improvement, with training loss dropping by $\sim 31\%$, suggesting that reducing the degree of singularity meaningfully aids optimization.
 
-Hooke's law improves further still, achieving a $\sim 60\%$ training loss reduction. Because the interaction is linear in displacement with bounded derivatives, the model requires less functional composition and fewer active spline regions to represent it accurately. This is also reflected in the regularization results, where Hooke's law (figure~\ref{sub@fig:diff_hooke_msg}) is the only force function that produces a noticeably sparser network. The ``nice'' force function, despite being nonlinear, achieves comparable relative loss reductions ($\sim 45\%$ on validation) and maintains the lowest absolute losses throughout training---likely because its smooth exponential profile avoids the distance-magnitude and reciprocal-scaling terms that make gravity challenging.
+Hooke's law improves further still, achieving a $\sim 60\%$ training loss reduction. Because the interaction is linear in displacement with bounded derivatives, the model requires less functional composition and fewer active spline regions to represent it accurately. This is also reflected in the regularization results, where Hooke's law (Figure~\ref{sub@fig:diff_hooke_msg}) is the only force function that produces a noticeably sparser network. The ``nice'' force function, despite being nonlinear, achieves comparable relative loss reductions ($\sim 45\%$ on validation) and maintains the lowest absolute losses throughout training---likely because its smooth exponential profile avoids the distance-magnitude and reciprocal-scaling terms that make gravity challenging.
 
 In combination, these results suggest that GKAN optimization is sensitive to the analytic structure of the target force law. Interpretability and sparsity also benefit from smoother targets: simpler force laws not only converge faster, but compress more naturally into compact GKAN representations.
 
