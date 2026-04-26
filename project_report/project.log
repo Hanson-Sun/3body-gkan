@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.25 (MiKTeX 23.9) (preloaded format=pdflatex 2024.9.5)  25 APR 2026 22:01
+This is pdfTeX, Version 3.141592653-2.6-1.40.25 (MiKTeX 23.9) (preloaded format=pdflatex 2024.9.5)  25 APR 2026 22:05
 entering extended mode
  \write18 enabled.
  %&-line parsing enabled.
@@ -905,7 +905,7 @@ Package microtype Info: Loading generic protrusion settings for font family
 LaTeX Warning: `h' float specifier changed to `ht'.
 
 [4] [5] [6] [7]
-LaTeX Font Info:    Trying to load font information for TS1+ptm on input line 366.
+LaTeX Font Info:    Trying to load font information for TS1+ptm on input line 365.
  (C:\Users\docto\AppData\Local\Programs\MiKTeX\tex/latex/psnfss\ts1ptm.fd
 File: ts1ptm.fd 2001/06/04 font definitions for TS1/ptm.
 ) [8]
@@ -974,24 +974,20 @@ L3 programming layer <2023-08-29>
 
 LaTeX Warning: Label(s) may have changed. Rerun to get cross-references right.
 
-
-Package biblatex Warning: Please rerun LaTeX.
-(biblatex)                Page breaks have changed.
-
 Package logreq Info: Writing requests to 'project.run.xml'.
 \openout1 = `project.run.xml'.
 
  ) 
 Here is how much of TeX's memory you used:
- 25624 strings out of 475248
- 469544 string characters out of 5757814
+ 25621 strings out of 475248
+ 469520 string characters out of 5757814
  1944801 words of memory out of 5000000
  46613 multiletter control sequences out of 15000+600000
- 604383 words of font info for 206 fonts, out of 8000000 for 9000
+ 604256 words of font info for 204 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
  72i,12n,81p,1201b,1780s stack positions out of 10000i,1000n,20000p,200000b,200000s
  <C:\Users\docto\AppData\Local\MiKTeX\fonts/pk/ljfour/jknappen/ec/dpi600\ectt0900.pk> <C:\Users\docto\AppData\Local\MiKTeX\fonts/pk/ljfour/jknappen/ec/dpi600\ectt1000.pk><C:/Users/docto/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmex10.pfb><C:/Users/docto/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmmi10.pfb><C:/Users/docto/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmmi5.pfb><C:/Users/docto/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmmi7.pfb><C:/Users/docto/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmr10.pfb><C:/Users/docto/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmr5.pfb><C:/Users/docto/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmr7.pfb><C:/Users/docto/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmsy10.pfb><C:/Users/docto/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmsy7.pfb><C:/Users/docto/AppData/Local/Programs/MiKTeX/fonts/type1/urw/helvetic/uhvr8a.pfb><C:/Users/docto/AppData/Local/Programs/MiKTeX/fonts/type1/urw/times/utmb8a.pfb><C:/Users/docto/AppData/Local/Programs/MiKTeX/fonts/type1/urw/times/utmr8a.pfb><C:/Users/docto/AppData/Local/Programs/MiKTeX/fonts/type1/urw/times/utmri8a.pfb>
-Output written on project.pdf (15 pages, 218206 bytes).
+Output written on project.pdf (15 pages, 218234 bytes).
 PDF statistics:
  226 PDF objects out of 1000 (max. 8388607)
  0 named destinations out of 1000 (max. 500000)

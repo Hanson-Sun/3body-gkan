@@ -282,7 +282,7 @@ The relative training and validation loss decreases the GKAN models on 10 epochs
 \begin{table}[h]
 
 \centering
-\caption{Losses of different force functions. Gravity is trained with no min-separation constraint for fair comparison.}
+\caption{Losses of different force functions. Gravity is trained with no min-separation constraint for fair comparison. Se figure \ref{fig:different_force_losses} for the loss plots.}
 \begin{tabular}{l|l|l|l|l}
 \hline
 experiment name & init train loss & final train loss & init val loss & final val loss\\
@@ -296,8 +296,7 @@ experiment name & init train loss & final train loss & init val loss & final val
 \label{tab:results-different-force}
 
 \end{table}
-In terms of reguarlization results, we see the same patterns with little difference in sparsity. With the only exception with hooke's law, which has a significantly more sparse network
-\hs{insert image here}
+In terms of reguarlization results, we see the same patterns with little difference in sparsity. With the only exception with hooke's law, which has a significantly more sparse network (see figure \ref{fig:different_force_msg_models} in the appendix).
 
 \section{Discussion}
 \subsection{Regularization}
