@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.25 (MiKTeX 23.9) (preloaded format=pdflatex 2024.9.5)  25 APR 2026 21:22
+This is pdfTeX, Version 3.141592653-2.6-1.40.25 (MiKTeX 23.9) (preloaded format=pdflatex 2024.9.5)  25 APR 2026 21:52
 entering extended mode
  \write18 enabled.
  %&-line parsing enabled.
@@ -257,7 +257,6 @@ File: puenc.def 2023-07-08 v7.01b Hyperref: PDF Unicode definition (HO)
 Now handling font encoding PU ...
 ... no UTF-8 mapping file for font encoding PU
 )
-Package hyperref Info: Option `draft' set `true' on input line 4050.
 Package hyperref Info: Hyper figures OFF on input line 4167.
 Package hyperref Info: Link nesting OFF on input line 4172.
 Package hyperref Info: Hyper index ON on input line 4175.
@@ -378,10 +377,17 @@ LaTeX Info: Redefining \[ on input line 2953.
 LaTeX Info: Redefining \] on input line 2954.
 )
 \linenoamsmath@ams@eqpen=\count307
- (C:\Users\docto\AppData\Local\Programs\MiKTeX\tex/latex/multirow\multirow.sty
+ (C:\Users\docto\AppData\Local\Programs\MiKTeX\tex/latex/float\float.sty
+Package: float 2001/11/08 v1.3d Float enhancements (AL)
+\c@float@type=\count308
+\float@exts=\toks32
+\float@box=\box55
+\@float@everytoks=\toks33
+\@floatcapt=\box56
+) (C:\Users\docto\AppData\Local\Programs\MiKTeX\tex/latex/multirow\multirow.sty
 Package: multirow 2024/11/12 v2.9 Span multiple rows of a table
 \multirow@colwidth=\skip60
-\multirow@cntb=\count308
+\multirow@cntb=\count309
 \multirow@dima=\skip61
 \bigstrutjot=\dimen182
 ) (C:\Users\docto\AppData\Local\Programs\MiKTeX\tex/latex/caption\subcaption.sty
@@ -400,14 +406,15 @@ Package: caption3 2023/07/31 v2.4d caption3 kernel (AR)
 \caption@hangindent=\dimen190
 Package caption Info: Standard document class detected.
 )
-\c@caption@flags=\count309
-\c@continuedfloat=\count310
+\c@caption@flags=\count310
+\c@continuedfloat=\count311
+Package caption Info: float package is loaded.
 Package caption Info: hyperref package is loaded.
 )
 Package caption Info: New subtype `subfigure' on input line 238.
-\c@subfigure=\count311
+\c@subfigure=\count312
 Package caption Info: New subtype `subtable' on input line 238.
-\c@subtable=\count312
+\c@subtable=\count313
 ) (C:\Users\docto\AppData\Local\Programs\MiKTeX\tex/latex/graphics\graphicx.sty
 Package: graphicx 2021/09/16 v1.2d Enhanced LaTeX Graphics (DPC,SPQR)
  (C:\Users\docto\AppData\Local\Programs\MiKTeX\tex/latex/graphics\graphics.sty
@@ -425,53 +432,53 @@ Package graphics Info: Driver file: pdftex.def on input line 107.
 Package: biblatex 2023/03/05 v3.19 programmable bibliographies (PK/MW)
  (C:\Users\docto\AppData\Local\Programs\MiKTeX\tex/latex/logreq\logreq.sty
 Package: logreq 2010/08/04 v1.0 xml request logger
-\lrq@indent=\count313
+\lrq@indent=\count314
  (C:\Users\docto\AppData\Local\Programs\MiKTeX\tex/latex/logreq\logreq.def
 File: logreq.def 2010/08/04 v1.0 logreq spec v1.0
 ))
-\c@tabx@nest=\count314
-\c@listtotal=\count315
-\c@listcount=\count316
-\c@liststart=\count317
-\c@liststop=\count318
-\c@citecount=\count319
-\c@citetotal=\count320
-\c@multicitecount=\count321
-\c@multicitetotal=\count322
-\c@instcount=\count323
-\c@maxnames=\count324
-\c@minnames=\count325
-\c@maxitems=\count326
-\c@minitems=\count327
-\c@citecounter=\count328
-\c@maxcitecounter=\count329
-\c@savedcitecounter=\count330
-\c@uniquelist=\count331
-\c@uniquename=\count332
-\c@refsection=\count333
-\c@refsegment=\count334
-\c@maxextratitle=\count335
-\c@maxextratitleyear=\count336
-\c@maxextraname=\count337
-\c@maxextradate=\count338
-\c@maxextraalpha=\count339
-\c@abbrvpenalty=\count340
-\c@highnamepenalty=\count341
-\c@lownamepenalty=\count342
-\c@maxparens=\count343
-\c@parenlevel=\count344
-\blx@tempcnta=\count345
-\blx@tempcntb=\count346
-\blx@tempcntc=\count347
-\c@blx@maxsection=\count348
-\blx@maxsegment@0=\count349
-\blx@notetype=\count350
-\blx@parenlevel@text=\count351
-\blx@parenlevel@foot=\count352
-\blx@sectionciteorder@0=\count353
-\blx@sectionciteorderinternal@0=\count354
-\blx@entrysetcounter=\count355
-\blx@biblioinstance=\count356
+\c@tabx@nest=\count315
+\c@listtotal=\count316
+\c@listcount=\count317
+\c@liststart=\count318
+\c@liststop=\count319
+\c@citecount=\count320
+\c@citetotal=\count321
+\c@multicitecount=\count322
+\c@multicitetotal=\count323
+\c@instcount=\count324
+\c@maxnames=\count325
+\c@minnames=\count326
+\c@maxitems=\count327
+\c@minitems=\count328
+\c@citecounter=\count329
+\c@maxcitecounter=\count330
+\c@savedcitecounter=\count331
+\c@uniquelist=\count332
+\c@uniquename=\count333
+\c@refsection=\count334
+\c@refsegment=\count335
+\c@maxextratitle=\count336
+\c@maxextratitleyear=\count337
+\c@maxextraname=\count338
+\c@maxextradate=\count339
+\c@maxextraalpha=\count340
+\c@abbrvpenalty=\count341
+\c@highnamepenalty=\count342
+\c@lownamepenalty=\count343
+\c@maxparens=\count344
+\c@parenlevel=\count345
+\blx@tempcnta=\count346
+\blx@tempcntb=\count347
+\blx@tempcntc=\count348
+\c@blx@maxsection=\count349
+\blx@maxsegment@0=\count350
+\blx@notetype=\count351
+\blx@parenlevel@text=\count352
+\blx@parenlevel@foot=\count353
+\blx@sectionciteorder@0=\count354
+\blx@sectionciteorderinternal@0=\count355
+\blx@entrysetcounter=\count356
+\blx@biblioinstance=\count357
 \labelnumberwidth=\skip62
 \labelalphawidth=\skip63
 \biblabelsep=\skip64
@@ -483,9 +490,9 @@ File: logreq.def 2010/08/04 v1.0 logreq spec v1.0
 \blx@bcfin=\read3
 \blx@bcfout=\write3
 \blx@langwohyphens=\language80
-\c@mincomprange=\count357
-\c@maxcomprange=\count358
-\c@mincompwidth=\count359
+\c@mincomprange=\count358
+\c@maxcomprange=\count359
+\c@mincompwidth=\count360
 Package biblatex Info: Trying to load biblatex default data model...
 Package biblatex Info: ... file 'blx-dm.def' found.
  (C:\Users\docto\AppData\Local\Programs\MiKTeX\tex/latex/biblatex\blx-dm.def
@@ -495,74 +502,74 @@ Package biblatex Info: Trying to load biblatex style data model...
 Package biblatex Info: ... file 'authoryear.dbx' not found.
 Package biblatex Info: Trying to load biblatex custom data model...
 Package biblatex Info: ... file 'biblatex-dm.cfg' not found.
-\c@afterword=\count360
-\c@savedafterword=\count361
-\c@annotator=\count362
-\c@savedannotator=\count363
-\c@author=\count364
-\c@savedauthor=\count365
-\c@bookauthor=\count366
-\c@savedbookauthor=\count367
-\c@commentator=\count368
-\c@savedcommentator=\count369
-\c@editor=\count370
-\c@savededitor=\count371
-\c@editora=\count372
-\c@savededitora=\count373
-\c@editorb=\count374
-\c@savededitorb=\count375
-\c@editorc=\count376
-\c@savededitorc=\count377
-\c@foreword=\count378
-\c@savedforeword=\count379
-\c@holder=\count380
-\c@savedholder=\count381
-\c@introduction=\count382
-\c@savedintroduction=\count383
-\c@namea=\count384
-\c@savednamea=\count385
-\c@nameb=\count386
-\c@savednameb=\count387
-\c@namec=\count388
-\c@savednamec=\count389
-\c@translator=\count390
-\c@savedtranslator=\count391
-\c@shortauthor=\count392
-\c@savedshortauthor=\count393
-\c@shorteditor=\count394
-\c@savedshorteditor=\count395
-\c@labelname=\count396
-\c@savedlabelname=\count397
-\c@institution=\count398
-\c@savedinstitution=\count399
-\c@lista=\count400
-\c@savedlista=\count401
-\c@listb=\count402
-\c@savedlistb=\count403
-\c@listc=\count404
-\c@savedlistc=\count405
-\c@listd=\count406
-\c@savedlistd=\count407
-\c@liste=\count408
-\c@savedliste=\count409
-\c@listf=\count410
-\c@savedlistf=\count411
-\c@location=\count412
-\c@savedlocation=\count413
-\c@organization=\count414
-\c@savedorganization=\count415
-\c@origlocation=\count416
-\c@savedoriglocation=\count417
-\c@origpublisher=\count418
-\c@savedorigpublisher=\count419
-\c@publisher=\count420
-\c@savedpublisher=\count421
-\c@language=\count422
-\c@savedlanguage=\count423
-\c@origlanguage=\count424
-\c@savedoriglanguage=\count425
-\c@pageref=\count426
-\c@savedpageref=\count427
+\c@afterword=\count361
+\c@savedafterword=\count362
+\c@annotator=\count363
+\c@savedannotator=\count364
+\c@author=\count365
+\c@savedauthor=\count366
+\c@bookauthor=\count367
+\c@savedbookauthor=\count368
+\c@commentator=\count369
+\c@savedcommentator=\count370
+\c@editor=\count371
+\c@savededitor=\count372
+\c@editora=\count373
+\c@savededitora=\count374
+\c@editorb=\count375
+\c@savededitorb=\count376
+\c@editorc=\count377
+\c@savededitorc=\count378
+\c@foreword=\count379
+\c@savedforeword=\count380
+\c@holder=\count381
+\c@savedholder=\count382
+\c@introduction=\count383
+\c@savedintroduction=\count384
+\c@namea=\count385
+\c@savednamea=\count386
+\c@nameb=\count387
+\c@savednameb=\count388
+\c@namec=\count389
+\c@savednamec=\count390
+\c@translator=\count391
+\c@savedtranslator=\count392
+\c@shortauthor=\count393
+\c@savedshortauthor=\count394
+\c@shorteditor=\count395
+\c@savedshorteditor=\count396
+\c@labelname=\count397
+\c@savedlabelname=\count398
+\c@institution=\count399
+\c@savedinstitution=\count400
+\c@lista=\count401
+\c@savedlista=\count402
+\c@listb=\count403
+\c@savedlistb=\count404
+\c@listc=\count405
+\c@savedlistc=\count406
+\c@listd=\count407
+\c@savedlistd=\count408
+\c@liste=\count409
+\c@savedliste=\count410
+\c@listf=\count411
+\c@savedlistf=\count412
+\c@location=\count413
+\c@savedlocation=\count414
+\c@organization=\count415
+\c@savedorganization=\count416
+\c@origlocation=\count417
+\c@savedoriglocation=\count418
+\c@origpublisher=\count419
+\c@savedorigpublisher=\count420
+\c@publisher=\count421
+\c@savedpublisher=\count422
+\c@language=\count423
+\c@savedlanguage=\count424
+\c@origlanguage=\count425
+\c@savedoriglanguage=\count426
+\c@pageref=\count427
+\c@savedpageref=\count428
 \shorthandwidth=\skip70
 \shortjournalwidth=\skip71
 \shortserieswidth=\skip72
@@ -586,19 +593,19 @@ Package biblatex Info: Trying to load generic definitions...
 Package biblatex Info: ... file 'biblatex.def' found.
  (C:\Users\docto\AppData\Local\Programs\MiKTeX\tex/latex/biblatex\biblatex.def
 File: biblatex.def 2023/03/05 v3.19 biblatex compatibility (PK/MW)
-\c@textcitecount=\count428
-\c@textcitetotal=\count429
-\c@textcitemaxnames=\count430
-\c@biburlbigbreakpenalty=\count431
-\c@biburlbreakpenalty=\count432
-\c@biburlnumpenalty=\count433
-\c@biburlucpenalty=\count434
-\c@biburllcpenalty=\count435
+\c@textcitecount=\count429
+\c@textcitetotal=\count430
+\c@textcitemaxnames=\count431
+\c@biburlbigbreakpenalty=\count432
+\c@biburlbreakpenalty=\count433
+\c@biburlnumpenalty=\count434
+\c@biburlucpenalty=\count435
+\c@biburllcpenalty=\count436
 \biburlbigskip=\muskip18
 \biburlnumskip=\muskip19
 \biburlucskip=\muskip20
 \biburllcskip=\muskip21
-\c@smartand=\count436
+\c@smartand=\count437
 )
 Package biblatex Info: Trying to load natbib compatibility...
 Package biblatex Info: ... file 'blx-natbib.def' found.
@@ -614,8 +621,8 @@ Package biblatex Info: Trying to load bibliography style 'standard'...
 Package biblatex Info: ... file 'standard.bbx' found.
  (C:\Users\docto\AppData\Local\Programs\MiKTeX\tex/latex/biblatex/bbx\standard.bbx
 File: standard.bbx 2023/03/05 v3.19 biblatex bibliography style (PK/MW)
-\c@bbx:relatedcount=\count437
-\c@bbx:relatedtotal=\count438
+\c@bbx:relatedcount=\count438
+\c@bbx:relatedtotal=\count439
 ))
 Package biblatex Info: Trying to load citation style 'authoryear'...
 Package biblatex Info: ... file 'authoryear.cbx' found.
@@ -640,8 +647,8 @@ Package biblatex Info: Document encoding is UTF8 ....
 Package: expl3 2023-08-29 L3 programming layer (loader) 
  (C:\Users\docto\AppData\Local\Programs\MiKTeX\tex/latex/l3backend\l3backend-pdftex.def
 File: l3backend-pdftex.def 2023-04-19 L3 backend support: PDF output (pdfTeX)
-\l__color_backend_stack_int=\count439
-\l__pdf_internal_box=\box55
+\l__color_backend_stack_int=\count440
+\l__pdf_internal_box=\box57
 ))
 Package biblatex Info: ... and expl3
 (biblatex)             2023-08-29 L3 programming layer (loader) 
@@ -652,7 +659,7 @@ Package: xparse 2023-08-29 L3 Experimental document command parser
 )
 Package: blx-case-expl3 2023/03/05 v3.19 expl3 case changing code for biblatex
 ))
-Package biblatex Info: Delimiter 'nameyeardelim' in context '' already defined, overwriting on input line 39.
+Package biblatex Info: Delimiter 'nameyeardelim' in context '' already defined, overwriting on input line 40.
  (C:\Users\docto\AppData\Local\Programs\MiKTeX\tex/latex/cleveref\cleveref.sty
 Package: cleveref 2018/03/27 v0.21.4 Intelligent cross-referencing
 Package cleveref Info: `hyperref' support loaded on input line 2370.
@@ -677,24 +684,24 @@ Package csquotes Info: Redefining alias 'default' -> 'USenglish'.
  (project.aux)
 \openout1 = `project.aux'.
 
-LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 79.
-LaTeX Font Info:    ... okay on input line 79.
-LaTeX Font Info:    Checking defaults for OMS/cmsy/m/n on input line 79.
-LaTeX Font Info:    ... okay on input line 79.
-LaTeX Font Info:    Checking defaults for OT1/cmr/m/n on input line 79.
-LaTeX Font Info:    ... okay on input line 79.
-LaTeX Font Info:    Checking defaults for T1/cmr/m/n on input line 79.
-LaTeX Font Info:    ... okay on input line 79.
-LaTeX Font Info:    Checking defaults for TS1/cmr/m/n on input line 79.
-LaTeX Font Info:    ... okay on input line 79.
-LaTeX Font Info:    Checking defaults for OMX/cmex/m/n on input line 79.
-LaTeX Font Info:    ... okay on input line 79.
-LaTeX Font Info:    Checking defaults for U/cmr/m/n on input line 79.
-LaTeX Font Info:    ... okay on input line 79.
-LaTeX Font Info:    Checking defaults for PD1/pdf/m/n on input line 79.
-LaTeX Font Info:    ... okay on input line 79.
-LaTeX Font Info:    Checking defaults for PU/pdf/m/n on input line 79.
-LaTeX Font Info:    ... okay on input line 79.
+LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 80.
+LaTeX Font Info:    ... okay on input line 80.
+LaTeX Font Info:    Checking defaults for OMS/cmsy/m/n on input line 80.
+LaTeX Font Info:    ... okay on input line 80.
+LaTeX Font Info:    Checking defaults for OT1/cmr/m/n on input line 80.
+LaTeX Font Info:    ... okay on input line 80.
+LaTeX Font Info:    Checking defaults for T1/cmr/m/n on input line 80.
+LaTeX Font Info:    ... okay on input line 80.
+LaTeX Font Info:    Checking defaults for TS1/cmr/m/n on input line 80.
+LaTeX Font Info:    ... okay on input line 80.
+LaTeX Font Info:    Checking defaults for OMX/cmex/m/n on input line 80.
+LaTeX Font Info:    ... okay on input line 80.
+LaTeX Font Info:    Checking defaults for U/cmr/m/n on input line 80.
+LaTeX Font Info:    ... okay on input line 80.
+LaTeX Font Info:    Checking defaults for PD1/pdf/m/n on input line 80.
+LaTeX Font Info:    ... okay on input line 80.
+LaTeX Font Info:    Checking defaults for PU/pdf/m/n on input line 80.
+LaTeX Font Info:    ... okay on input line 80.
 
 *geometry* driver: auto-detecting
 *geometry* detected driver: pdftex
@@ -762,19 +769,19 @@ LaTeX Font Info:    ... okay on input line 79.
 * \@reversemarginfalse
 * (1in=72.27pt=25.4mm, 1cm=28.453pt)
 
-LaTeX Info: Redefining \microtypecontext on input line 79.
-Package microtype Info: Applying patch `item' on input line 79.
-Package microtype Info: Applying patch `toc' on input line 79.
-Package microtype Info: Applying patch `eqnum' on input line 79.
-Package microtype Info: Applying patch `footnote' on input line 79.
-Package microtype Info: Applying patch `verbatim' on input line 79.
+LaTeX Info: Redefining \microtypecontext on input line 80.
+Package microtype Info: Applying patch `item' on input line 80.
+Package microtype Info: Applying patch `toc' on input line 80.
+Package microtype Info: Applying patch `eqnum' on input line 80.
+Package microtype Info: Applying patch `footnote' on input line 80.
+Package microtype Info: Applying patch `verbatim' on input line 80.
 Package microtype Info: Generating PDF output.
 Package microtype Info: Character protrusion enabled (level 2).
 Package microtype Info: Using default protrusion set `alltext'.
 Package microtype Info: Automatic font expansion enabled (level 2),
 (microtype)             stretch: 20, shrink: 20, step: 1, non-selected.
 Package microtype Info: Using default expansion set `alltext-nott'.
-LaTeX Info: Redefining \showhyphens on input line 79.
+LaTeX Info: Redefining \showhyphens on input line 80.
 Package microtype Info: No adjustment of tracking.
 Package microtype Info: No adjustment of interword spacing.
 Package microtype Info: No adjustment of character kerning.
@@ -782,17 +789,17 @@ Package microtype Info: No adjustment of character kerning.
 File: mt-ptm.cfg 2006/04/20 v1.7 microtype config. file: Times (RS)
 ) (C:\Users\docto\AppData\Local\Programs\MiKTeX\tex/context/base/mkii\supp-pdf.mkii
 [Loading MPS to PDF converter (version 2006.09.02).]
-\scratchcounter=\count440
+\scratchcounter=\count441
 \scratchdimen=\dimen193
-\scratchbox=\box56
-\nofMPsegments=\count441
-\nofMParguments=\count442
-\everyMPshowfont=\toks32
-\MPscratchCnt=\count443
+\scratchbox=\box58
+\nofMPsegments=\count442
+\nofMParguments=\count443
+\everyMPshowfont=\toks34
+\MPscratchCnt=\count444
 \MPscratchDim=\dimen194
-\MPnumerator=\count444
-\makeMPintoPDFobject=\count445
-\everyMPtoPDFconversion=\toks33
+\MPnumerator=\count445
+\makeMPintoPDFobject=\count446
+\everyMPtoPDFconversion=\toks35
 ) (C:\Users\docto\AppData\Local\Programs\MiKTeX\tex/latex/epstopdf-pkg\epstopdf-base.sty
 Package: epstopdf-base 2020-01-24 v2.11 Base part for package epstopdf
  (C:\Users\docto\AppData\Local\Programs\MiKTeX\tex/latex/grfext\grfext.sty
@@ -805,15 +812,16 @@ Package grfext Info: Graphics extension search list:
  (C:\Users\docto\AppData\Local\Programs\MiKTeX\tex/latex/00miktex\epstopdf-sys.cfg
 File: epstopdf-sys.cfg 2021/03/18 v2.0 Configuration of epstopdf for MiKTeX
 ))
+Package hyperref Info: Link coloring OFF on input line 80.
+ (project.out) (project.out)
+\@outlinefile=\write4
+\openout4 = `project.out'.
 
-Package hyperref Warning: Draft mode on.
-
-Package hyperref Info: Link coloring OFF on input line 79.
 Package caption Info: Begin \AtBeginDocument code.
 Package caption Info: End \AtBeginDocument code.
 Package biblatex Info: Trying to load language 'USenglish'...
 Package biblatex Info: ... file 'USenglish.lbx' found.
-(C:\Users\docto\AppData\Local\Programs\MiKTeX\tex/latex/biblatex/lbx\USenglish.lbx
+ (C:\Users\docto\AppData\Local\Programs\MiKTeX\tex/latex/biblatex/lbx\USenglish.lbx
 File: USenglish.lbx 2023/03/05 v3.19 biblatex localization (PK/MW)
 Package biblatex Info: Trying to load language 'american'...
 Package biblatex Info: ... file 'american.lbx' found.
@@ -856,24 +864,24 @@ Package biblatex Warning: The following entry could not be found
 (biblatex)                LaTeX afterwards.
 
 )
-Package biblatex Info: Reference section=0 on input line 79.
-Package biblatex Info: Reference segment=0 on input line 79.
+Package biblatex Info: Reference section=0 on input line 80.
+Package biblatex Info: Reference segment=0 on input line 80.
  (C:\Users\docto\AppData\Local\Programs\MiKTeX\tex/latex/microtype\mt-cmr.cfg
 File: mt-cmr.cfg 2013/05/19 v2.2 microtype config. file: Computer Modern Roman (RS)
 )
-LaTeX Font Info:    Trying to load font information for U+msa on input line 81.
+LaTeX Font Info:    Trying to load font information for U+msa on input line 82.
  (C:\Users\docto\AppData\Local\Programs\MiKTeX\tex/latex/amsfonts\umsa.fd
 File: umsa.fd 2013/01/14 v3.01 AMS symbols A
 ) (C:\Users\docto\AppData\Local\Programs\MiKTeX\tex/latex/microtype\mt-msa.cfg
 File: mt-msa.cfg 2006/02/04 v1.1 microtype config. file: AMS symbols (a) (RS)
 )
-LaTeX Font Info:    Trying to load font information for U+msb on input line 81.
+LaTeX Font Info:    Trying to load font information for U+msb on input line 82.
  (C:\Users\docto\AppData\Local\Programs\MiKTeX\tex/latex/amsfonts\umsb.fd
 File: umsb.fd 2013/01/14 v3.01 AMS symbols B
 ) (C:\Users\docto\AppData\Local\Programs\MiKTeX\tex/latex/microtype\mt-msb.cfg
 File: mt-msb.cfg 2005/06/01 v1.0 microtype config. file: AMS symbols (b) (RS)
 )
-LaTeX Font Info:    Trying to load font information for T1+cmtt on input line 81.
+LaTeX Font Info:    Trying to load font information for T1+cmtt on input line 82.
  (C:\Users\docto\AppData\Local\Programs\MiKTeX\tex/latex/base\t1cmtt.fd
 File: t1cmtt.fd 2023/04/13 v2.5m Standard LaTeX font definitions
 )
@@ -881,7 +889,7 @@ Package microtype Info: Loading generic protrusion settings for font family
 (microtype)             `cmtt' (encoding: T1).
 (microtype)             For optimal results, create family-specific settings.
 (microtype)             See the microtype manual for details.
-LaTeX Font Info:    Trying to load font information for T1+phv on input line 85.
+LaTeX Font Info:    Trying to load font information for T1+phv on input line 86.
  (C:\Users\docto\AppData\Local\Programs\MiKTeX\tex/latex/psnfss\t1phv.fd
 File: t1phv.fd 2020/03/25 scalable font definitions for T1/phv.
 )
@@ -892,82 +900,105 @@ Package microtype Info: Loading generic protrusion settings for font family
  [1
 
 
-{C:/Users/docto/AppData/Local/MiKTeX/fonts/map/pdftex/pdftex.map}{C:/Users/docto/AppData/Local/Programs/MiKTeX/fonts/enc/dvips/base/8r.enc}] [2] [3]
+{C:/Users/docto/AppData/Local/MiKTeX/fonts/map/pdftex/pdftex.map}{C:/Users/docto/AppData/Local/Programs/MiKTeX/fonts/enc/dvips/base/8r.enc}] [2]
 
 LaTeX Warning: `h' float specifier changed to `ht'.
 
-[4] [5] [6] [7]
+[3] [4] [5] [6] [7] [8]
 LaTeX Font Info:    Trying to load font information for TS1+ptm on input line 380.
  (C:\Users\docto\AppData\Local\Programs\MiKTeX\tex/latex/psnfss\ts1ptm.fd
 File: ts1ptm.fd 2001/06/04 font definitions for TS1/ptm.
-)
-<figures/different_function_losses/min_gravity_loss.png, id=38, 570.4512pt x 352.1958pt>
-<figures/different_function_losses/min_linear_gravity_loss.png, id=40, 570.4512pt x 352.1958pt>
-<figures/different_function_losses/min_hooke_loss.png, id=41, 570.4512pt x 352.1958pt>
-<figures/different_function_losses/min_nice_loss.png, id=42, 570.4512pt x 352.1958pt>
-<figures/different_function_kans/min_gravity_sparse/kan_msg_network.png, id=43, 2813.712pt x 2181.3495pt>
-<figures/different_function_kans/min_hooke_sparse/kan_msg_network.png, id=44, 2813.712pt x 2181.3495pt>
-<figures/different_function_kans/min_nice_sparse/kan_msg_network.png, id=45, 2813.712pt x 2181.3495pt>
-<figures/different_function_kans/min_gravity_sparse/kan_node_network.png, id=46, 2086.9167pt x 803.1606pt>
-<figures/different_function_kans/min_hooke_sparse/kan_node_network.png, id=47, 2086.9167pt x 803.1606pt>
-<figures/different_function_kans/min_nice_sparse/kan_node_network.png, id=48, 2086.9167pt x 803.1606pt>
- [8]
-<figures/no_regularization_loss.png, id=52, 570.4512pt x 352.1958pt>
-<figures/l1_1e-4_loss.png, id=53, 570.4512pt x 352.1958pt>
-<figures/l1_1e-3_loss.png, id=54, 570.4512pt x 352.1958pt>
-<figures/entropy_1e-4_loss.png, id=55, 570.4512pt x 352.1958pt>
-<figures/entropy_1e-3_loss.png, id=56, 570.4512pt x 352.1958pt>
-<figures/combined_1e-4_loss.png, id=57, 570.4512pt x 352.1958pt>
-<figures/combined_1e-3_loss.png, id=58, 570.4512pt x 352.1958pt>
-<figures/combined_1e-1_loss.png, id=59, 570.4512pt x 352.1958pt>
-<figures/combined_1e1_loss.png, id=60, 570.4512pt x 352.1958pt>
-<figures/combined_1e2_loss.png, id=61, 570.4512pt x 352.1958pt>
-<figures/sparse_init_loss.png, id=62, 569.4876pt x 352.1958pt>
- [9]
-<figures/baseline/gnn_loss.png, id=66, 570.4512pt x 352.1958pt>
-<figures/small/kan_loss.png, id=67, 570.4512pt x 352.1958pt>
-<figures/small_rel_pos/kan_loss.png, id=68, 570.4512pt x 352.1958pt>
-<figures/small_rel_pos_dsq/kan_loss.png, id=69, 570.4512pt x 352.1958pt>
-<figures/small_rel_pos_idc/kan_loss.png, id=70, 570.4512pt x 352.1958pt>
-<figures/small/kan_msg_network.png, id=71, 2813.712pt x 2181.3495pt>
-<figures/small_rel_pos/kan_msg_network.png, id=72, 2530.4136pt x 1730.8665pt>
-<figures/small_rel_pos_dsq/kan_msg_network.png, id=73, 2530.4136pt x 1730.8665pt>
-<figures/small_rel_pos_idc/kan_msg_network.png, id=74, 2530.4136pt x 1730.8665pt>
-<figures/small/kan_node_network.png, id=75, 2086.9167pt x 803.1606pt>
-<figures/small_rel_pos/kan_node_network.png, id=76, 2086.9167pt x 803.1606pt>
-<figures/small_rel_pos_dsq/kan_node_network.png, id=77, 2086.9167pt x 803.1606pt>
-<figures/small_rel_pos_idc/kan_node_network.png, id=78, 2086.9167pt x 803.1606pt>
- [10] [11] [12]
-Underfull \vbox (badness 2799) has occurred while \output is active []
+) [9]
+<figures/no_regularization_loss.png, id=233, 570.4512pt x 352.1958pt>
+File: figures/no_regularization_loss.png Graphic file (type png)
+<use figures/no_regularization_loss.png>
+Package pdftex.def Info: figures/no_regularization_loss.png  used on input line 397.
+(pdftex.def)             Requested size: 158.99156pt x 98.16272pt.
+<figures/l1_1e-4_loss.png, id=235, 570.4512pt x 352.1958pt>
+File: figures/l1_1e-4_loss.png Graphic file (type png)
+<use figures/l1_1e-4_loss.png>
+Package pdftex.def Info: figures/l1_1e-4_loss.png  used on input line 405.
+(pdftex.def)             Requested size: 158.99156pt x 98.16272pt.
+<figures/l1_1e-3_loss.png, id=236, 570.4512pt x 352.1958pt>
+File: figures/l1_1e-3_loss.png Graphic file (type png)
+<use figures/l1_1e-3_loss.png>
+Package pdftex.def Info: figures/l1_1e-3_loss.png  used on input line 409.
+(pdftex.def)             Requested size: 158.99156pt x 98.16272pt.
+<figures/entropy_1e-4_loss.png, id=237, 570.4512pt x 352.1958pt>
+File: figures/entropy_1e-4_loss.png Graphic file (type png)
+<use figures/entropy_1e-4_loss.png>
+Package pdftex.def Info: figures/entropy_1e-4_loss.png  used on input line 418.
+(pdftex.def)             Requested size: 158.99156pt x 98.16272pt.
+<figures/entropy_1e-3_loss.png, id=238, 570.4512pt x 352.1958pt>
+File: figures/entropy_1e-3_loss.png Graphic file (type png)
+<use figures/entropy_1e-3_loss.png>
+Package pdftex.def Info: figures/entropy_1e-3_loss.png  used on input line 422.
+(pdftex.def)             Requested size: 158.99156pt x 98.16272pt.
+<figures/combined_1e-4_loss.png, id=239, 570.4512pt x 352.1958pt>
+File: figures/combined_1e-4_loss.png Graphic file (type png)
+<use figures/combined_1e-4_loss.png>
+Package pdftex.def Info: figures/combined_1e-4_loss.png  used on input line 431.
+(pdftex.def)             Requested size: 158.99156pt x 98.16272pt.
+<figures/combined_1e-3_loss.png, id=240, 570.4512pt x 352.1958pt>
+File: figures/combined_1e-3_loss.png Graphic file (type png)
+<use figures/combined_1e-3_loss.png>
+Package pdftex.def Info: figures/combined_1e-3_loss.png  used on input line 435.
+(pdftex.def)             Requested size: 158.99156pt x 98.16272pt.
+<figures/combined_1e-1_loss.png, id=241, 570.4512pt x 352.1958pt>
+File: figures/combined_1e-1_loss.png Graphic file (type png)
+<use figures/combined_1e-1_loss.png>
+Package pdftex.def Info: figures/combined_1e-1_loss.png  used on input line 441.
+(pdftex.def)             Requested size: 158.99156pt x 98.16272pt.
+<figures/combined_1e1_loss.png, id=242, 570.4512pt x 352.1958pt>
+File: figures/combined_1e1_loss.png Graphic file (type png)
+<use figures/combined_1e1_loss.png>
+Package pdftex.def Info: figures/combined_1e1_loss.png  used on input line 445.
+(pdftex.def)             Requested size: 158.99156pt x 98.16272pt.
+<figures/combined_1e2_loss.png, id=243, 570.4512pt x 352.1958pt>
+File: figures/combined_1e2_loss.png Graphic file (type png)
+<use figures/combined_1e2_loss.png>
+Package pdftex.def Info: figures/combined_1e2_loss.png  used on input line 451.
+(pdftex.def)             Requested size: 158.99156pt x 98.16272pt.
 
- [13] [14] [15] [16]
+Underfull \vbox (badness 10000) has occurred while \output is active []
 
-LaTeX Warning: Citation 'transformers' on page 17 undefined on input line 694.
+ [10 <./figures/no_regularization_loss.png> <./figures/l1_1e-4_loss.png> <./figures/l1_1e-3_loss.png> <./figures/entropy_1e-4_loss.png> <./figures/entropy_1e-3_loss.png>]
+<figures/sparse_init_loss.png, id=256, 569.4876pt x 352.1958pt>
+File: figures/sparse_init_loss.png Graphic file (type png)
+<use figures/sparse_init_loss.png>
+Package pdftex.def Info: figures/sparse_init_loss.png  used on input line 459.
+(pdftex.def)             Requested size: 158.99156pt x 98.32394pt.
+<figures/baseline/gnn_loss.png, id=257, 570.4512pt x 352.1958pt>
+File: figures/baseline/gnn_loss.png Graphic file (type png)
+<use figures/baseline/gnn_loss.png>
+Package pdftex.def Info: figures/baseline/gnn_loss.png  used on input line 468.
+(pdftex.def)             Requested size: 178.86702pt x 110.43172pt.
 
+Underfull \vbox (badness 10000) has occurred while \output is active []
 
-LaTeX Warning: Citation 'ml-is-fun' on page 17 undefined on input line 696.
-
-[17] [18] [19] (project.aux)
- ***********
-LaTeX2e <2023-06-01> patch level 1
-L3 programming layer <2023-08-29>
- ***********
-Package logreq Info: Writing requests to 'project.run.xml'.
-\openout1 = `project.run.xml'.
-
- ) 
-Here is how much of TeX's memory you used:
- 25585 strings out of 475248
- 467858 string characters out of 5757814
- 1941801 words of memory out of 5000000
- 46545 multiletter control sequences out of 15000+600000
- 605887 words of font info for 228 fonts, out of 8000000 for 9000
- 1141 hyphenation exceptions out of 8191
- 72i,11n,81p,1081b,1772s stack positions out of 10000i,1000n,20000p,200000b,200000s
- <C:\Users\docto\AppData\Local\MiKTeX\fonts/pk/ljfour/jknappen/ec/dpi600\ectt0900.pk> <C:\Users\docto\AppData\Local\MiKTeX\fonts/pk/ljfour/jknappen/ec/dpi600\ectt1000.pk><C:/Users/docto/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmex10.pfb><C:/Users/docto/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmmi10.pfb><C:/Users/docto/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmmi5.pfb><C:/Users/docto/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmmi7.pfb><C:/Users/docto/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmr10.pfb><C:/Users/docto/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmr5.pfb><C:/Users/docto/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmr7.pfb><C:/Users/docto/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmsy10.pfb><C:/Users/docto/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmsy7.pfb><C:/Users/docto/AppData/Local/Programs/MiKTeX/fonts/type1/urw/helvetic/uhvr8a.pfb><C:/Users/docto/AppData/Local/Programs/MiKTeX/fonts/type1/urw/times/utmb8a.pfb><C:/Users/docto/AppData/Local/Programs/MiKTeX/fonts/type1/urw/times/utmr8a.pfb><C:/Users/docto/AppData/Local/Programs/MiKTeX/fonts/type1/urw/times/utmri8a.pfb>
-Output written on project.pdf (19 pages, 232841 bytes).
-PDF statistics:
- 244 PDF objects out of 1000 (max. 8388607)
- 0 named destinations out of 1000 (max. 500000)
- 49835 words of extra memory for PDF output out of 51595 (max. 10000000)
-
+ [11 <./figures/combined_1e-4_loss.png> <./figures/combined_1e-3_loss.png> <./figures/combined_1e-1_loss.png> <./figures/combined_1e1_loss.png> <./figures/combined_1e2_loss.png> <./figures/sparse_init_loss.png>]
+<figures/small/kan_loss.png, id=270, 570.4512pt x 352.1958pt>
+File: figures/small/kan_loss.png Graphic file (type png)
+<use figures/small/kan_loss.png>
+Package pdftex.def Info: figures/small/kan_loss.png  used on input line 476.
+(pdftex.def)             Requested size: 178.86702pt x 110.43172pt.
+<figures/small_rel_pos/kan_loss.png, id=271, 570.4512pt x 352.1958pt>
+File: figures/small_rel_pos/kan_loss.png Graphic file (type png)
+<use figures/small_rel_pos/kan_loss.png>
+Package pdftex.def Info: figures/small_rel_pos/kan_loss.png  used on input line 481.
+(pdftex.def)             Requested size: 178.86702pt x 110.43172pt.
+<figures/small_rel_pos_dsq/kan_loss.png, id=272, 570.4512pt x 352.1958pt>
+File: figures/small_rel_pos_dsq/kan_loss.png Graphic file (type png)
+<use figures/small_rel_pos_dsq/kan_loss.png>
+Package pdftex.def Info: figures/small_rel_pos_dsq/kan_loss.png  used on input line 486.
+(pdftex.def)             Requested size: 178.86702pt x 110.43172pt.
+<figures/small_rel_pos_idc/kan_loss.png, id=273, 570.4512pt x 352.1958pt>
+File: figures/small_rel_pos_idc/kan_loss.png Graphic file (type png)
+<use figures/small_rel_pos_idc/kan_loss.png>
+Package pdftex.def Info: figures/small_rel_pos_idc/kan_loss.png  used on input line 491.
+(pdftex.def)             Requested size: 178.86702pt x 110.43172pt.
+<figures/small/kan_msg_network.png, id=274, 2813.712pt x 2181.3495pt>
+File: figures/small/kan_msg_network.png Graphic file (type png)
+<use figures/small/kan_msg_network.png>
+Package pdftex.def Info: figures/small/kan_msg_network.png  used on input line 501.
+(pdftex.def)            

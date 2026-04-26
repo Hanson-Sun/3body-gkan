@@ -1,5 +1,5 @@
-\documentclass[draft]{article}
-% \documentclass{article}
+% \documentclass[draft]{article}
+\documentclass{article}
 % AG: Exceeds compile timeout on Overleaf due to figures.
 
 \usepackage{project_440_550}
@@ -24,6 +24,7 @@
 \usepackage{hyperref}       % hyperlinks
 \usepackage{url}            % simple URL typesetting
 \usepackage{amsmath}
+\usepackage{float}
 
 \usepackage{multirow}
 
@@ -81,7 +82,7 @@
 
 
 \begin{abstract}
-    Our project literally sucks and doesnt work
+  We investigate whether Kolmogorov-Arnold Networks (KANs) can be integrated into graph neural networks (GNNs) to produce interpretable models of $n$-body physical systems. We introduce Graph KANs (GKANs), a hybrid architecture that replaces MLP components in message-passing GNNs with learnable spline-based edge functions. We evaluate GKANs on simulated $n$-body dynamics under several force laws and assess both predictive performance and interpretability through sparsity and network visualization. Our results are largely negative: GKANs are consistently harder to optimize than MLP baselines, and standard regularization techniques fail to produce interpretable sparse networks. We attribute this primarily to the interaction between spline-based edge functions and message passing, which amplifies gradient instability. Despite this, we find that physics-informed feature engineering can recover baseline GNN performance at a 99.5\% reduction in model size, and that smoother force laws are substantially easier to learn --- suggesting that GKANs may still hold promise under the right inductive biases.
 \end{abstract}
 
 \section{Introduction}
@@ -304,6 +305,9 @@ In terms of reguarlization results, we see the same patterns with little differe
 
 \section{Discussion}
 \subsection{Regularization}
+
+\hs{discuss future improvements like pruning low-weighted edges every few epochs}
+
 From \cite{liu2024kankolmogorovarnoldnetworks}, we expected that indivdually L1-norm and entropy would be insufficient. However, contrary to our expectations, even the combined regularization did not produce significantly sparser networks or better validation losses. The differences between losses in the experiments is easily explained as noise, and none of the regularization techniques encouraged sparse networks. This may be explained by:
 \begin{enumerate}
     \item The gravitational $n$-body problem requiring dense networks to accurately represent the dynamic system. Though  \cite{liu2024kan20kolmogorovarnoldnetworks} provide an example of a symbolic KAN modeling gravitational force between two bodies in a small, interpretable network, indicating that the gravitational interactions do not require dense networks in the ideal case. \ek{I HATE THIS I HATE THIS THIS} \hs{i dont like this reason, it contradicts the section with minimal models, i propose the following reason instead}
@@ -331,7 +335,7 @@ In combination, these results suggest that GKAN optimization is sensitive to the
 
 \subsection{KAN't Optimize}
 
-\ag{discuss future improvements like pruning low-weighted edges every few epochs} \hs{should be in regularization section.}
+
 
 \hs{shorten rewrite and clean up this section}
 
@@ -358,7 +362,7 @@ So KAN it learn? Kind of.
 
 \newpage
 
-
+\printbibliography[title={References}]
 
 \appendix
 
@@ -373,7 +377,7 @@ All of our code and experiments are available at \url{https://github.com/Hanson-
 
 There are several additional features that we implemented but did not have time to test fully and include in our report. These include:
 \begin{itemize}
-    \item importance score based pruning of final models to help visualization
+    \item Importance score based pruning of final models to help visualization
     \item MultKan support, which is a variation of KAN that includes multiplication nodes in addition to addition and function composition.
     \item Reguarlization schedules that increase regularization magnitudes over the course of training to encourage learning first, then sparsity.
     \item Incomplete support for Hamiltonian GNNs.
@@ -386,85 +390,16 @@ There are several additional features that we implemented but did not have time 
 
 This section will hold any addition figures, plots, and visualizations related to the experiments that we could not fit.
 
-\subsubsection{Different Force Functions}
+\subsubsection{Regularization}
 
-\begin{figure}[htbp]
-    \centering
-    \begin{subfigure}[b]{0.4\textwidth}
-        \includegraphics[width=\textwidth]{figures/different_function_losses/min_gravity_loss.png}\caption{Normal gravity, no min-separation}\label{fig:diff_gravity_loss}
-    \end{subfigure}
-
-    \begin{subfigure}[b]{0.4\textwidth}
-        \includegraphics[width=\textwidth]{figures/different_function_losses/min_linear_gravity_loss.png}\caption{Linear gravity}\label{fig:diff_linear_loss}
-    \end{subfigure}
-    \hfill
-    \begin{subfigure}[b]{0.4\textwidth}
-        \includegraphics[width=\textwidth]{figures/different_function_losses/min_hooke_loss.png}\caption{Hooke's law}\label{fig:diff_hooke_loss}
-    \end{subfigure}
-    
-    \vspace{1em} % Spacing between rows
-    
-    \begin{subfigure}[b]{0.4\textwidth}
-        \includegraphics[width=\textwidth]{figures/different_function_losses/min_nice_loss.png}\caption{Nice force}\label{fig:diff_nice_loss}
-    \end{subfigure}
-    
-    \caption{Training and validation loss over 10 epochs for different force functions. All trained without regularization. }
-    \label{fig:different_force_losses}
-\end{figure}
-
-\begin{figure}[htbp]
-    \centering
-    \begin{subfigure}[b]{0.4\textwidth}
-        \includegraphics[width=\textwidth]{figures/different_function_kans/min_gravity_sparse/kan_msg_network.png}\caption{Normal gravity message network}\label{fig:diff_gravity_msg}
-    \end{subfigure}
-
-    \begin{subfigure}[b]{0.4\textwidth}
-        \includegraphics[width=\textwidth]{figures/different_function_kans/min_hooke_sparse/kan_msg_network.png}\caption{Hooke's law message network}\label{fig:diff_hooke_msg}
-    \end{subfigure}
-
-
-    \begin{subfigure}[b]{0.4\textwidth}
-        \includegraphics[width=\textwidth]{figures/different_function_kans/min_nice_sparse/kan_msg_network.png}\caption{Nice force message network}\label{fig:diff_nice_msg}
-    \end{subfigure}
-
-    
-    \caption{Message network visualizations for different force functions. Trained with regularization for 50 epochs.}
-    \label{fig:different_force_msg_models}
-\end{figure}
-
-\begin{figure}[htbp]
-    \centering
-    \begin{subfigure}[b]{0.4\textwidth}
-        \includegraphics[width=\textwidth]{figures/different_function_kans/min_gravity_sparse/kan_node_network.png}\caption{Normal gravity node network}\label{fig:diff_gravity_node}
-    \end{subfigure}
-
-    \begin{subfigure}[b]{0.4\textwidth}
-        \includegraphics[width=\textwidth]{figures/different_function_kans/min_hooke_sparse/kan_node_network.png}\caption{Hooke's law node network}\label{fig:diff_hooke_node}
-    \end{subfigure}
-
-    \begin{subfigure}[b]{0.4\textwidth}
-        \includegraphics[width=\textwidth]{figures/different_function_kans/min_nice_sparse/kan_node_network.png}\caption{Nice force node network}\label{fig:diff_nice_node}
-    \end{subfigure}
-
-    \caption{Node network visualizations for different force functions. Trained with regularization for 50 epochs.}
-    \label{fig:different_force_node_models}
-\end{figure}
-
-
-
-\newpage
-\section{Loss Plots}
-
-% 1. Control (Baseline)
-\begin{figure}[htbp]
+\begin{figure}[H]
     \centering
     \includegraphics[width=0.4\textwidth]{figures/no_regularization_loss.png}
     \caption{Training and validation loss over 50 epochs for the regularization control.}
     \label{fig:reg_control}
 \end{figure}
 
-% 2. L1-norm Only
-\begin{figure}[htbp]
+\begin{figure}[H]
     \centering
     \begin{subfigure}[b]{0.4\textwidth}
         \includegraphics[width=\textwidth]{figures/l1_1e-4_loss.png}\caption{L1-norm 1e-4}\label{fig:l1_1e-4}
@@ -477,8 +412,7 @@ This section will hold any addition figures, plots, and visualizations related t
     \label{fig:l1_losses}
 \end{figure}
 
-% 3. Entropy Only
-\begin{figure}[htbp]
+\begin{figure}[H]
     \centering
     \begin{subfigure}[b]{0.4\textwidth}
         \includegraphics[width=\textwidth]{figures/entropy_1e-4_loss.png}\caption{Entropy 1e-4}\label{fig:entropy_1e-4}
@@ -491,8 +425,7 @@ This section will hold any addition figures, plots, and visualizations related t
     \label{fig:entropy_losses}
 \end{figure}
 
-% 4. Combined (L1-norm and Entropy)
-\begin{figure}[htbp]
+\begin{figure}[H]
     \centering
     \begin{subfigure}[b]{0.4\textwidth}
         \includegraphics[width=\textwidth]{figures/combined_1e-4_loss.png}\caption{L1-norm and Entropy 1e-4}\label{fig:comb_1e-4}
@@ -501,9 +434,9 @@ This section will hold any addition figures, plots, and visualizations related t
     \begin{subfigure}[b]{0.4\textwidth}
         \includegraphics[width=\textwidth]{figures/combined_1e-3_loss.png}\caption{L1-norm and Entropy 1e-3}\label{fig:comb_1e-3}
     \end{subfigure}
-    
-    \vspace{1em} % Spacing between rows
-    
+
+    \vspace{1em}
+
     \begin{subfigure}[b]{0.4\textwidth}
         \includegraphics[width=\textwidth]{figures/combined_1e-1_loss.png}\caption{L1-norm and Entropy 1e-1}\label{fig:comb_1e-1}
     \end{subfigure}
@@ -511,9 +444,9 @@ This section will hold any addition figures, plots, and visualizations related t
     \begin{subfigure}[b]{0.4\textwidth}
         \includegraphics[width=\textwidth]{figures/combined_1e1_loss.png}\caption{L1-norm and Entropy 1e1}\label{fig:comb_1e1}
     \end{subfigure}
-    
-    \vspace{1em} % Spacing between rows
-    
+
+    \vspace{1em}
+
     \begin{subfigure}[b]{0.4\textwidth}
         \includegraphics[width=\textwidth]{figures/combined_1e2_loss.png}\caption{L1-norm and Entropy 1e2}\label{fig:comb_1e2}
     \end{subfigure}
@@ -521,120 +454,117 @@ This section will hold any addition figures, plots, and visualizations related t
     \label{fig:combined_losses}
 \end{figure}
 
-% 5. Sparse Init
-\begin{figure}[htbp]
+\begin{figure}[H]
     \centering
     \includegraphics[width=0.4\textwidth]{figures/sparse_init_loss.png}
     \caption{Training and validation loss over 50 epochs with sparse initialization.}
     \label{fig:sparse_init}
 \end{figure}
 
-\newpage
+\subsubsection{How Small KAN We Get?}
 
-\ag{Plots for ``How small KAN we get?'' go here for now.}
-
-% gnn loss
-\begin{figure}[htbp]
-
+\begin{figure}[H]
 \centering
-\includegraphics[width=0.5\textwidth]{figures/baseline/gnn_loss.png}
+\includegraphics[width=0.45\textwidth]{figures/baseline/gnn_loss.png}
 \caption{The baseline.}
 \label{fig:loss-baseline}
-
 \end{figure}
 
-% kan loss
-\begin{figure}[htbp]
-
+\begin{figure}[H]
 \centering
-
-\begin{subfigure}{0.5\textwidth}
-\includegraphics[width=\textwidth]{figures/small/kan_loss.png}
-\caption{\texttt{small}}
+\begin{subfigure}{0.45\textwidth}
+    \includegraphics[width=\textwidth]{figures/small/kan_loss.png}
+    \caption{\texttt{small}}
+\end{subfigure}
+\hfill
+\begin{subfigure}{0.45\textwidth}
+    \includegraphics[width=\textwidth]{figures/small_rel_pos/kan_loss.png}
+    \caption{\texttt{small\_rel\_pos}}
 \end{subfigure}
 
-\begin{subfigure}{0.5\textwidth}
-\includegraphics[width=\textwidth]{figures/small_rel_pos/kan_loss.png}
-\caption{\texttt{small\_rel\_pos}}
+\begin{subfigure}{0.45\textwidth}
+    \includegraphics[width=\textwidth]{figures/small_rel_pos_dsq/kan_loss.png}
+    \caption{\texttt{small\_rel\_dsq}}
 \end{subfigure}
-
-\begin{subfigure}{0.5\textwidth}
-\includegraphics[width=\textwidth]{figures/small_rel_pos_dsq/kan_loss.png}
-\caption{\texttt{small\_rel\_dsq}}
+\hfill
+\begin{subfigure}{0.45\textwidth}
+    \includegraphics[width=\textwidth]{figures/small_rel_pos_idc/kan_loss.png}
+    \caption{\texttt{small\_rel\_idc}}
 \end{subfigure}
-
-\begin{subfigure}{0.5\textwidth}
-\includegraphics[width=\textwidth]{figures/small_rel_pos_idc/kan_loss.png}
-\caption{\texttt{small\_rel\_idc}}
-\end{subfigure}
-
-\caption{The smaller models.}
+\caption{Training and validation loss for the smaller models.}
 \label{fig:loss-small}
-
 \end{figure}
 
-% message network
-\begin{figure}[htbp]
-
-  \centering
-
-  \begin{subfigure}{0.5\textwidth}
-  \includegraphics[width=\textwidth]{figures/small/kan_msg_network.png}
-  \caption{\texttt{small}}
-  \end{subfigure}
-
-  \begin{subfigure}{0.5\textwidth}
-  \includegraphics[width=\textwidth]{figures/small_rel_pos/kan_msg_network.png}
-  \caption{\texttt{small\_rel\_pos}}
-  \end{subfigure}
-
-  \begin{subfigure}{0.5\textwidth}
-  \includegraphics[width=\textwidth]{figures/small_rel_pos_dsq/kan_msg_network.png}
-  \caption{\texttt{small\_rel\_dsq}}
-  \end{subfigure}
-
-  \begin{subfigure}{0.5\textwidth}
-  \includegraphics[width=\textwidth]{figures/small_rel_pos_idc/kan_msg_network.png}
-  \caption{\texttt{small\_rel\_idc}}
-  \end{subfigure}
-
-  \caption{The smaller models.}
-  \label{fig:message-network-small}
-\end{figure}
-
-% node update network
-\begin{figure}[htbp]
-
+\begin{figure}[H]
 \centering
-
-\begin{subfigure}{0.5\textwidth}
-\includegraphics[width=\textwidth]{figures/small/kan_node_network.png}
-\caption{\texttt{small}}
+\begin{subfigure}{0.45\textwidth}
+    \includegraphics[width=\textwidth]{figures/small/kan_msg_network.png}
+    \caption{\texttt{small}}
+\end{subfigure}
+\hfill
+\begin{subfigure}{0.45\textwidth}
+    \includegraphics[width=\textwidth]{figures/small_rel_pos/kan_msg_network.png}
+    \caption{\texttt{small\_rel\_pos}}
 \end{subfigure}
 
-\begin{subfigure}{0.5\textwidth}
-\includegraphics[width=\textwidth]{figures/small_rel_pos/kan_node_network.png}
-\caption{\texttt{small\_rel\_pos}}
+
+\begin{subfigure}{0.45\textwidth}
+    \includegraphics[width=\textwidth]{figures/small_rel_pos_dsq/kan_msg_network.png}
+    \caption{\texttt{small\_rel\_dsq}}
 \end{subfigure}
-
-\begin{subfigure}{0.5\textwidth}
-\includegraphics[width=\textwidth]{figures/small_rel_pos_dsq/kan_node_network.png}
-\caption{\texttt{small\_rel\_dsq}}
+\hfill
+\begin{subfigure}{0.45\textwidth}
+    \includegraphics[width=\textwidth]{figures/small_rel_pos_idc/kan_msg_network.png}
+    \caption{\texttt{small\_rel\_idc}}
 \end{subfigure}
-
-\begin{subfigure}{0.5\textwidth}
-\includegraphics[width=\textwidth]{figures/small_rel_pos_idc/kan_node_network.png}
-\caption{\texttt{small\_rel\_idc}}
-\end{subfigure}
-
-\caption{The smaller models.}
-\label{fig:node-update-network-small}
-
+\caption{Message network visualizations for the smaller models.}
+\label{fig:message-network-small}
 \end{figure}
 
-% feasible routes
-\begin{figure}[htbp]
+\begin{figure}[H]
+\centering
+\begin{subfigure}{0.45\textwidth}
+    \includegraphics[width=\textwidth]{figures/small/kan_node_network.png}
+    \caption{\texttt{small}}
+\end{subfigure}
+\hfill
+\begin{subfigure}{0.45\textwidth}
+    \includegraphics[width=\textwidth]{figures/small_rel_pos/kan_node_network.png}
+    \caption{\texttt{small\_rel\_pos}}
+\end{subfigure}
 
+
+\begin{subfigure}{0.45\textwidth}
+    \includegraphics[width=\textwidth]{figures/small_rel_pos_dsq/kan_node_network.png}
+    \caption{\texttt{small\_rel\_dsq}}
+\end{subfigure}
+\hfill
+\begin{subfigure}{0.45\textwidth}
+    \includegraphics[width=\textwidth]{figures/small_rel_pos_idc/kan_node_network.png}
+    \caption{\texttt{small\_rel\_idc}}
+\end{subfigure}
+\caption{Node update network visualizations for the smaller models.}
+\label{fig:node-update-network-small}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\begin{subfigure}{0.45\textwidth}
+    \includegraphics[width=\textwidth]{figures/small_rel_pos/msg_kan_responses.png}
+    \caption{Message network}
+\end{subfigure}
+\hfill
+\begin{subfigure}{0.45\textwidth}
+    \includegraphics[width=\textwidth]{figures/small_rel_pos/node_kan_responses.png}
+    \caption{Node update network}
+\end{subfigure}
+\caption{The cross-section for \texttt{small\_rel\_pos}.}
+\label{fig:cross-section-small-rel-pos}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\begin{subfigure}{\textwidth}
 \centering
 \begin{tabular}{c|l}
 input & $m_{i}$, $s_{x,i}$, $s_{y,i}$, $v_{x,i}$, $v_{y,i}$, $m_{j}$, $s_{x,j}$, $s_{y,j}$, $v_{x,j}$, $v_{y,j}$, $\Delta x$, $\Delta y$ \\
@@ -655,13 +585,12 @@ input & $m_{i}$, $s_{x,i}$, $s_{y,i}$, $v_{x,i}$, $v_{y,i}$, $m_{j}$, $s_{x,j}$,
 \hline
 output & $a_{x,i} = h_{3,1}$, $a_{y,i} = h_{3,2}$ \\
 \end{tabular}
-\caption{The feasible route for \texttt{small\_rel\_pos}.}
+\caption{\texttt{small\_rel\_pos}}
 \label{fig:feasible-route-small-rel-pos}
+\end{subfigure}
 
-\end{figure}
 
-\begin{figure}[htbp]
-
+\begin{subfigure}{\textwidth}
 \centering
 \begin{tabular}{c|l}
 input & $m_{i}$, $s_{x,i}$, $s_{y,i}$, $v_{x,i}$, $v_{y,i}$, $m_{j}$, $s_{x,j}$, $s_{y,j}$, $v_{x,j}$, $v_{y,j}$, $\Delta x$, $\Delta y$, $\|r\|^{2}$ \\
@@ -682,13 +611,12 @@ input & $m_{i}$, $s_{x,i}$, $s_{y,i}$, $v_{x,i}$, $v_{y,i}$, $m_{j}$, $s_{x,j}$,
 \hline
 output & $a_{x,i} = h_{3,1}$, $a_{y,i} = h_{3,2}$ \\
 \end{tabular}
-\caption{The feasible route for \texttt{small\_rel\_dsq}.}
+\caption{\texttt{small\_rel\_dsq}}
 \label{fig:feasible-route-small-rel-dsq}
+\end{subfigure}
 
-\end{figure}
 
-\begin{figure}[htbp]
-
+\begin{subfigure}{\textwidth}
 \centering
 \begin{tabular}{c|l}
 input & $m_{i}$, $s_{x,i}$, $s_{y,i}$, $v_{x,i}$, $v_{y,i}$, $m_{j}$, $s_{x,j}$, $s_{y,j}$, $v_{x,j}$, $v_{y,j}$, $\Delta x$, $\Delta y$, $\|r\|^{-3}$ \\
@@ -708,161 +636,70 @@ input & $m_{i}$, $s_{x,i}$, $s_{y,i}$, $v_{x,i}$, $v_{y,i}$, $m_{j}$, $s_{x,j}$,
 \hline
 output & $a_{x,i} = h_{3,1}$, $a_{y,i} = h_{3,2}$ \\
 \end{tabular}
-\caption{The feasible route for \texttt{small\_rel\_idc}.}
+\caption{\texttt{small\_rel\_idc}}
 \label{fig:feasible-route-small-rel-idc}
-
-\end{figure}
-
-% cross-sections
-\begin{figure}[htbp]
-
-\centering
-
-\begin{subfigure}{0.5\textwidth}
-\includegraphics[width=\textwidth]{figures/small_rel_pos/msg_kan_responses.png}
-\caption{message network}
 \end{subfigure}
 
-\begin{subfigure}{0.5\textwidth}
-\includegraphics[width=\textwidth]{figures/small_rel_pos/node_kan_responses.png}
-\caption{node update network}
-\end{subfigure}
-
-\caption{The cross-section for \texttt{small\_rel\_pos}.}
-\label{fig:cross-section-small-rel-pos}
-
+\caption{Feasible routes for the smaller models with feature engineering.}
+\label{fig:feasible-routes}
 \end{figure}
 
-\newpage
+\subsubsection{Different Force Functions}
 
-\printbibliography
+\begin{figure}[H]
+    \centering
+    \begin{subfigure}[b]{0.4\textwidth}
+        \includegraphics[width=\textwidth]{figures/different_function_losses/min_gravity_loss.png}\caption{Normal gravity, no min-separation}\label{fig:diff_gravity_loss}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[b]{0.4\textwidth}
+        \includegraphics[width=\textwidth]{figures/different_function_losses/min_linear_gravity_loss.png}\caption{Linear gravity}\label{fig:diff_linear_loss}
+    \end{subfigure}
 
-\section{What goes in the report}
-Part of your grade is based on the contribution of your project:
-did you do something meaningful in your project, that adds something new to the world?
-Again, we don't expect you to necessarily make a high-impact totally novel result,
-and it's fine if you end up with a negative result,
-but you should have something here.
-You should make sure that the contribution of your project is clear in the introduction of your paper,
-and that the rest of the writeup clearly demonstrates that you actually made this contribution.
-
-A large portion of your grade is based on writing a clear and structured paper that addresses the relevant questions that would be asked of a generic scientific/engineering publication.
-Your writeup should look more or less like a scientific paper as published at, say, NeurIPS,
-or a NeurIPS workshop.
-To achieve that, most papers should use something like the following traditional outline:
-\begin{enumerate}
-\item Introduction: Clearly state the problem being addressed. \textbf{Explain why it is an important problem to work on}. At a high level, briefly summarize what the limitations of existing approaches that your work will be addressing, and what the contribution of your project is.
-\item Related Work: Identify at least three publications on related topics; usually these will be papers that have worked on slightly different problems or papers that have proposed an approach to your problem that is not fully satisfactory. For each paper, briefly say either how the problem addressed is related and/or different (if they address a different problem) or why it doesn't solve the problem you are working on (if it addresses the same problem). Sometimes it makes more sense to put this later in the paper, but usually it's here.
-\item Description and justification of what you did, divided up (possibly in multiple sections and/or sub-sections). There's a lot of flexibility here, and it will depend on the type of project you are doing. For example, if you're applying standard machine learning methods to a new dataset or doing a Kaggle competition, you could have one (sub-)section describing the dataset and why you think machine learning could help, and one (sub-)section stating the methods you will try and why you think these are appropriate methods (you don't necessarily have to go into detail describing the methods). If you're extending an existing technique, you could have one sub-section describing the existing technique, and one sub-section for each of the extensions you explored. If your project has a theoretical component, you might have one sub-section discussing the assumptions, one sub-section describing the results, and one sub-section describing implications.
-\item Experiments and/or analysis (if you have an experimental component): Describe each experiment that you did. Say what each experiment is trying to test. Ideally, each experiment should only try to test one thing and you should control for as many other factors as possible. Subsequently, summarize the result of your experiment, in both the text and in a nice visual form such as a figure; \textbf{a table with a huge list of numbers is often not the best way to summarize information}, but sometimes a well-designed table (especially with some colour-coding) is still your best bet.
-\item Discussion and future work: State the main conclusions you obtained from this course project. List at least one strength and one weakness of your contribution. Briefly describe what you might do with more time.
-\end{enumerate}
-
-An example outline for a perspective paper might be something like
-\begin{enumerate}
-\item Introduction: Clearly state the problem being addressed. Explain why it is an important problem. At a high level, briefly summarize the history of the works that will be discussed in the project.
-\item Review: Go through the different works in some logical order, such as chronologically or by going from simple to complex models. Don't just list the methods, but say how they relate to each other (going through the strengths/weaknesses of the different methods, both in comparison to each other and compared to an ideal method that solves the problem).
-\item Discussion: Discuss the trends that have occurred over time. Speculate about where the next steps in the trend could lead. Point out issues that are not properly addressed by existing methods. State some interesting directions to explore, or opportunities to use existing tools in new applications.
-\end{enumerate}
-
-You definitely don't have to stick to these exact structures; many of my papers don't.
-But if you're not using this format (\dots or if you are), you should make sure what you're doing makes sense,
-and answers the important questions about your project.
-
-\paragraph{Writing style}
-Mark has some advice for writing here, most of which I agree with:
-\url{https://www.cs.ubc.ca/~schmidtm/Courses/Notes/writing.pdf}.
-(He has a bunch of minor grammatical errors in that document, though. :/)
-
-You're not going to lose points for making some minor grammatical mistakes or anything like that
--- the published literature is full of them!
-You will lose points if there are grammatical errors to the level of making your work hard to understand.
-More importantly, you will also lose points if your writing doesn't convey what you did
-in a clear, easy-to-understand way.
-Note that this involves a lot more than just having a good grasp of written English.
-
-
-\section{How to format stuff}
-\subsection{Citations}
-
-Something a lot of people don't know at first:
-use \verb+\citet{ref}+ (or \verb+\textcite+)
-if the citation plays a grammatical role in the sentence,
-e.g.\ ``\citet{transformers} demonstrated that \dots.''
-Use \verb+\citep{ref}+ (or \verb+\parencite+)
-if it doesn't, e.g.\ ``Machine learning is fun \citep{ml-is-fun}.''
-
-
-\subsection{Figures}
-
-See \cref{fig:sample} for how to include a figure.
-
-\begin{figure}
-  \centering
-  % The next line would normally be \includegraphics instead.
-  \fbox{\rule[-.5cm]{0cm}{4cm} hi =) \rule[-.5cm]{4cm}{0cm}}
-  \caption{Sample figure caption.}
-  \label{fig:sample}
+    \begin{subfigure}[b]{0.4\textwidth}
+        \includegraphics[width=\textwidth]{figures/different_function_losses/min_hooke_loss.png}\caption{Hooke's law}\label{fig:diff_hooke_loss}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[b]{0.4\textwidth}
+        \includegraphics[width=\textwidth]{figures/different_function_losses/min_nice_loss.png}\caption{Nice force}\label{fig:diff_nice_loss}
+    \end{subfigure}
+    \caption{Training and validation loss over 10 epochs for different force functions. All trained without regularization.}
+    \label{fig:different_force_losses}
 \end{figure}
 
+\begin{figure}[H]
+    \centering
+    \begin{subfigure}[b]{0.4\textwidth}
+        \includegraphics[width=\textwidth]{figures/different_function_kans/min_gravity_sparse/kan_msg_network.png}\caption{Normal gravity}\label{fig:diff_gravity_msg}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[b]{0.4\textwidth}
+        \includegraphics[width=\textwidth]{figures/different_function_kans/min_hooke_sparse/kan_msg_network.png}\caption{Hooke's law}\label{fig:diff_hooke_msg}
+    \end{subfigure}
 
-\subsection{Tables}
+    \begin{subfigure}[b]{0.4\textwidth}
+        \includegraphics[width=\textwidth]{figures/different_function_kans/min_nice_sparse/kan_msg_network.png}\caption{Nice force}\label{fig:diff_nice_msg}
+    \end{subfigure}
 
-Table captions go \emph{above} the table,
-because that's the usual style, idk.
-There's an example in \cref{tab:sample}.
-Avoid having too many lines, and in particular don't just put them between every table cell; put them where they help readability.
+    \caption{Message network visualizations for different force functions. Trained with regularization for 50 epochs.}
+    \label{fig:different_force_msg_models}
+\end{figure}
 
-\begin{table}
-  \caption{Sample table title}
-  \label{tab:sample}
-  \centering
-  \begin{tabular}{lll}
-    \toprule
-    \multicolumn{2}{c}{Part}                   \\
-    \cmidrule(r){1-2}
-    Name     & Description     & Size ($\mu$m) \\
-    \midrule
-    Dendrite & Input terminal  & $\sim$100     \\
-    Axon     & Output terminal & $\sim$10      \\
-    Soma     & Cell body       & up to $10^6$  \\
-    \bottomrule
-  \end{tabular}
-\end{table}
+\begin{figure}[H]
+    \centering
+    \begin{subfigure}[b]{0.4\textwidth}
+        \includegraphics[width=\textwidth]{figures/different_function_kans/min_gravity_sparse/kan_node_network.png}\caption{Normal gravity}\label{fig:diff_gravity_node}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[b]{0.4\textwidth}
+        \includegraphics[width=\textwidth]{figures/different_function_kans/min_hooke_sparse/kan_node_network.png}\caption{Hooke's law}\label{fig:diff_hooke_node}
+    \end{subfigure}
 
-\subsection{Math}
-Using display math in bare TeX commands, like \texttt{\$\$f(x)\$\$}, will mess up the line numbers. (Inline math like \texttt{\$f(x)\$} is fine.)
-Instead use \texttt{\textbackslash [ f(x) \textbackslash ]} or \texttt{\textbackslash begin\{equation*\} f(x) \textbackslash end\{equation*\}},
-like this:
-\[ \sum_i a_i = 2 .\]
-(You shouldn't use \texttt{\$\$} anyway; see \href{https://tex.stackexchange.com/questions/503/why-is-preferable-to}{this discussion} and \href{https://tex.stackexchange.com/questions/40492/what-are-the-differences-between-align-equation-and-displaymath}{this one} for more.)
-
-
-\subsection{Supplementary Material}
-You can include extra information in appendices, like \cref{app:info}.
-You don't have to if you don't want to.
-
-Please \emph{don't} include code in your writeups, unless you did something particularly cool and want to \emph{briefly} describe the way something works as a contribution (this should be relatively unusual).
-Please instead link to it somewhere, preferably a GitHub repo or similar,
-especially if the code is a significant contribution of your project.
-
-
-\section{Discussion}
-In the end, you should give us an A++++.
-
-
-\begin{ack}
-    You can acknowledge useful discussion with other people who aren't coauthors here (or leave the section out).
-    Typically you'd also put funding here, acknowledgements for computing clusters, etc.
-\end{ack}
-
-
-% \printbibliography
-\printbibliography[title={References}]
-
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-
+    \begin{subfigure}[b]{0.4\textwidth}
+        \includegraphics[width=\textwidth]{figures/different_function_kans/min_nice_sparse/kan_node_network.png}\caption{Nice force}\label{fig:diff_nice_node}
+    \end{subfigure}
+    \caption{Node network visualizations for different force functions. Trained with regularization for 50 epochs.}
+    \label{fig:different_force_node_models}
+\end{figure}
 
 \end{document}
