@@ -281,7 +281,8 @@ def compose_manual(layer_results, var_names, out_names):
 
 # ── Plotting ──────────────────────────────────────────────────────
 
-def plot_spline_fits(kan, layer_results, input_names, tag, save_dir):
+def plot_spline_fits(kan, layer_results, input_names, tag, save_dir,
+                     deaffine=False):
     save_dir = Path(save_dir)
     save_dir.mkdir(parents=True, exist_ok=True)
 
@@ -296,15 +297,17 @@ def plot_spline_fits(kan, layer_results, input_names, tag, save_dir):
             continue
 
         postacts = None
-        if hasattr(layer, "postacts") and layer.postacts is not None:
-            postacts = layer.postacts.detach().cpu()
+        if hasattr(kan, "spline_postacts") and l < len(kan.spline_postacts):
+            postacts = kan.spline_postacts[l].detach().cpu()
 
         fig, axes = plt.subplots(
             out_dim, in_dim,
             figsize=(max(2.2 * in_dim, 6), 2.5 * out_dim),
             squeeze=False,
         )
-        fig.suptitle(f"{tag} KAN — Layer {l} ({in_dim}→{out_dim})", fontsize=11)
+        suffix = " [de-affined]" if deaffine else ""
+        fig.suptitle(f"{tag} KAN — Layer {l} ({in_dim}→{out_dim}){suffix}",
+                     fontsize=11)
 
         for i in range(in_dim):
             x_data = acts_in[:, i].detach().cpu()
@@ -320,19 +323,26 @@ def plot_spline_fits(kan, layer_results, input_names, tag, save_dir):
                 fn_name = info.get("fn", "?")
                 r2 = info.get("r2", 0.0)
                 affine = info.get("affine", [1, 0, 1, 0])
+                a_x, b_x, c, d = affine
+
+                skip_deaffine = deaffine and abs(c) < COEFF_DEAD
 
                 if postacts is not None and postacts.shape[2] > i and postacts.shape[1] > j:
                     x_pts = x_data.numpy()
                     y_pts = postacts[:, j, i].numpy()
+                    if deaffine and not skip_deaffine:
+                        y_pts = (y_pts - d) / c
                     n = min(500, len(x_pts))
                     idx = np.random.default_rng(0).choice(len(x_pts), n, replace=False)
                     ax.scatter(x_pts[idx], y_pts[idx], s=1, alpha=0.3, c="steelblue")
 
-                if fn_name != "0" and fn_name in SYMBOLIC_LIB:
-                    a_x, b_x, c, d = affine
+                if fn_name != "0" and fn_name in SYMBOLIC_LIB and not skip_deaffine:
                     torch_fn = SYMBOLIC_LIB[fn_name][0]
                     try:
-                        y_fit = c * torch_fn(a_x * x_plot + b_x) + d
+                        if deaffine:
+                            y_fit = torch_fn(a_x * x_plot + b_x)
+                        else:
+                            y_fit = c * torch_fn(a_x * x_plot + b_x) + d
                         ax.plot(x_plot.numpy(), y_fit.numpy(), "r-", linewidth=1, alpha=0.8)
                     except Exception:
                         pass
@@ -340,8 +350,7 @@ def plot_spline_fits(kan, layer_results, input_names, tag, save_dir):
                 color = "green" if r2 >= R2_THRESHOLD else ("orange" if r2 > 0.5 else "gray")
                 lbl = f"{fn_name} R²={r2:.2f}"
                 if fn_name != "0":
-                    _, _, c_coeff, _ = affine
-                    lbl += f" c={c_coeff:.2f}"
+                    lbl += f" c={c:.2f}"
                 ax.set_title(lbl, fontsize=6, color=color, pad=2)
 
                 if l == 0:
@@ -354,9 +363,10 @@ def plot_spline_fits(kan, layer_results, input_names, tag, save_dir):
                 ax.grid(True, alpha=0.2)
 
         plt.tight_layout()
-        fig.savefig(save_dir / f"{tag}_layer{l}.png", dpi=150, bbox_inches="tight")
+        name = f"{tag}_layer{l}_deaffine" if deaffine else f"{tag}_layer{l}"
+        fig.savefig(save_dir / f"{name}.png", dpi=150, bbox_inches="tight")
         plt.close(fig)
-        print(f"    Saved: {save_dir / f'{tag}_layer{l}.png'}")
+        print(f"    Saved: {save_dir / f'{name}.png'}")
 
 
 # ── Per-layer summary ─────────────────────────────────────────────
@@ -425,6 +435,8 @@ def analyze_model(name):
 
         # Plots
         plot_spline_fits(kan, layer_results, var_names, tag, out_dir)
+        plot_spline_fits(kan, layer_results, var_names, tag, out_dir,
+                         deaffine=True)
 
         # pykan composition
         formulas, err = compose_pykan(kan, var_names)
