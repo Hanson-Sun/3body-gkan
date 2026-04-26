@@ -131,7 +131,6 @@ Sparsification can be achieved in KAN layers through L1 regularization of weight
 
 Each GKAN network uses a node network of 3 layers $(7 \to 8 \to 2)$, a message network of 4 layers $(10 \to 12 \to 12 \to 2)$, and is trained over 50 epochs. Once all models are trained, they are compared in both training loss, validation loss against a test set, as well as visually compared for how sparse the networks are. The ideal regularization approach is determined by which hyperparameters provide a relatively sparse and interpretable network without sacrificing performance on the validation set.
 
-\ek{I don't know if we should mention sparse init} \hs{ig we dont have to}
 \subsection{How small KAN we get?}
 
 The Kolmogorov-Arnold (KA) representation theorem states that any continuous multivariate function can be decomposed into a finite number of univariate functions and addition operations \parencite{liu2024kankolmogorovarnoldnetworks}.
@@ -306,14 +305,12 @@ In terms of reguarlization results, we see the same patterns with little differe
 \section{Discussion}
 \subsection{Regularization}
 
-\hs{discuss future improvements like pruning low-weighted edges every few epochs}
-
 From \cite{liu2024kankolmogorovarnoldnetworks}, we expected that indivdually L1-norm and entropy would be insufficient. However, contrary to our expectations, even the combined regularization did not produce significantly sparser networks or better validation losses. The differences between losses in the experiments is easily explained as noise, and none of the regularization techniques encouraged sparse networks. This may be explained by:
-\begin{enumerate}
-    \item The gravitational $n$-body problem requiring dense networks to accurately represent the dynamic system. Though  \cite{liu2024kan20kolmogorovarnoldnetworks} provide an example of a symbolic KAN modeling gravitational force between two bodies in a small, interpretable network, indicating that the gravitational interactions do not require dense networks in the ideal case. \ek{I HATE THIS I HATE THIS THIS} \hs{i dont like this reason, it contradicts the section with minimal models, i propose the following reason instead}
-    \item Learning the sparse representation of the gravitational $n$-body is difficult. Uses a regular L1 loss on the difference in output accelerations may not be sufficient the model to learn ``physically'' important structure (eg. energy conservation, symmetries, etc.) that would encourage sparsity. \hs{We can link this to physically informed loss that i talk about in difficulty learning.}
-    \item Constant regularization does not allow for balance between learning and sparsity. The experiments did not increase regularization magnitudes over the learning period, which may have done a better job of letting the model optimize for accurate predictions first, then learn a sparse representation after.
-\end{enumerate}
+\paragraph{Sparse Learning Difficulty}. Learning the sparse representation of the gravitational $n$-body is difficult. Uses a regular L1 loss on the difference in output accelerations may not be sufficient the model to learn ``physically'' important structure (eg. energy conservation, symmetries, etc.) that would encourage sparsity.  
+\paragraph{Constant regularization.} Constant regularization does not allow for balance between learning and sparsity. The experiments did not increase regularization magnitudes over the learning period, which may have done a better job of letting the model optimize for accurate predictions first, then learn a sparse representation after.
+
+Sparsity may be encouraged by regularly pruning low-weighted edges every few epochs. This would mitigate the issue sparse initialization causes where the model has no chance to learn before being pruned.
+Another extension is to incorporate physical structure directly into the loss function. Physics-informed GNNs such as Dynami-CAL GraphNet \parencite{sharma2025dynamicalgraphnetphysicsinformedgraph} enforce conservation of linear and angular momentum through equivariant message passing, effectively constraining the hypothesis space to physically consistent solutions. In our setting, such constraints could encourage sparser, more interpretable representations while also improving optimization stability and long-term rollout accuracy.
 
 \subsection{How small KAN we get?}
 
@@ -338,9 +335,6 @@ In combination, these results suggest that GKAN optimization is sensitive to the
 Beyond interpretability, a persistent challenge in our experiments was optimization. GKANs were consistently harder to train than MLP-based GNN baselines: loss decreased slowly, converged to worse minima, and was sensitive to initialization. This was surprising given that \cite{liu2024kankolmogorovarnoldnetworks} and \cite{liu2024kan20kolmogorovarnoldnetworks} demonstrate effective KAN training on gravitational systems---however, their setting trains a single KAN directly on force inputs and outputs, without the added complexity of message passing.
 
 We suspect message passing is the key differentiator. Errors in learned edge functions propagate across the graph, amplifying the gradient instability that spline-based functions already exhibit. This is consistent with known pathologies in deep GNNs such as oversmoothing and oversquashing \parencite{arroyo2025vanishinggradientsoversmoothingoversquashing}. We tested Adam, L-BFGS, warmup schedules, and alternating optimization, but none consistently improved training, suggesting that this difficulty may be intrinsic to the GKAN architecture in message-passing settings.
-
-\hs{might move to regularization section}
-A natural extension is to incorporate physical structure directly into the loss function. Physics-informed GNNs such as Dynami-CAL GraphNet \parencite{sharma2025dynamicalgraphnetphysicsinformedgraph} enforce conservation of linear and angular momentum through equivariant message passing, effectively constraining the hypothesis space to physically consistent solutions. In our setting, such constraints could encourage sparser, more interpretable representations while also improving optimization stability and long-term rollout accuracy.
 
 \section{Conclusion}
 
@@ -384,7 +378,7 @@ This section will hold any addition figures, plots, and visualizations related t
 
 \begin{figure}[H]
     \centering
-    \includegraphics[width=0.4\textwidth]{figures/no_regularization_loss.png}
+    \includegraphics[width=0.4\textwidth]{figures/reg/no_regularization_loss.png}
     \caption{Training and validation loss over 50 epochs for the regularization control.}
     \label{fig:reg_control}
 \end{figure}
@@ -392,11 +386,11 @@ This section will hold any addition figures, plots, and visualizations related t
 \begin{figure}[H]
     \centering
     \begin{subfigure}[b]{0.4\textwidth}
-        \includegraphics[width=\textwidth]{figures/l1_1e-4_loss.png}\caption{L1-norm 1e-4}\label{fig:l1_1e-4}
+        \includegraphics[width=\textwidth]{figures/reg/l1_1e-4_loss.png}\caption{L1-norm 1e-4}\label{fig:l1_1e-4}
     \end{subfigure}
     \hfill
     \begin{subfigure}[b]{0.4\textwidth}
-        \includegraphics[width=\textwidth]{figures/l1_1e-3_loss.png}\caption{L1-norm 1e-3}\label{fig:l1_1e-3}
+        \includegraphics[width=\textwidth]{figures/reg/l1_1e-3_loss.png}\caption{L1-norm 1e-3}\label{fig:l1_1e-3}
     \end{subfigure}
     \caption{Training and validation loss over 50 epochs for L1-norm regularization experiments.}
     \label{fig:l1_losses}
@@ -405,11 +399,11 @@ This section will hold any addition figures, plots, and visualizations related t
 \begin{figure}[H]
     \centering
     \begin{subfigure}[b]{0.4\textwidth}
-        \includegraphics[width=\textwidth]{figures/entropy_1e-4_loss.png}\caption{Entropy 1e-4}\label{fig:entropy_1e-4}
+        \includegraphics[width=\textwidth]{figures/reg/entropy_1e-4_loss.png}\caption{Entropy 1e-4}\label{fig:entropy_1e-4}
     \end{subfigure}
     \hfill
     \begin{subfigure}[b]{0.4\textwidth}
-        \includegraphics[width=\textwidth]{figures/entropy_1e-3_loss.png}\caption{Entropy 1e-3}\label{fig:entropy_1e-3}
+        \includegraphics[width=\textwidth]{figures/reg/entropy_1e-3_loss.png}\caption{Entropy 1e-3}\label{fig:entropy_1e-3}
     \end{subfigure}
     \caption{Training and validation loss over 50 epochs for Entropy regularization experiments.}
     \label{fig:entropy_losses}
@@ -418,27 +412,27 @@ This section will hold any addition figures, plots, and visualizations related t
 \begin{figure}[H]
     \centering
     \begin{subfigure}[b]{0.4\textwidth}
-        \includegraphics[width=\textwidth]{figures/combined_1e-4_loss.png}\caption{L1-norm and Entropy 1e-4}\label{fig:comb_1e-4}
+        \includegraphics[width=\textwidth]{figures/reg/combined_1e-4_loss.png}\caption{L1-norm and Entropy 1e-4}\label{fig:comb_1e-4}
     \end{subfigure}
     \hfill
     \begin{subfigure}[b]{0.4\textwidth}
-        \includegraphics[width=\textwidth]{figures/combined_1e-3_loss.png}\caption{L1-norm and Entropy 1e-3}\label{fig:comb_1e-3}
+        \includegraphics[width=\textwidth]{figures/reg/combined_1e-3_loss.png}\caption{L1-norm and Entropy 1e-3}\label{fig:comb_1e-3}
     \end{subfigure}
 
     \vspace{1em}
 
     \begin{subfigure}[b]{0.4\textwidth}
-        \includegraphics[width=\textwidth]{figures/combined_1e-1_loss.png}\caption{L1-norm and Entropy 1e-1}\label{fig:comb_1e-1}
+        \includegraphics[width=\textwidth]{figures/reg/combined_1e-1_loss.png}\caption{L1-norm and Entropy 1e-1}\label{fig:comb_1e-1}
     \end{subfigure}
     \hfill
     \begin{subfigure}[b]{0.4\textwidth}
-        \includegraphics[width=\textwidth]{figures/combined_1e1_loss.png}\caption{L1-norm and Entropy 1e1}\label{fig:comb_1e1}
+        \includegraphics[width=\textwidth]{figures/reg/combined_1e1_loss.png}\caption{L1-norm and Entropy 1e1}\label{fig:comb_1e1}
     \end{subfigure}
 
     \vspace{1em}
 
     \begin{subfigure}[b]{0.4\textwidth}
-        \includegraphics[width=\textwidth]{figures/combined_1e2_loss.png}\caption{L1-norm and Entropy 1e2}\label{fig:comb_1e2}
+        \includegraphics[width=\textwidth]{figures/reg/combined_1e2_loss.png}\caption{L1-norm and Entropy 1e2}\label{fig:comb_1e2}
     \end{subfigure}
     \caption{Training and validation loss over 50 epochs for combined L1-norm and Entropy regularization experiments.}
     \label{fig:combined_losses}
@@ -446,10 +440,33 @@ This section will hold any addition figures, plots, and visualizations related t
 
 \begin{figure}[H]
     \centering
-    \includegraphics[width=0.4\textwidth]{figures/sparse_init_loss.png}
+    \includegraphics[width=0.4\textwidth]{figures/reg/sparse_init_loss.png}
     \caption{Training and validation loss over 50 epochs with sparse initialization.}
     \label{fig:sparse_init}
 \end{figure}
+
+\begin{figure}[H]
+    \centering
+    \begin{subfigure}[b]{0.4\textwidth}
+        \includegraphics[width=\textwidth]{figures/reg/com1e2_node_network.png}\caption{Node network $1 \times 10^2$} combined regularization\label{fig:comb_1e2_node}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[b]{0.4\textwidth}
+        \includegraphics[width=\textwidth]{figures/reg/com1e2_node_network.png}\caption{Message network $1 \times 10^2$} combined regularization\label{fig:comb_1e2_msg}
+    \end{subfigure}
+
+    \begin{subfigure}[b]{0.4\textwidth}
+        \includegraphics[width=\textwidth]{figures/reg/control_node_network.png}\caption{Node network with no regularization\label{fig:control_node}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[b]{0.4\textwidth}
+        \includegraphics[width=\textwidth]{figures/reg/control_msg_network.png}\caption{Message network with no regularization\label{fig:control_msg}
+    \end{subfigure}
+    \caption{Node and message network examples for high regularization and no regularization.}
+    \label{fig:reg_nets}
+\end{figure}
+
+
 
 \subsubsection{How Small KAN We Get?}
 
