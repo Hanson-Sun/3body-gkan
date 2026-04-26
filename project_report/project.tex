@@ -279,23 +279,24 @@ Furthermore, by introducing simple computed features such as $\Delta x$ and $\De
 
 The relative training and validation loss decreases the GKAN models on 10 epochs of training are in Table \ref{tab:results-different-force}
 
-\begin{table}[h]
 
+\begin{table}
 \centering
-\caption{Losses of different force functions. Gravity is trained with no min-separation constraint for fair comparison. Se figure \ref{fig:different_force_losses} for the loss plots.}
-\begin{tabular}{l|l|l|l|l}
-\hline
-experiment name & init train loss & final train loss & init val loss & final val loss\\
-\hline
-\texttt{Gravity} & $2.571 \times 10^{0}$ & $2.396 \times 10^{0}$ & $2.143 \times 10^{0}$ & $1.952 \times 10^{0}$\\
-\texttt{Linear} & $1.883 \times 10^{0}$ & $1.301 \times 10^{0}$ & $1.250 \times 10^{0}$ & $0.764 \times 10^{0}$\\
-\texttt{Hooke} & $0.752 \times 10^{0}$ & $0.300 \times 10^{0}$ & $0.225 \times 10^{0}$ & $0.141 \times 10^{0}$\\
-\texttt{Nice} & $7.015 \times 10^{-2}$ & $3.878 \times 10^{-2}$ & $3.721 \times 10^{-2}$ & $2.11\times 10^{-2}$\\
-\hline
-\end{tabular}
-\label{tab:results-different-force}
-
+\caption{Losses of different force functions. Gravity is trained with no min-separation constraint for fair comparison. See figure \ref{fig:different_force_losses} for the loss plots.}
+\vspace{0.2em}
+    \begin{tabular}{l|l|l|l|l}
+    \hline
+    experiment name & init train loss & final train loss & init val loss & final val loss\\
+    \hline
+    \texttt{Gravity} & $2.571 \times 10^{0}$ & $2.396 \times 10^{0}$ & $2.143 \times 10^{0}$ & $1.952 \times 10^{0}$\\
+    \texttt{Linear} & $1.883 \times 10^{0}$ & $1.301 \times 10^{0}$ & $1.250 \times 10^{0}$ & $0.764 \times 10^{0}$\\
+    \texttt{Hooke} & $0.752 \times 10^{0}$ & $0.300 \times 10^{0}$ & $0.225 \times 10^{0}$ & $0.141 \times 10^{0}$\\
+    \texttt{Nice} & $7.015 \times 10^{-2}$ & $3.878 \times 10^{-2}$ & $3.721 \times 10^{-2}$ & $2.11\times 10^{-2}$\\
+    \hline
+    \end{tabular}
+    \label{tab:results-different-force}
 \end{table}
+
 In terms of reguarlization results, we see the same patterns with little difference in sparsity. With the only exception with Hooke's law, which has a significantly more sparse network (see figure \ref{fig:different_force_msg_models} in the appendix).
 
 \section{Discussion}
