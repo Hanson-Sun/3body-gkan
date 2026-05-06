@@ -6,5 +6,6 @@ figures/*
 visualizations/*
 data/*
 checkpoints/*
+outputs/*
 test_outputs/*
 .DS_Store
