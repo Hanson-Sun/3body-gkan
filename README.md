@@ -1,37 +1,20 @@
-# NBody with Graph KANs 
+# KAN it learn? Interpretable N-Body Physics
 
-Learn symbolic relationship between n-body systems from tracjectory data, utilizing a Graph KAN architecture. The goal is to extract interpretable, symbolic equations that govern the dynamics of the system, and to demonstrate that these equations generalize better than black-box models.
+We investigate whether Kolmogorov-Arnold Networks (KANs) can be integrated into graph neural networks (GNNs) to produce interpretable models of $n$-body physical systems. We introduce Graph KANs (GKANs), a hybrid architecture that replaces MLP components in message-passing GNNs with learnable spline-based edge functions. We evaluate GKANs on simulated $n$-body dynamics under several force laws and assess both predictive performance and interpretability through sparsity and network visualization. Our results are largely negative: GKANs are consistently harder to optimize than MLP baselines, and standard regularization techniques fail to produce interpretable sparse networks. We attribute this primarily to the interaction between spline-based edge functions and message passing, which amplifies gradient instability. Despite this, we find that physics-informed feature engineering can recover baseline GNN performance with a 99.5\% reduction in model size, and that smoother force laws are substantially easier to learn---suggesting that GKANs may still hold promise under the right inductive biases.
 
-We can compare this with previous research on symbolic regression from deep learning, which typically uses MLP-based GNNs and a separate symbolic regression step. The key novelty here is that the KAN architecture allows us to directly learn symbolic functions without needing a separate regression step, which should improve interpretability and potentially generalization.
+**Please see the [project_report](https://github.com/Hanson-Sun/3body-gkan/tree/main/project_report) folder for the full report.**
 
-So there is no guarantee that it will be better but hopefully we can gain some interesting insights about the tradeoffs between interpretability and performance in this specific application. We can also compare the performance of the Graph KAN with other physics-informed GNN architectures, such as Hamiltonian GNNs or momentum-conserving GNNs, to see if the KAN architecture provides any advantages in terms of accuracy or generalization.
+## Code
 
-## Tools
+To set up the project, use `uv`
+```
+uv init
+uv sync
+```
 
-So we can pick a KAN library
-- pykan (classic, Python, not super optimized, **has symbolic regression built in**)
-- efficient-kan (C++, optimized for speed, but less user-friendly)
-- GraphKAN (Python, optimized for graph data, but less mature)
-- KAGNN (might be the goat?)
+To run experiments, use
+```
+uv run run_experiments.py
+```
 
-it "should" be not too hard to roll our own GKAN implementation with pytorch + efficient-kan.
-
-Ideally have GPU accelerated pytorch or else this will be slow af to train...
-
-# TODO 
-
-- [x] n body simulation data generation (allow us to specify the force law between trajectories)
-    - there might be some stability issues with close interactions, might be problematic
-- [x] n body simulation visualizer
-- [x] convert trajectory data into graph format for GNN
-- [x] GNN baseline implementation and training
-- [x] Graph KAN implementation and training
-- [x] Implement sparse initialization for the KAN layers
-- [x] Add multiply layer to KAN architecture (copy MultKan from pykan)
-- [x] design experiments to compare generalization performance of GNN vs Graph KAN
-  - [x] Test some feature engineering approaches
-  - [x] Try with minimal model complexity
-  - [x] Try with more complex model and see if sparsity works
-  - [x] Look at some approaches from KAN 2.0 paper
-- [x] interpretability analysis of learned functions
-
+To define/change experiments, modify `experiments.yaml`
